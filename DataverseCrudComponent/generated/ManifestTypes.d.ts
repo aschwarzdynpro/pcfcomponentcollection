@@ -1,0 +1,15 @@
+/*
+*This is auto generated from the ControlManifest.Input.xml file
+*/
+
+// Define IInputs and IOutputs Type. They should match with ControlManifest.
+export interface IInputs {
+    sampleProperty: ComponentFramework.PropertyTypes.StringProperty;
+    allowCreate: ComponentFramework.PropertyTypes.TwoOptionsProperty;
+    allowUpdate: ComponentFramework.PropertyTypes.TwoOptionsProperty;
+    allowDelete: ComponentFramework.PropertyTypes.TwoOptionsProperty;
+    sampleDataSet: ComponentFramework.PropertyTypes.DataSet;
+}
+export interface IOutputs {
+    sampleProperty?: string;
+}
