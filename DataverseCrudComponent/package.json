@@ -1,0 +1,31 @@
+{
+  "name": "pcf-project",
+  "version": "1.0.0",
+  "description": "A PCF component with CRUD functionality for Dataverse",
+  "keywords": [
+    "PCF",
+    "Dataverse",
+    "CRUD",
+    "React"
+  ],
+  "author": "PCF Component Collection",
+  "license": "MIT",
+  "main": "index.ts",
+  "scripts": {
+    "build": "pcf-scripts build",
+    "clean": "pcf-scripts clean",
+    "rebuild": "pcf-scripts rebuild",
+    "start": "pcf-scripts start"
+  },
+  "dependencies": {
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "devDependencies": {
+    "@types/powerapps-component-framework": "^1.3.18",
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "pcf-scripts": "^1",
+    "pcf-start": "^1"
+  }
+}

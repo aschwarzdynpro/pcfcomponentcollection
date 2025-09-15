@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="DataverseCrud" constructor="DataverseCrudComponent" version="1.0.0" display-name-key="DataverseCrudComponent" description-key="DataverseCrudComponent_Desc" control-type="standard">
+    <!-- dataset definition -->
+    <data-set name="sampleDataSet" display-name-key="dataset" description-key="dataset_desc">
+      <property-set name="samplePropertySet" display-name-key="property_set" description-key="property_set_desc" of-type="SingleLine.Text" usage="bound" required="true" />
+    </data-set>
+    <!-- property definition -->
+    <property name="sampleProperty" display-name-key="property" description-key="property_desc" of-type="SingleLine.Text" usage="bound" required="true" />
+    <property name="allowCreate" display-name-key="allow_create" description-key="allow_create_desc" of-type="TwoOptions" usage="input" required="false" />
+    <property name="allowUpdate" display-name-key="allow_update" description-key="allow_update_desc" of-type="TwoOptions" usage="input" required="false" />
+    <property name="allowDelete" display-name-key="allow_delete" description-key="allow_delete_desc" of-type="TwoOptions" usage="input" required="false" />
+    <!-- resources -->
+    <resources>
+      <code path="index.ts" order="1"/>
+      <css path="css/DataverseCrudComponent.css" order="1" />
+      <resx path="strings/DataverseCrudComponent.1033.resx" version="1.0.0" />
+    </resources>
+    <!-- feature usage -->
+    <feature-usage>
+      <uses-feature name="Device.pickFile" required="false" />
+      <uses-feature name="WebAPI" required="true" />
+    </feature-usage>
+  </control>
+</manifest>
