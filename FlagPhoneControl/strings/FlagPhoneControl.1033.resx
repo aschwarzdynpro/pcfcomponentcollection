@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="FlagPhoneControl_Display" xml:space="preserve">
+    <value>Flag Phone</value>
+    <comment>Display name for the control</comment>
+  </data>
+  <data name="FlagPhoneControl_Desc" xml:space="preserve">
+    <value>International phone number input with a country flag selector. Stores the value in E.164-style format (e.g. +491234567).</value>
+    <comment>Description for the control</comment>
+  </data>
+  <data name="phoneNumber_Display" xml:space="preserve">
+    <value>Phone Number</value>
+    <comment>Display name for the bound phone number field</comment>
+  </data>
+  <data name="phoneNumber_Desc" xml:space="preserve">
+    <value>The phone number field (Format Type = Phone Number) bound to this control. Stored format: +&lt;country code&gt;&lt;subscriber number&gt;.</value>
+    <comment>Description for the bound phone number field</comment>
+  </data>
+  <data name="defaultCountry_Display" xml:space="preserve">
+    <value>Default Country (ISO)</value>
+    <comment>Display name for the default country property</comment>
+  </data>
+  <data name="defaultCountry_Desc" xml:space="preserve">
+    <value>Optional ISO 3166-1 alpha-2 code (e.g. DE, US, GB) used when the field is empty or the existing value cannot be parsed. Defaults to DE.</value>
+    <comment>Description for the default country property</comment>
+  </data>
+  <data name="placeholder_Display" xml:space="preserve">
+    <value>Placeholder</value>
+    <comment>Display name for the placeholder property</comment>
+  </data>
+  <data name="placeholder_Desc" xml:space="preserve">
+    <value>Optional placeholder text for the phone number input.</value>
+    <comment>Description for the placeholder property</comment>
+  </data>
+</root>

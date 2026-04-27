@@ -1,3 +1,14 @@
+# PCF Component Collection
+
+A collection of Power Apps Component Framework (PCF) components for Dataverse.
+
+## Components
+
+- **DataverseCrudComponent** – React-based CRUD UI for Dataverse datasets (see below).
+- **FlagPhoneControl** – International phone-number input with a country flag selector for fields of format type "Phone Number". Stores values in E.164-style format like `+491234567`. See [`FlagPhoneControl/`](./FlagPhoneControl).
+
+---
+
 # Dataverse CRUD PCF Component
 
 A modern, React-based Power Apps Component Framework (PCF) component that provides full CRUD (Create, Read, Update, Delete) operations for Dataverse entities with a beautiful, responsive user interface.
