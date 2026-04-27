@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as ReactDOM from "react-dom";
 import {
     countries,
     Country,
@@ -28,8 +29,10 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
     const [national, setNational] = React.useState<string>(initial.national);
     const [open, setOpen] = React.useState(false);
     const [filter, setFilter] = React.useState("");
+    const [anchorRect, setAnchorRect] = React.useState<DOMRect | null>(null);
 
     const wrapperRef = React.useRef<HTMLDivElement>(null);
+    const dropdownRef = React.useRef<HTMLDivElement>(null);
     const filterInputRef = React.useRef<HTMLInputElement>(null);
 
     // When the bound value changes from outside, sync local state
@@ -39,12 +42,34 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
         setNational(parsed.national);
     }, [props.value, props.defaultCountry]);
 
+    // Reposition the portaled dropdown under the trigger; keep it in sync with
+    // ancestor scroll/resize so we don't drift while open.
+    React.useLayoutEffect(() => {
+        if (!open) {
+            setAnchorRect(null);
+            return;
+        }
+        const recalc = () => {
+            if (wrapperRef.current) {
+                setAnchorRect(wrapperRef.current.getBoundingClientRect());
+            }
+        };
+        recalc();
+        window.addEventListener("resize", recalc);
+        window.addEventListener("scroll", recalc, true);
+        return () => {
+            window.removeEventListener("resize", recalc);
+            window.removeEventListener("scroll", recalc, true);
+        };
+    }, [open]);
+
     React.useEffect(() => {
         if (!open) return;
         const handler = (e: MouseEvent) => {
+            const target = e.target as Node;
             if (
-                wrapperRef.current &&
-                !wrapperRef.current.contains(e.target as Node)
+                !wrapperRef.current?.contains(target) &&
+                !dropdownRef.current?.contains(target)
             ) {
                 setOpen(false);
                 setFilter("");
@@ -112,7 +137,6 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
                 <span className="fpc-flag" aria-hidden="true">
                     {flagEmoji(country.iso)}
                 </span>
-                <span className="fpc-iso">{country.iso}</span>
                 <span className="fpc-dial">{country.dial}</span>
                 <span className="fpc-caret" aria-hidden="true">▾</span>
             </button>
@@ -127,38 +151,52 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
                 aria-label="Phone number"
             />
 
-            {open && (
-                <div className="fpc-dropdown" role="listbox">
-                    <input
-                        ref={filterInputRef}
-                        type="text"
-                        className="fpc-search"
-                        placeholder="Search country or code…"
-                        value={filter}
-                        onChange={(e) => setFilter(e.target.value)}
-                    />
-                    <ul className="fpc-list">
-                        {filtered.length === 0 && (
-                            <li className="fpc-empty">No country found</li>
-                        )}
-                        {filtered.map((c) => (
-                            <li
-                                key={c.iso}
-                                role="option"
-                                aria-selected={c.iso === iso}
-                                className={`fpc-option ${c.iso === iso ? "fpc-option-selected" : ""}`}
-                                onClick={() => handleSelect(c.iso)}
-                            >
-                                <span className="fpc-flag" aria-hidden="true">
-                                    {flagEmoji(c.iso)}
-                                </span>
-                                <span className="fpc-option-name">{c.name}</span>
-                                <span className="fpc-option-dial">{c.dial}</span>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
+            {open &&
+                anchorRect &&
+                ReactDOM.createPortal(
+                    <div
+                        ref={dropdownRef}
+                        className="fpc-dropdown"
+                        role="listbox"
+                        style={{
+                            position: "fixed",
+                            top: anchorRect.bottom + 4,
+                            left: anchorRect.left,
+                            width: anchorRect.width,
+                        }}
+                    >
+                        <input
+                            ref={filterInputRef}
+                            type="text"
+                            className="fpc-search"
+                            placeholder="Search country or code…"
+                            value={filter}
+                            onChange={(e) => setFilter(e.target.value)}
+                        />
+                        <ul className="fpc-list">
+                            {filtered.length === 0 && (
+                                <li className="fpc-empty">No country found</li>
+                            )}
+                            {filtered.map((c) => (
+                                <li
+                                    key={c.iso}
+                                    role="option"
+                                    aria-selected={c.iso === iso}
+                                    className={`fpc-option ${c.iso === iso ? "fpc-option-selected" : ""}`}
+                                    onClick={() => handleSelect(c.iso)}
+                                >
+                                    <span className="fpc-flag" aria-hidden="true">
+                                        {flagEmoji(c.iso)}
+                                    </span>
+                                    <span className="fpc-option-name">{c.name}</span>
+                                    <span className="fpc-option-iso">{c.iso}</span>
+                                    <span className="fpc-option-dial">{c.dial}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>,
+                    document.body,
+                )}
         </div>
     );
 };
