@@ -50,9 +50,25 @@
     cursor: not-allowed;
 }
 
+/* Flag is either an inline SVG (country-flag-icons) or a fallback emoji span. */
 .fpc-flag {
-    font-size: 18px;
-    line-height: 1;
+    flex: 0 0 auto;
+    width: 22px;
+    height: 16px;
+    display: inline-block;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+    object-fit: cover;
+    /* emoji fallback styling */
+    font-size: 16px;
+    line-height: 16px;
+    text-align: center;
+    overflow: hidden;
+}
+
+svg.fpc-flag {
+    /* SVG flags have no intrinsic block sizing; force aspect ratio. */
+    display: inline-block;
 }
 
 .fpc-dial {

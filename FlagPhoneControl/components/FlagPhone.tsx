@@ -5,9 +5,9 @@ import {
     Country,
     DEFAULT_ISO,
     findCountryByIso,
-    flagEmoji,
     parsePhone,
 } from "./countries";
+import { Flag } from "./Flag";
 
 export interface FlagPhoneProps {
     value: string | null;
@@ -134,9 +134,7 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
                 aria-expanded={open}
                 title={`${country.name} (${country.dial})`}
             >
-                <span className="fpc-flag" aria-hidden="true">
-                    {flagEmoji(country.iso)}
-                </span>
+                <Flag iso={country.iso} className="fpc-flag" />
                 <span className="fpc-dial">{country.dial}</span>
                 <span className="fpc-caret" aria-hidden="true">▾</span>
             </button>
@@ -185,9 +183,7 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
                                     className={`fpc-option ${c.iso === iso ? "fpc-option-selected" : ""}`}
                                     onClick={() => handleSelect(c.iso)}
                                 >
-                                    <span className="fpc-flag" aria-hidden="true">
-                                        {flagEmoji(c.iso)}
-                                    </span>
+                                    <Flag iso={c.iso} className="fpc-flag" />
                                     <span className="fpc-option-name">{c.name}</span>
                                     <span className="fpc-option-iso">{c.iso}</span>
                                     <span className="fpc-option-dial">{c.dial}</span>
