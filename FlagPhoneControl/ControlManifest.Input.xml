@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="FlagPhone" constructor="FlagPhoneControl" version="1.0.0" display-name-key="FlagPhoneControl_Display" description-key="FlagPhoneControl_Desc" control-type="standard">
+    <!-- The bound phone number field (Format Type = Phone Number) -->
+    <property name="phoneNumber" display-name-key="phoneNumber_Display" description-key="phoneNumber_Desc" of-type="SingleLine.Phone" usage="bound" required="true" />
+
+    <!-- Optional default country (ISO 3166-1 alpha-2, e.g. DE, US, GB) -->
+    <property name="defaultCountry" display-name-key="defaultCountry_Display" description-key="defaultCountry_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- Optional placeholder text for the phone number input -->
+    <property name="placeholder" display-name-key="placeholder_Display" description-key="placeholder_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- resources -->
+    <resources>
+      <code path="index.ts" order="1"/>
+      <css path="css/FlagPhoneControl.css" order="1" />
+      <resx path="strings/FlagPhoneControl.1033.resx" version="1.0.0" />
+    </resources>
+  </control>
+</manifest>
