@@ -283,24 +283,36 @@ export const STRINGS: Record<Lang, {
     search: string;
     empty: string;
     phoneAria: string;
+    invalidNumber: string;
+    tooShort: string;
+    tooLong: string;
 }> = {
     en: {
         placeholder: "Phone number",
         search: "Search country or code…",
         empty: "No country found",
         phoneAria: "Phone number",
+        invalidNumber: "Invalid phone number",
+        tooShort: "Number is too short",
+        tooLong: "Number is too long",
     },
     de: {
         placeholder: "Telefonnummer",
         search: "Land oder Vorwahl suchen…",
         empty: "Kein Land gefunden",
         phoneAria: "Telefonnummer",
+        invalidNumber: "Ungültige Telefonnummer",
+        tooShort: "Nummer ist zu kurz",
+        tooLong: "Nummer ist zu lang",
     },
     fr: {
         placeholder: "Numéro de téléphone",
         search: "Rechercher pays ou indicatif…",
         empty: "Aucun pays trouvé",
         phoneAria: "Numéro de téléphone",
+        invalidNumber: "Numéro de téléphone invalide",
+        tooShort: "Le numéro est trop court",
+        tooLong: "Le numéro est trop long",
     },
 };
 

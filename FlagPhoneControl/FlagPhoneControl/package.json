@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "country-flag-icons": "^1.6.16",
+    "libphonenumber-js": "^1.12.42",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   },

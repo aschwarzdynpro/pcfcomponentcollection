@@ -28,6 +28,49 @@
     color: #707070;
 }
 
+.fpc-root.fpc-invalid {
+    border-color: #c50f1f;
+}
+
+.fpc-root.fpc-invalid:focus-within {
+    border-color: #c50f1f;
+    box-shadow: 0 0 0 1px #c50f1f;
+}
+
+/* Subtle valid-state nudge — only visible while there's actually a number */
+.fpc-root.fpc-valid {
+    border-color: #d1d1d1;
+}
+
+.fpc-validity {
+    flex: 0 0 auto;
+    width: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    user-select: none;
+}
+
+.fpc-validity-ok {
+    color: #107c10;
+}
+
+.fpc-validity-err {
+    color: #c50f1f;
+    font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+.fpc-error {
+    margin-top: 4px;
+    color: #c50f1f;
+    font-size: 12px;
+    line-height: 1.4;
+    font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system,
+        BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+}
+
 .fpc-country-button {
     display: inline-flex;
     align-items: center;

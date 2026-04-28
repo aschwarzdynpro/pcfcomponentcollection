@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import { parsePhoneNumberFromString } from "libphonenumber-js/min";
 import {
     countries,
     countryMatches,
@@ -12,6 +13,27 @@ import {
     STRINGS,
 } from "./countries";
 import { Flag } from "./Flag";
+
+type Validity = "empty" | "valid" | "tooShort" | "tooLong" | "invalid";
+
+function classifyNumber(combined: string): Validity {
+    if (!combined || combined === "+") return "empty";
+    const parsed = parsePhoneNumberFromString(combined);
+    if (!parsed) return "invalid";
+    if (parsed.isValid()) return "valid";
+    // Distinguish length issues from genuinely malformed numbers so we can
+    // show the most helpful message.
+    try {
+        const reason = (parsed as unknown as { getValidationError?: () => string })
+            .getValidationError?.();
+        if (reason === "TOO_SHORT") return "tooShort";
+        if (reason === "TOO_LONG") return "tooLong";
+    } catch {
+        // libphonenumber-js may not expose getValidationError; fall through.
+    }
+    if (parsed.isPossible()) return "tooShort"; // common partial-input case
+    return "invalid";
+}
 
 export interface FlagPhoneProps {
     value: string | null;
@@ -35,6 +57,12 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
     const [open, setOpen] = React.useState(false);
     const [filter, setFilter] = React.useState("");
     const [anchorRect, setAnchorRect] = React.useState<DOMRect | null>(null);
+    // Error UI is suppressed while the user is actively editing, then revealed
+    // on blur if the number isn't valid. Mirrors intl-tel-input's pattern.
+    const [errorVisible, setErrorVisible] = React.useState(false);
+    const [errorId] = React.useState(
+        () => `fpc-err-${Math.random().toString(36).slice(2, 9)}`,
+    );
 
     const wrapperRef = React.useRef<HTMLDivElement>(null);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
@@ -132,10 +160,41 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
         return countries.filter((c) => countryMatches(c, q));
     }, [filter]);
 
+    // libphonenumber-js validation. Recomputed cheaply per render — the
+    // metadata lookup is O(1) once the module is loaded.
+    const combinedForValidation = React.useMemo(() => {
+        const c = findCountryByIso(iso);
+        const digits = national.replace(/\D/g, "");
+        return c && digits ? `${c.dial}${digits}` : "";
+    }, [iso, national]);
+
+    const validity = React.useMemo(
+        () => classifyNumber(combinedForValidation),
+        [combinedForValidation],
+    );
+
+    const showError =
+        errorVisible && validity !== "empty" && validity !== "valid";
+
+    const errorMessage =
+        validity === "tooShort"
+            ? t.tooShort
+            : validity === "tooLong"
+              ? t.tooLong
+              : t.invalidNumber;
+
+    const handleBlur = () => {
+        setErrorVisible(validity !== "empty" && validity !== "valid");
+    };
+    const handleFocus = () => {
+        setErrorVisible(false);
+    };
+
     return (
+        <>
         <div
             ref={wrapperRef}
-            className={`fpc-root ${props.disabled ? "fpc-disabled" : ""}`}
+            className={`fpc-root ${props.disabled ? "fpc-disabled" : ""} ${showError ? "fpc-invalid" : ""} ${validity === "valid" && national ? "fpc-valid" : ""}`}
         >
             <button
                 type="button"
@@ -156,10 +215,21 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
                 className="fpc-number"
                 value={national}
                 onChange={handleNationalChange}
+                onBlur={handleBlur}
+                onFocus={handleFocus}
                 placeholder={props.placeholder ?? t.placeholder}
                 disabled={props.disabled}
                 aria-label={t.phoneAria}
+                aria-invalid={showError || undefined}
+                aria-describedby={showError ? errorId : undefined}
             />
+
+            {validity === "valid" && national && (
+                <span className="fpc-validity fpc-validity-ok" aria-hidden="true">✓</span>
+            )}
+            {showError && (
+                <span className="fpc-validity fpc-validity-err" aria-hidden="true">!</span>
+            )}
 
             {open &&
                 anchorRect &&
@@ -206,5 +276,11 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
                     document.body,
                 )}
         </div>
+        {showError && (
+            <div id={errorId} className="fpc-error" role="alert">
+                {errorMessage}
+            </div>
+        )}
+        </>
     );
 };
