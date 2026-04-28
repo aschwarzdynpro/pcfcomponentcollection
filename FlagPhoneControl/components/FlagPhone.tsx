@@ -2,10 +2,14 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import {
     countries,
+    countryMatches,
     Country,
     DEFAULT_ISO,
     findCountryByIso,
+    Lang,
+    localizedName,
     parsePhone,
+    STRINGS,
 } from "./countries";
 import { Flag } from "./Flag";
 
@@ -14,6 +18,7 @@ export interface FlagPhoneProps {
     defaultCountry?: string | null;
     placeholder?: string | null;
     disabled?: boolean;
+    lang?: Lang;
     onChange: (value: string) => void;
 }
 
@@ -118,16 +123,13 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
         emit(iso, cleaned);
     };
 
+    const lang: Lang = props.lang ?? "en";
+    const t = STRINGS[lang];
+
     const filtered = React.useMemo(() => {
         const q = filter.trim().toLowerCase();
         if (!q) return countries;
-        return countries.filter(
-            (c) =>
-                c.name.toLowerCase().includes(q) ||
-                c.iso.toLowerCase().includes(q) ||
-                c.dial.includes(q.replace(/^\+?/, "+")) ||
-                c.dial.replace("+", "").includes(q.replace(/^\+/, "")),
-        );
+        return countries.filter((c) => countryMatches(c, q));
     }, [filter]);
 
     return (
@@ -142,7 +144,7 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
                 onClick={() => !props.disabled && setOpen((o) => !o)}
                 aria-haspopup="listbox"
                 aria-expanded={open}
-                title={`${country.name} (${country.dial})`}
+                title={`${localizedName(country, lang)} (${country.dial})`}
             >
                 <Flag iso={country.iso} className="fpc-flag" />
                 <span className="fpc-dial">{country.dial}</span>
@@ -154,9 +156,9 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
                 className="fpc-number"
                 value={national}
                 onChange={handleNationalChange}
-                placeholder={props.placeholder ?? "Phone number"}
+                placeholder={props.placeholder ?? t.placeholder}
                 disabled={props.disabled}
-                aria-label="Phone number"
+                aria-label={t.phoneAria}
             />
 
             {open &&
@@ -177,13 +179,13 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
                             ref={filterInputRef}
                             type="text"
                             className="fpc-search"
-                            placeholder="Search country or code…"
+                            placeholder={t.search}
                             value={filter}
                             onChange={(e) => setFilter(e.target.value)}
                         />
                         <ul className="fpc-list">
                             {filtered.length === 0 && (
-                                <li className="fpc-empty">No country found</li>
+                                <li className="fpc-empty">{t.empty}</li>
                             )}
                             {filtered.map((c) => (
                                 <li
@@ -194,7 +196,7 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
                                     onClick={() => handleSelect(c.iso)}
                                 >
                                     <Flag iso={c.iso} className="fpc-flag" />
-                                    <span className="fpc-option-name">{c.name}</span>
+                                    <span className="fpc-option-name">{localizedName(c, lang)}</span>
                                     <span className="fpc-option-iso">{c.iso}</span>
                                     <span className="fpc-option-dial">{c.dial}</span>
                                 </li>

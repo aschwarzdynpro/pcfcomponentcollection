@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="FlagPhone" constructor="FlagPhoneControl" version="1.0.3" display-name-key="FlagPhoneControl_Display" description-key="FlagPhoneControl_Desc" control-type="standard">
+  <control namespace="FlagPhone" constructor="FlagPhoneControl" version="1.0.4" display-name-key="FlagPhoneControl_Display" description-key="FlagPhoneControl_Desc" control-type="standard">
     <!-- The bound phone number field (Format Type = Phone Number) -->
     <property name="phoneNumber" display-name-key="phoneNumber_Display" description-key="phoneNumber_Desc" of-type="SingleLine.Phone" usage="bound" required="true" />
 
@@ -14,7 +14,7 @@
     <resources>
       <code path="index.ts" order="1"/>
       <css path="css/FlagPhoneControl.css" order="1" />
-      <resx path="strings/FlagPhoneControl.1033.resx" version="1.0.3" />
+      <resx path="strings/FlagPhoneControl.1033.resx" version="1.0.4" />
     </resources>
   </control>
 </manifest>

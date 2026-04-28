@@ -2,6 +2,7 @@ import { IInputs, IOutputs } from "./generated/ManifestTypes";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { FlagPhone } from "./components/FlagPhone";
+import { lcidToLang } from "./components/countries";
 
 export class FlagPhoneControl
     implements ComponentFramework.StandardControl<IInputs, IOutputs>
@@ -50,11 +51,14 @@ export class FlagPhoneControl
     private render(): void {
         const isDisabled = this._context.mode.isControlDisabled;
 
+        const lang = lcidToLang(this._context.userSettings?.languageId);
+
         const props = {
             value: this._value,
             defaultCountry: this._context.parameters.defaultCountry?.raw ?? null,
             placeholder: this._context.parameters.placeholder?.raw ?? null,
             disabled: isDisabled,
+            lang,
             onChange: (next: string) => {
                 if (next === this._value) return;
                 this._value = next;
