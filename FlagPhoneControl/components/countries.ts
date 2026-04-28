@@ -176,6 +176,12 @@ export function findCountryByIso(iso: string): Country | undefined {
     return countries.find(c => c.iso === upper);
 }
 
+// Pre-sort once at module load; parsePhone runs on every host update,
+// allocating + sorting 150 entries per call shows up as input lag.
+const COUNTRIES_BY_DIAL_DESC = [...countries].sort(
+    (a, b) => b.dial.length - a.dial.length,
+);
+
 /**
  * Parse a stored phone value (e.g. "+491234567" or "0049 1234 567") into
  * a country and a national subscriber number. Picks the longest matching
@@ -197,8 +203,7 @@ export function parsePhone(
 
     if (normalized.startsWith("+")) {
         const digits = normalized.slice(1);
-        const sorted = [...countries].sort((a, b) => b.dial.length - a.dial.length);
-        for (const c of sorted) {
+        for (const c of COUNTRIES_BY_DIAL_DESC) {
             const code = c.dial.slice(1);
             if (digits.startsWith(code)) {
                 return { iso: c.iso, national: digits.slice(code.length) };

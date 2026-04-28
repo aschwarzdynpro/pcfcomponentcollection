@@ -13,7 +13,7 @@ export interface FlagProps {
     title?: string;
 }
 
-export const Flag: React.FC<FlagProps> = ({ iso, className, title }) => {
+const FlagInner: React.FC<FlagProps> = ({ iso, className, title }) => {
     const upper = (iso || "").toUpperCase();
     const Svg = FLAG_MAP[upper];
     if (Svg) {
@@ -32,3 +32,7 @@ export const Flag: React.FC<FlagProps> = ({ iso, className, title }) => {
         </span>
     );
 };
+
+// SVG flags are pure functions of `iso` — memo to avoid re-rendering ~250
+// inline SVGs every keystroke when the dropdown is open.
+export const Flag = React.memo(FlagInner);

@@ -35,9 +35,18 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
     const dropdownRef = React.useRef<HTMLDivElement>(null);
     const filterInputRef = React.useRef<HTMLInputElement>(null);
 
-    // When the bound value changes from outside, sync local state
+    // Tracks the last value we emitted upstream. When the host echoes that
+    // same value back via props.value, we skip the resync below — otherwise
+    // a stale echo can overwrite characters the user has typed in the
+    // meantime, producing visible "rewinds" while typing fast.
+    const lastEmittedRef = React.useRef<string>(props.value ?? "");
+
     React.useEffect(() => {
-        const parsed = parsePhone(props.value, props.defaultCountry ?? DEFAULT_ISO);
+        const incoming = props.value ?? "";
+        if (incoming === lastEmittedRef.current) return;
+
+        const parsed = parsePhone(incoming, props.defaultCountry ?? DEFAULT_ISO);
+        lastEmittedRef.current = incoming;
         setIso(parsed.iso);
         setNational(parsed.national);
     }, [props.value, props.defaultCountry]);
@@ -92,6 +101,7 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
         const c = findCountryByIso(nextIso);
         const digits = nextNational.replace(/\D/g, "");
         const combined = c && digits ? `${c.dial}${digits}` : "";
+        lastEmittedRef.current = combined;
         props.onChange(combined);
     };
 
