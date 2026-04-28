@@ -22,8 +22,8 @@ param(
 $ErrorActionPreference = 'Continue'
 
 $solutionRoot = $PSScriptRoot
-$repoRoot     = Split-Path $solutionRoot -Parent
-$pcfRoot      = Join-Path $repoRoot 'FlagPhoneControl'
+$featureRoot  = Split-Path $solutionRoot -Parent  # ../FlagPhoneControl (wrapper)
+$pcfRoot      = Join-Path $featureRoot 'FlagPhoneControl'
 $controlOut   = Join-Path $pcfRoot 'out\controls'
 $stageRoot    = Join-Path $solutionRoot 'src\Controls\wal_FlagPhone.FlagPhoneControl'
 $binDir       = Join-Path $solutionRoot 'bin'

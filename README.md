@@ -8,7 +8,7 @@ and model-driven apps.
 | Component | Type | Purpose |
 |-----------|------|---------|
 | [DataverseCrudComponent](./DataverseCrudComponent/) | dataset | React-based CRUD UI for Dataverse datasets — list, search, create, edit, and delete records inside a model-driven form, view, or dashboard. |
-| [FlagPhoneControl](./FlagPhoneControl/) | field | International phone-number input for `SingleLine.Phone` columns with country flag selector, dial-code parsing, and trilingual UI (DE / EN / FR). |
+| [FlagPhoneControl](./FlagPhoneControl/FlagPhoneControl/) | field | International phone-number input for `SingleLine.Phone` columns with country flag selector, dial-code parsing, and trilingual UI (DE / EN / FR). |
 
 Each component has its own `README.md` with detailed features, properties,
 build commands, and integration notes.
@@ -19,7 +19,7 @@ Importable Dataverse solutions live alongside their source components:
 
 | Solution | Source | Notes |
 |----------|--------|-------|
-| [FlagPhoneControl.Solution](./FlagPhoneControl.Solution/) | `FlagPhoneControl/` | Publisher `HerbertWaldmann`, prefix `wal`. Run [`build.ps1`](./FlagPhoneControl.Solution/build.ps1) to produce unmanaged + managed zips. |
+| [FlagPhoneControl.Solution](./FlagPhoneControl/FlagPhoneControl.Solution/) | `FlagPhoneControl/FlagPhoneControl/` | Publisher `HerbertWaldmann`, prefix `wal`. Run [`build.ps1`](./FlagPhoneControl/FlagPhoneControl.Solution/build.ps1) to produce unmanaged + managed zips. |
 
 ## General installation guide
 
@@ -30,11 +30,12 @@ walkthrough (build → solution package → import → form configuration).
 
 ```
 pcfcomponentcollection/
-├── DataverseCrudComponent/     # PCF source — see folder README
-├── FlagPhoneControl/           # PCF source — see folder README
-├── FlagPhoneControl.Solution/  # Importable Dataverse solution
-├── INSTALLATION.md             # General install walkthrough
-└── README.md                   # This file
+├── DataverseCrudComponent/         # PCF source — see folder README
+├── FlagPhoneControl/               # feature folder grouping source + solution
+│   ├── FlagPhoneControl/           # PCF source
+│   └── FlagPhoneControl.Solution/  # Importable Dataverse solution
+├── INSTALLATION.md                 # General install walkthrough
+└── README.md                       # This file
 ```
 
 ## License
