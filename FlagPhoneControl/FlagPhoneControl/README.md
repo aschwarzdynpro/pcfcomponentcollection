@@ -72,8 +72,37 @@ FlagPhoneControl/
 | Property         | Type               | Usage  | Required | Description                                                               |
 |------------------|--------------------|--------|----------|---------------------------------------------------------------------------|
 | `phoneNumber`    | `SingleLine.Phone` | bound  | yes      | The Dataverse phone-number column this control is bound to.               |
-| `defaultCountry` | `SingleLine.Text`  | input  | no       | ISO 3166-1 alpha-2 country code used when the value is empty (e.g. `DE`). |
+| `defaultCountry` | `SingleLine.Text`  | input  | no       | ISO 3166-1 alpha-2 (e.g. `DE`) **or** dial code (e.g. `+49`) used as the pre-selected country when the field is empty. Overrides the user-level `usersettings.defaultcountrycode`. Leave blank to honor the user's personal setting. |
 | `placeholder`    | `SingleLine.Text`  | input  | no       | Placeholder text for the subscriber-number input. Overrides the localized default. |
+
+## 🌍 Default-country resolution
+
+When the bound field is empty, the pre-selected country is picked from the
+following sources, in order. The first one that yields a known country wins:
+
+1. **Maker-set `defaultCountry` property** — explicit form-level override.
+2. **`usersettings.defaultcountrycode`** — the value the user configured in
+   *Personal Options → "Country/Region Code Prefix"* (typically a dial code
+   like `+41`). Fetched once via `webAPI` and cached for the page lifetime.
+3. **LCID-derived country** — derived from `context.userSettings.languageId`
+   (e.g. `1031` → `DE`, `1033` → `US`, `2057` → `GB`, `1036` → `FR`,
+   `4108` → `CH`, `3084` → `CA`).
+4. **`DE`** as the final hardcoded fallback.
+
+Both the `defaultCountry` property and the user's `defaultcountrycode`
+accept either an ISO code (`DE`, `us`) or a dial code (`+49`, `41`). For
+dial codes shared by multiple countries (e.g. `+1`), the LCID is used as a
+tie-breaker so an English-US user gets `US` and an English-CA user gets `CA`.
+
+If you want a user's personal preference to take effect, **leave the
+`defaultCountry` form property empty**. The control then falls through to
+their `usersettings.defaultcountrycode`. If neither is set, it picks the
+country that matches the user's region.
+
+> **Permission note**: the `usersettings` table is normally readable by every
+> user for their own row. If the host environment denies `WebAPI` access,
+> the control falls back silently to the LCID-derived default and logs a
+> single `console.warn` so makers can diagnose the failure.
 
 ## 🎮 User Interface Features
 

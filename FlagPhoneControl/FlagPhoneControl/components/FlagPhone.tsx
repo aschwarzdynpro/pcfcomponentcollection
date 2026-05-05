@@ -10,6 +10,7 @@ import {
     Lang,
     localizedName,
     parsePhone,
+    resolveDefaultIso,
     STRINGS,
 } from "./countries";
 import { Flag } from "./Flag";
@@ -37,7 +38,12 @@ function classifyNumber(combined: string): Validity {
 
 export interface FlagPhoneProps {
     value: string | null;
+    /** Maker-supplied default (highest precedence) — ISO or dial code. */
     defaultCountry?: string | null;
+    /** User's `usersettings.defaultcountrycode` — typically a dial code. */
+    userDefaultCountry?: string | null;
+    /** LCID of the current user, used as a fallback hint. */
+    languageId?: number | null;
     placeholder?: string | null;
     disabled?: boolean;
     lang?: Lang;
@@ -45,8 +51,18 @@ export interface FlagPhoneProps {
 }
 
 export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
+    // Resolution chain: maker prop → user setting → LCID-derived → DEFAULT_ISO
+    const effectiveDefault = React.useMemo(
+        () =>
+            resolveDefaultIso(
+                [props.defaultCountry, props.userDefaultCountry],
+                props.languageId,
+            ),
+        [props.defaultCountry, props.userDefaultCountry, props.languageId],
+    );
+
     const initial = React.useMemo(
-        () => parsePhone(props.value, props.defaultCountry ?? DEFAULT_ISO),
+        () => parsePhone(props.value, effectiveDefault),
         // only reparse when the bound value identity changes
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [props.value],
@@ -78,11 +94,31 @@ export const FlagPhone: React.FC<FlagPhoneProps> = (props) => {
         const incoming = props.value ?? "";
         if (incoming === lastEmittedRef.current) return;
 
-        const parsed = parsePhone(incoming, props.defaultCountry ?? DEFAULT_ISO);
+        const parsed = parsePhone(incoming, effectiveDefault);
         lastEmittedRef.current = incoming;
         setIso(parsed.iso);
         setNational(parsed.national);
-    }, [props.value, props.defaultCountry]);
+    }, [props.value, effectiveDefault]);
+
+    // When the user's `usersettings.defaultcountrycode` arrives asynchronously
+    // after the initial render and the field is still empty, adopt it as the
+    // displayed country. We only react on the prev→next *transition* of the
+    // userDefaultCountry prop, so subsequent re-renders or manual country
+    // selections by the user are not overridden.
+    const prevUserDefaultRef = React.useRef<string | null | undefined>(
+        props.userDefaultCountry,
+    );
+    React.useEffect(() => {
+        const prev = prevUserDefaultRef.current;
+        const next = props.userDefaultCountry;
+        prevUserDefaultRef.current = next;
+        if (prev === next) return;
+        if (national || (props.value && props.value.trim())) return;
+        if (effectiveDefault && effectiveDefault !== iso) {
+            setIso(effectiveDefault);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.userDefaultCountry]);
 
     // Reposition the portaled dropdown under the trigger; keep it in sync with
     // ancestor scroll/resize so we don't drift while open.

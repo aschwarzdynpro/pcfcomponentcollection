@@ -171,6 +171,102 @@ export function lcidToLang(lcid: number | null | undefined): Lang {
     return "en";
 }
 
+/**
+ * Best-effort country derived from the regional sub-language portion of the
+ * LCID. Used as a fallback when neither the maker's `defaultCountry` prop
+ * nor `usersettings.defaultcountrycode` are configured.
+ *
+ * Returns null for languages we don't have a region mapping for.
+ */
+export function lcidToDefaultCountry(
+    lcid: number | null | undefined,
+): string | null {
+    if (!lcid) return null;
+    const map: Record<number, string> = {
+        // German variants
+        1031: "DE", 2055: "CH", 3079: "AT", 4103: "LU", 5127: "LI",
+        // English variants
+        1033: "US", 2057: "GB", 3081: "AU", 4105: "CA", 5129: "NZ",
+        6153: "IE", 7177: "ZA", 8201: "JM", 10249: "BZ", 11273: "TT",
+        // French variants
+        1036: "FR", 2060: "BE", 3084: "CA", 4108: "CH", 5132: "LU",
+        6156: "MC",
+    };
+    return map[lcid] ?? null;
+}
+
+/**
+ * Convert an arbitrary user-supplied string into an ISO country code.
+ * Accepts:
+ *   - ISO 3166-1 alpha-2 (e.g. "DE", "us", " gb ")
+ *   - Dial code with or without leading "+" (e.g. "+49", "49")
+ * Returns null if no unambiguous mapping is possible.
+ *
+ * For dial codes shared by multiple countries (e.g. +1), returns the first
+ * country we list with that code — callers that need to disambiguate
+ * should pass an LCID hint via {@link resolveDefaultIso}.
+ */
+export function stringToIso(input: string | null | undefined): string | null {
+    if (!input) return null;
+    const trimmed = input.trim();
+    if (!trimmed) return null;
+
+    // ISO 3166-1 alpha-2
+    if (/^[a-zA-Z]{2}$/.test(trimmed)) {
+        const iso = trimmed.toUpperCase();
+        return findCountryByIso(iso) ? iso : null;
+    }
+
+    // Dial code: strip non-digits, prepend "+"
+    const digits = trimmed.replace(/\D/g, "");
+    if (!digits) return null;
+    const dial = "+" + digits;
+    const matches = countries.filter((c) => c.dial === dial);
+    if (matches.length === 0) return null;
+    return matches[0].iso;
+}
+
+/**
+ * Resolve the effective default country from a precedence chain. Each
+ * candidate is tried in order; the first one that yields a known ISO code
+ * wins. For an ambiguous dial code (e.g. +1), an `lcidHint` lets us prefer
+ * the country whose region matches the user's locale.
+ */
+export function resolveDefaultIso(
+    candidates: (string | null | undefined)[],
+    lcidHint?: number | null,
+): string {
+    const hint = lcidToDefaultCountry(lcidHint);
+
+    for (const candidate of candidates) {
+        if (!candidate) continue;
+        const trimmed = candidate.trim();
+        if (!trimmed) continue;
+
+        // ISO short-circuit
+        if (/^[a-zA-Z]{2}$/.test(trimmed)) {
+            const iso = trimmed.toUpperCase();
+            if (findCountryByIso(iso)) return iso;
+            continue;
+        }
+
+        // Dial-code resolution with LCID-aware tiebreaker
+        const digits = trimmed.replace(/\D/g, "");
+        if (!digits) continue;
+        const dial = "+" + digits;
+        const matches = countries.filter((c) => c.dial === dial);
+        if (matches.length === 0) continue;
+        if (matches.length === 1) return matches[0].iso;
+        // Multiple — prefer the LCID hint country if it's among them.
+        const preferred = hint && matches.find((c) => c.iso === hint);
+        if (preferred) return preferred.iso;
+        return matches[0].iso;
+    }
+
+    // Last fallback: LCID-derived country, then global default.
+    return hint ?? DEFAULT_ISO;
+}
+
 const NAME_DE: Record<string, string> = {
     AF: "Afghanistan", AL: "Albanien", DZ: "Algerien", AD: "Andorra",
     AO: "Angola", AR: "Argentinien", AM: "Armenien", AU: "Australien",
