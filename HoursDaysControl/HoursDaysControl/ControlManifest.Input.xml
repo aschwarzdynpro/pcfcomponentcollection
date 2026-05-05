@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="WorkTime" constructor="HoursDaysControl" version="1.0.1" display-name-key="HoursDaysControl_Display" description-key="HoursDaysControl_Desc" control-type="standard">
+    <!-- The bound numeric field. Value is stored as raw hours (e.g. 12 = 1 day + 4 hours when hoursPerDay = 8). -->
+    <property name="totalHours" display-name-key="totalHours_Display" description-key="totalHours_Desc" of-type-group="numbers" usage="bound" required="true" />
+
+    <!-- Optional: number of hours that make up a workday. Defaults to 8. -->
+    <property name="hoursPerDay" display-name-key="hoursPerDay_Display" description-key="hoursPerDay_Desc" of-type="Whole.None" usage="input" required="false" />
+
+    <!-- Optional: how the bound numeric column stores the value. "auto" (default) detects Whole.Duration columns and uses minutes; everything else uses hours. -->
+    <property name="storageUnit" display-name-key="storageUnit_Display" description-key="storageUnit_Desc" of-type="Enum" usage="input" required="false" default-value="auto">
+      <value name="auto" display-name-key="storageUnit_Auto_Display" description-key="storageUnit_Auto_Desc">auto</value>
+      <value name="hours" display-name-key="storageUnit_Hours_Display" description-key="storageUnit_Hours_Desc">hours</value>
+      <value name="minutes" display-name-key="storageUnit_Minutes_Display" description-key="storageUnit_Minutes_Desc">minutes</value>
+    </property>
+
+    <type-group name="numbers">
+      <type>Whole.None</type>
+      <type>Decimal</type>
+      <type>FP</type>
+      <type>Currency</type>
+    </type-group>
+
+    <!-- resources -->
+    <resources>
+      <code path="index.ts" order="1"/>
+      <css path="css/HoursDaysControl.css" order="1" />
+      <resx path="strings/HoursDaysControl.1033.resx" version="1.0.1" />
+      <resx path="strings/HoursDaysControl.1031.resx" version="1.0.1" />
+    </resources>
+  </control>
+</manifest>

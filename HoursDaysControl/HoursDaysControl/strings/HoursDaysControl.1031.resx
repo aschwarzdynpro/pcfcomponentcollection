@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="HoursDaysControl_Display" xml:space="preserve">
+    <value>Stunden und Tage</value>
+    <comment>Anzeigename des Controls</comment>
+  </data>
+  <data name="HoursDaysControl_Desc" xml:space="preserve">
+    <value>Eingabe einer Dauer als Arbeitstage plus Stunden. Gespeichert wird die Gesamtdauer in Stunden (1 Arbeitstag = 8 Stunden, Standardwert).</value>
+    <comment>Beschreibung des Controls</comment>
+  </data>
+  <data name="totalHours_Display" xml:space="preserve">
+    <value>Gesamtstunden</value>
+    <comment>Anzeigename des gebundenen Zahlenfelds</comment>
+  </data>
+  <data name="totalHours_Desc" xml:space="preserve">
+    <value>Das Zahlenfeld, das die Gesamtdauer in Stunden speichert. Das Control zerlegt den Wert für die Anzeige in Arbeitstage + Stunden.</value>
+    <comment>Beschreibung des gebundenen Zahlenfelds</comment>
+  </data>
+  <data name="hoursPerDay_Display" xml:space="preserve">
+    <value>Stunden pro Arbeitstag</value>
+    <comment>Anzeigename der Eigenschaft "Stunden pro Tag"</comment>
+  </data>
+  <data name="hoursPerDay_Desc" xml:space="preserve">
+    <value>Wie viele Stunden ein Arbeitstag umfasst. Standardwert: 8.</value>
+    <comment>Beschreibung der Eigenschaft "Stunden pro Tag"</comment>
+  </data>
+  <data name="storageUnit_Display" xml:space="preserve">
+    <value>Speichereinheit</value>
+    <comment>Anzeigename der Override-Eigenschaft für die Speichereinheit</comment>
+  </data>
+  <data name="storageUnit_Desc" xml:space="preserve">
+    <value>Einheit, in der die gebundene Spalte den Wert speichert. "Automatisch" erkennt Whole.Duration-Spalten (Minuten) und nutzt sonst Stunden.</value>
+    <comment>Beschreibung der Override-Eigenschaft für die Speichereinheit</comment>
+  </data>
+  <data name="storageUnit_Auto_Display" xml:space="preserve">
+    <value>Automatisch</value>
+  </data>
+  <data name="storageUnit_Auto_Desc" xml:space="preserve">
+    <value>Aus dem Spaltenformat ableiten (Duration =&gt; Minuten, sonst Stunden).</value>
+  </data>
+  <data name="storageUnit_Hours_Display" xml:space="preserve">
+    <value>Stunden</value>
+  </data>
+  <data name="storageUnit_Hours_Desc" xml:space="preserve">
+    <value>Die Spalte speichert die Gesamtdauer in Stunden.</value>
+  </data>
+  <data name="storageUnit_Minutes_Display" xml:space="preserve">
+    <value>Minuten</value>
+  </data>
+  <data name="storageUnit_Minutes_Desc" xml:space="preserve">
+    <value>Die Spalte speichert die Gesamtdauer in Minuten (üblich bei Whole.Duration-Spalten).</value>
+  </data>
+</root>
