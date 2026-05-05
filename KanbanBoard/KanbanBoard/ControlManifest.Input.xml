@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="Kanban" constructor="KanbanBoard" version="1.0.0" display-name-key="KanbanBoard_Display" description-key="KanbanBoard_Desc" control-type="standard">
+    <!-- Bound dataset (the records to display as cards) -->
+    <data-set name="cards" display-name-key="cards_Display" description-key="cards_Desc"></data-set>
+
+    <!-- Logical name of the choice/status column to group by (required) -->
+    <property name="statusColumn" display-name-key="statusColumn_Display" description-key="statusColumn_Desc" of-type="SingleLine.Text" usage="input" required="true" />
+
+    <!-- Optional: logical name of the column used as card title (defaults to entity primary name column) -->
+    <property name="titleColumn" display-name-key="titleColumn_Display" description-key="titleColumn_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- Optional: logical name of the column used as card subtitle -->
+    <property name="subtitleColumn" display-name-key="subtitleColumn_Display" description-key="subtitleColumn_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- Optional: logical name of the column used as card description -->
+    <property name="descriptionColumn" display-name-key="descriptionColumn_Display" description-key="descriptionColumn_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- Allow drag-and-drop between columns. Default: true -->
+    <property name="allowDragDrop" display-name-key="allowDragDrop_Display" description-key="allowDragDrop_Desc" of-type="TwoOptions" usage="input" required="false" />
+
+    <!-- Show a "+ Add" button in each column header. Default: true -->
+    <property name="allowCreate" display-name-key="allowCreate_Display" description-key="allowCreate_Desc" of-type="TwoOptions" usage="input" required="false" />
+
+    <!-- resources -->
+    <resources>
+      <code path="index.ts" order="1"/>
+      <css path="css/KanbanBoard.css" order="1" />
+      <resx path="strings/KanbanBoard.1033.resx" version="1.0.0" />
+    </resources>
+
+    <feature-usage>
+      <uses-feature name="WebAPI" required="true" />
+      <uses-feature name="Utility" required="true" />
+    </feature-usage>
+  </control>
+</manifest>
