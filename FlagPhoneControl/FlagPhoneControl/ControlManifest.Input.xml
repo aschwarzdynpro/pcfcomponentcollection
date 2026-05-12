@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="FlagPhone" constructor="FlagPhoneControl" version="1.0.8" display-name-key="FlagPhoneControl_Display" description-key="FlagPhoneControl_Desc" control-type="standard">
+  <control namespace="FlagPhone" constructor="FlagPhoneControl" version="1.0.9" display-name-key="FlagPhoneControl_Display" description-key="FlagPhoneControl_Desc" control-type="standard">
     <!-- The bound phone number field (Format Type = Phone Number) -->
     <property name="phoneNumber" display-name-key="phoneNumber_Display" description-key="phoneNumber_Desc" of-type="SingleLine.Phone" usage="bound" required="true" />
 
@@ -10,17 +10,26 @@
     <!-- Optional placeholder text for the phone number input -->
     <property name="placeholder" display-name-key="placeholder_Display" description-key="placeholder_Desc" of-type="SingleLine.Text" usage="input" required="false" />
 
+    <!-- When true, clicking the call button also opens the Quick-Create form
+         for a Phone Call activity, pre-filled with current user (From/Owner),
+         current record (To/Regarding), Outgoing direction, and the dialed
+         number. -->
+    <property name="createPhoneCallActivity" display-name-key="createPhoneCallActivity_Display" description-key="createPhoneCallActivity_Desc" of-type="TwoOptions" usage="input" required="false" />
+
     <!-- resources -->
     <resources>
       <code path="index.ts" order="1"/>
       <css path="css/FlagPhoneControl.css" order="1" />
-      <resx path="strings/FlagPhoneControl.1033.resx" version="1.0.8" />
+      <resx path="strings/FlagPhoneControl.1033.resx" version="1.0.9" />
     </resources>
 
     <!-- Used to fetch the current user's `usersettings.defaultcountrycode`
-         so the pre-selected country honors the user's personal options. -->
+         so the pre-selected country honors the user's personal options,
+         and to resolve the current record's primary name when logging a
+         Phone Call activity. -->
     <feature-usage>
       <uses-feature name="WebAPI" required="false" />
+      <uses-feature name="Utility" required="false" />
     </feature-usage>
   </control>
 </manifest>

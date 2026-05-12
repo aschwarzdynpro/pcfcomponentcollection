@@ -90,4 +90,12 @@
     <value>Optional placeholder text for the phone number input.</value>
     <comment>Description for the placeholder property</comment>
   </data>
+  <data name="createPhoneCallActivity_Display" xml:space="preserve">
+    <value>Log Phone Call Activity</value>
+    <comment>Display name for the phone-call-activity toggle</comment>
+  </data>
+  <data name="createPhoneCallActivity_Desc" xml:space="preserve">
+    <value>If enabled, clicking the call button also opens the Quick-Create form for a Phone Call activity, pre-filled with the current user as From/Owner, the current record as To/Regarding, Outgoing direction, and the dialed number. Default: false.</value>
+    <comment>Description for the phone-call-activity toggle</comment>
+  </data>
 </root>
