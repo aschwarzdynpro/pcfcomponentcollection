@@ -170,6 +170,19 @@ export class FlagPhoneControl
                 this._value = next;
                 this._notifyOutputChanged();
             },
+            // Click-to-Dial: opens the `tel:` URL via the host's navigation
+            // API. On mobile this opens the dialer; on desktop it triggers the
+            // registered tel-handler (Teams, Skype, softphone client, …).
+            onCall: (number: string) => {
+                if (!number) return;
+                try {
+                    this._context.navigation.openUrl("tel:" + number);
+                } catch {
+                    // Fall back to a direct navigation if the host's openUrl
+                    // refuses tel: (some legacy hosts).
+                    window.open("tel:" + number, "_self");
+                }
+            },
         };
 
         ReactDOM.render(
