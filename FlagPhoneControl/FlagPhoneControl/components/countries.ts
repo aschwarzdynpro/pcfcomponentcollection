@@ -382,6 +382,8 @@ export const STRINGS: Record<Lang, {
     invalidNumber: string;
     tooShort: string;
     tooLong: string;
+    call: string;
+    callEmpty: string;
 }> = {
     en: {
         placeholder: "Phone number",
@@ -391,6 +393,8 @@ export const STRINGS: Record<Lang, {
         invalidNumber: "Invalid phone number",
         tooShort: "Number is too short",
         tooLong: "Number is too long",
+        call: "Call",
+        callEmpty: "Enter a number first",
     },
     de: {
         placeholder: "Telefonnummer",
@@ -400,6 +404,8 @@ export const STRINGS: Record<Lang, {
         invalidNumber: "Ungültige Telefonnummer",
         tooShort: "Nummer ist zu kurz",
         tooLong: "Nummer ist zu lang",
+        call: "Anrufen",
+        callEmpty: "Zuerst eine Nummer eingeben",
     },
     fr: {
         placeholder: "Numéro de téléphone",
@@ -409,6 +415,8 @@ export const STRINGS: Record<Lang, {
         invalidNumber: "Numéro de téléphone invalide",
         tooShort: "Le numéro est trop court",
         tooLong: "Le numéro est trop long",
+        call: "Appeler",
+        callEmpty: "Saisir d'abord un numéro",
     },
 };
 

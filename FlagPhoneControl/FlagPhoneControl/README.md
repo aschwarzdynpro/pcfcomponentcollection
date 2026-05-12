@@ -124,6 +124,17 @@ country that matches the user's region.
 - Stores only digits in the bound field
 - Localized placeholder (`Phone number` / `Telefonnummer` / `Numéro de téléphone`)
 
+### Click-to-Dial
+- Small phone-icon button to the right of the input
+- On click, opens the canonical `tel:+<dialcode><digits>` URL via
+  `context.navigation.openUrl`
+- On mobile this opens the native dialer; on desktop it triggers the
+  registered tel-handler (Microsoft Teams, Skype, softphone client, etc.)
+- Disabled when the field is empty; **stays enabled when the control is
+  read-only** so users can still call existing numbers on locked forms
+- Localized tooltip + `aria-label` (`Anrufen` / `Call` / `Appeler`) including
+  the actual number being dialed
+
 ## 🌐 Language Detection
 
 The display language is derived from the user's Dataverse profile language via
