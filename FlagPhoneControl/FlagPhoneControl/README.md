@@ -74,6 +74,7 @@ FlagPhoneControl/
 | `phoneNumber`    | `SingleLine.Phone` | bound  | yes      | The Dataverse phone-number column this control is bound to.               |
 | `defaultCountry` | `SingleLine.Text`  | input  | no       | ISO 3166-1 alpha-2 (e.g. `DE`) **or** dial code (e.g. `+49`) used as the pre-selected country when the field is empty. Overrides the user-level `usersettings.defaultcountrycode`. Leave blank to honor the user's personal setting. |
 | `placeholder`    | `SingleLine.Text`  | input  | no       | Placeholder text for the subscriber-number input. Overrides the localized default. |
+| `createPhoneCallActivity` | `TwoOptions` | input | no | When `true`, clicking the call button **also** opens the Quick-Create form for a Phone Call activity, pre-filled with the current user as From/Owner, the current record as To/Regarding, Outgoing direction, and the dialed number. Default: `false`. |
 
 ## 🌍 Default-country resolution
 
@@ -134,6 +135,28 @@ country that matches the user's region.
   read-only** so users can still call existing numbers on locked forms
 - Localized tooltip + `aria-label` (`Anrufen` / `Call` / `Appeler`) including
   the actual number being dialed
+
+### Phone Call activity logging (optional)
+When the `createPhoneCallActivity` property is set to `true`, the call button
+also opens the **Quick-Create form for a Phone Call activity** alongside the
+`tel:` invocation. The form is pre-filled with:
+
+| Phone Call field            | Pre-filled value                                    |
+|-----------------------------|-----------------------------------------------------|
+| `phonenumber`               | The dialed canonical E.164 number                   |
+| `directioncode`             | `Outgoing` (`true`)                                 |
+| `subject`                   | "Call to {record-name}" (localized DE/EN/FR)        |
+| `ownerid` / `from`          | The current user                                    |
+| `regardingobjectid` / `to`  | The current form's record                           |
+
+If the control is hosted outside a form context (view, dashboard, test
+harness), the regarding / to fields are left empty and the form opens with
+just the phone number, direction, and a fallback subject pre-filled.
+
+The current record's primary name is resolved via `Xrm.Page.data.entity.
+getPrimaryAttributeValue()` when available — the activity-party JSON for
+`from` / `to` will therefore display the right name in the Quick-Create form
+without an extra round-trip to the server.
 
 ## 🌐 Language Detection
 

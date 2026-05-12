@@ -7,6 +7,7 @@ export interface IInputs {
     phoneNumber: ComponentFramework.PropertyTypes.StringProperty;
     defaultCountry: ComponentFramework.PropertyTypes.StringProperty;
     placeholder: ComponentFramework.PropertyTypes.StringProperty;
+    createPhoneCallActivity: ComponentFramework.PropertyTypes.TwoOptionsProperty;
 }
 export interface IOutputs {
     phoneNumber?: string;

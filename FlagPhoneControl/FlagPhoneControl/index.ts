@@ -2,7 +2,7 @@ import { IInputs, IOutputs } from "./generated/ManifestTypes";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { FlagPhone } from "./components/FlagPhone";
-import { lcidToLang } from "./components/countries";
+import { lcidToLang, STRINGS } from "./components/countries";
 
 // Module-level cache so a single round-trip serves multiple control instances
 // on the same page (and survives within a session). The promise itself is the
@@ -151,6 +151,118 @@ export class FlagPhoneControl
         ReactDOM.unmountComponentAtNode(this._container);
     }
 
+    /**
+     * Best-effort lookup of the current record's primary name. PCF doesn't
+     * surface it directly, so we try the legacy `Xrm.Page` helper that the
+     * model-driven host injects on every form. Returns `null` when called
+     * outside a form context (e.g. view, dashboard, test harness).
+     */
+    private getCurrentRecordName(): string | null {
+        try {
+            const xrm = (window as unknown as { Xrm?: { Page?: { data?: {
+                entity?: { getPrimaryAttributeValue?: () => string };
+            } } } }).Xrm;
+            const v = xrm?.Page?.data?.entity?.getPrimaryAttributeValue?.();
+            return typeof v === "string" && v ? v : null;
+        } catch {
+            return null;
+        }
+    }
+
+    /**
+     * Opens the Quick-Create form for a Phone Call activity, pre-populated
+     * with:
+     *   - phonenumber: the dialed E.164 string
+     *   - directioncode: true (Outgoing)
+     *   - subject: "{Call to} {recordName}" (localized)
+     *   - regardingobjectid: the current record (when on a form)
+     *   - ownerid / from: the current user
+     *   - to: the current record (as activityparty)
+     *
+     * Falls back gracefully when called outside a form context: opens the
+     * form with just the phonenumber + direction pre-filled.
+     */
+    private async openPhoneCallQuickCreate(
+        number: string,
+        lang: ReturnType<typeof lcidToLang>,
+    ): Promise<void> {
+        const t = STRINGS[lang];
+        const page = (this._context as unknown as { page?: {
+            entityTypeName?: string;
+            entityId?: string;
+        } }).page;
+        const entityName = page?.entityTypeName ?? null;
+        const entityIdRaw = page?.entityId ?? null;
+        const entityId = entityIdRaw ? entityIdRaw.replace(/[{}]/g, "") : null;
+
+        const userSettings = this._context.userSettings;
+        const userIdRaw = userSettings?.userId ?? "";
+        const userId = userIdRaw.replace(/[{}]/g, "");
+        const userName = userSettings?.userName ?? "";
+
+        const recordName = this.getCurrentRecordName();
+
+        const formParameters: { [key: string]: string } = {
+            phonenumber: number,
+            directioncode: "1", // true = outgoing
+            subject: recordName
+                ? `${t.callSubjectPrefix} ${recordName}`
+                : t.callSubjectFallback,
+        };
+
+        // Owner = current user (standard lookup triplet)
+        if (userId) {
+            formParameters.ownerid = userId;
+            if (userName) formParameters.owneridname = userName;
+            formParameters.owneridtype = "systemuser";
+
+            // "From" is an activityparty (partylist). The UCI Quick-Create
+            // accepts a JSON-array of party references for these.
+            formParameters.from = JSON.stringify([
+                {
+                    id: userId,
+                    name: userName,
+                    entityType: "systemuser",
+                },
+            ]);
+        }
+
+        // Regarding + To = current record
+        if (entityName && entityId) {
+            formParameters.regardingobjectid = entityId;
+            formParameters.regardingobjectidtype = entityName;
+            if (recordName) {
+                formParameters.regardingobjectidname = recordName;
+            }
+
+            formParameters.to = JSON.stringify([
+                {
+                    id: entityId,
+                    name: recordName ?? "",
+                    entityType: entityName,
+                },
+            ]);
+        }
+
+        try {
+            await this._context.navigation.openForm(
+                {
+                    entityName: "phonecall",
+                    useQuickCreateForm: true,
+                },
+                formParameters,
+            );
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.warn(
+                "FlagPhoneControl: could not open Phone Call quick-create form. " +
+                    "Make sure the user has create permission on the Phone Call " +
+                    "entity and that a Quick-Create form is published.",
+                e,
+            );
+        }
+    }
+
     private render(): void {
         const isDisabled = this._context.mode.isControlDisabled;
         const userSettings = this._context.userSettings;
@@ -173,6 +285,9 @@ export class FlagPhoneControl
             // Click-to-Dial: opens the `tel:` URL via the host's navigation
             // API. On mobile this opens the dialer; on desktop it triggers the
             // registered tel-handler (Teams, Skype, softphone client, …).
+            // When `createPhoneCallActivity` is enabled, we *also* open the
+            // Phone Call activity Quick-Create form pre-filled with the
+            // current user + record.
             onCall: (number: string) => {
                 if (!number) return;
                 try {
@@ -181,6 +296,12 @@ export class FlagPhoneControl
                     // Fall back to a direct navigation if the host's openUrl
                     // refuses tel: (some legacy hosts).
                     window.open("tel:" + number, "_self");
+                }
+                if (
+                    this._context.parameters.createPhoneCallActivity?.raw ===
+                    true
+                ) {
+                    void this.openPhoneCallQuickCreate(number, lang);
                 }
             },
         };

@@ -43,6 +43,26 @@ Rufnummer. Gespeichert wird der Wert kanonisch im E.164-Stil
 - Bei fehlendem Eingabe-Wert deaktiviert; Fallback auf `window.open(tel:…)`
   falls der Host die `openUrl`-API ablehnt
 
+### Telefonanruf-Aktivität anlegen (optional)
+Wenn die Property `createPhoneCallActivity` auf `true` gesetzt ist, öffnet
+der Call-Button **zusätzlich** zum `tel:`-Aufruf das Quick-Create-Formular
+für eine Telefonanruf-Aktivität (`phonecall`). Vorbefüllt sind:
+
+| Phone-Call-Feld             | Vorbelegung                                          |
+|-----------------------------|------------------------------------------------------|
+| `phonenumber`               | Die gewählte kanonische E.164-Nummer                |
+| `directioncode`             | `Ausgehend` (`true`)                                |
+| `subject`                   | „Anruf an {Datensatzname}" (lokalisiert DE/EN/FR)   |
+| `ownerid` / `from`          | Aktueller Benutzer                                   |
+| `regardingobjectid` / `to`  | Aktueller Datensatz                                  |
+
+Außerhalb eines Formular-Kontextes (View, Dashboard, Test-Harness) bleibt
+Regarding/To leer; vorgefüllt werden dann nur Nummer, Richtung und ein
+Fallback-Betreff. Der Primärname des aktuellen Datensatzes wird via
+`Xrm.Page.data.entity.getPrimaryAttributeValue()` aufgelöst, sofern
+verfügbar — sonst zeigt das Lookup nur die GUID, der Datensatz-Bezug
+bleibt aber korrekt verknüpft.
+
 ### Mehrsprachigkeit (DE / EN / FR)
 - Wird automatisch aus der User-Sprache (`userSettings.languageId`) abgeleitet
 - Übersetzt sind: Ländername im Dropdown, Platzhaltertexte, Suchhinweis,
@@ -64,11 +84,12 @@ ISO-Codes (`DE`) oder Vorwahlen (`+49`).
 
 ## Konfigurations-Properties
 
-| Property         | Pflicht | Beschreibung |
-|------------------|---------|--------------|
-| `phoneNumber`    | ja      | Gebundene Phone-Spalte |
-| `defaultCountry` | nein    | ISO-Code oder Vorwahl als Override (leer lassen, damit User-Setting greift) |
-| `placeholder`    | nein    | Eigener Platzhaltertext (überschreibt die lokalisierte Vorgabe) |
+| Property                  | Pflicht | Beschreibung |
+|---------------------------|---------|--------------|
+| `phoneNumber`             | ja      | Gebundene Phone-Spalte |
+| `defaultCountry`          | nein    | ISO-Code oder Vorwahl als Override (leer lassen, damit User-Setting greift) |
+| `placeholder`             | nein    | Eigener Platzhaltertext (überschreibt die lokalisierte Vorgabe) |
+| `createPhoneCallActivity` | nein    | Boolean. Wenn `true`, öffnet der Call-Button zusätzlich das Quick-Create-Formular für eine Telefonanruf-Aktivität (vorbefüllt: Owner/From = aktueller User, To/Regarding = aktueller Datensatz, Direction = Ausgehend, Phone Number = gewählte Nummer). Default: `false`. |
 
 ## Technisches
 
@@ -77,7 +98,7 @@ ISO-Codes (`DE`) oder Vorwahlen (`+49`).
   (`country-flag-icons`) und `libphonenumber-js/min`
 - **Keine externen CDN/Internet-Abhängigkeiten** — funktioniert in
   air-gapped Tenants
-- **Solution-Version:** `1.0.6.0`, **Control-Version:** `1.0.6`,
+- **Solution-Version:** `1.0.9.0`, **Control-Version:** `1.0.9`,
   Publisher `HerbertWaldmann`, Prefix `wal`
 - **Unique Name:** `wal_FlagPhone.FlagPhoneControl`
 

@@ -384,6 +384,10 @@ export const STRINGS: Record<Lang, {
     tooLong: string;
     call: string;
     callEmpty: string;
+    /** Subject prefix when logging the Phone Call activity. Followed by " <recordName>" if available. */
+    callSubjectPrefix: string;
+    /** Fallback subject when the current record's name can't be resolved. */
+    callSubjectFallback: string;
 }> = {
     en: {
         placeholder: "Phone number",
@@ -395,6 +399,8 @@ export const STRINGS: Record<Lang, {
         tooLong: "Number is too long",
         call: "Call",
         callEmpty: "Enter a number first",
+        callSubjectPrefix: "Call to",
+        callSubjectFallback: "Phone call",
     },
     de: {
         placeholder: "Telefonnummer",
@@ -406,6 +412,8 @@ export const STRINGS: Record<Lang, {
         tooLong: "Nummer ist zu lang",
         call: "Anrufen",
         callEmpty: "Zuerst eine Nummer eingeben",
+        callSubjectPrefix: "Anruf an",
+        callSubjectFallback: "Telefonanruf",
     },
     fr: {
         placeholder: "Numéro de téléphone",
@@ -417,6 +425,8 @@ export const STRINGS: Record<Lang, {
         tooLong: "Le numéro est trop long",
         call: "Appeler",
         callEmpty: "Saisir d'abord un numéro",
+        callSubjectPrefix: "Appel vers",
+        callSubjectFallback: "Appel téléphonique",
     },
 };
 
