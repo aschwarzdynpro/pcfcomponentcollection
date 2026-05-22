@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <manifest>
-  <control namespace="Lookup" constructor="FuzzyLookupControl" version="1.0.0" display-name-key="FuzzyLookupControl_Display" description-key="FuzzyLookupControl_Desc" control-type="standard" api-version="1.3.18">
+  <control namespace="Lookup" constructor="FuzzyLookupControl" version="1.0.1" display-name-key="FuzzyLookupControl_Display" description-key="FuzzyLookupControl_Desc" control-type="standard" api-version="1.3.18">
     <property name="selectedItem" display-name-key="selectedItem_Display" description-key="selectedItem_Desc" of-type="Lookup.Simple" usage="bound" required="true"/>
     <property name="column1" display-name-key="column1_Display" description-key="column1_Desc" of-type="SingleLine.Text" usage="input" required="false"/>
     <property name="column2" display-name-key="column2_Display" description-key="column2_Desc" of-type="SingleLine.Text" usage="input" required="false"/>
@@ -14,9 +14,9 @@
     <resources>
       <code path="bundle.js" order="1"/>
       <css path="css/FuzzyLookupControl.css" order="1"/>
-      <resx path="strings/FuzzyLookupControl.1033.resx" version="1.0.0"/>
-      <resx path="strings/FuzzyLookupControl.1031.resx" version="1.0.0"/>
-      <resx path="strings/FuzzyLookupControl.1036.resx" version="1.0.0"/>
+      <resx path="strings/FuzzyLookupControl.1033.resx" version="1.0.1"/>
+      <resx path="strings/FuzzyLookupControl.1031.resx" version="1.0.1"/>
+      <resx path="strings/FuzzyLookupControl.1036.resx" version="1.0.1"/>
     </resources>
     <feature-usage>
       <uses-feature name="WebAPI" required="true"/>
