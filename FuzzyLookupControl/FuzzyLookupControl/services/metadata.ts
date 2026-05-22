@@ -30,11 +30,11 @@ interface PcfUtility {
 }
 
 interface PcfWebApi {
-    retrieveRecord?: (
+    retrieveMultipleRecords?: (
         entityType: string,
-        id: string,
-        options?: string,
-    ) => Promise<Record<string, unknown>>;
+        options: string,
+        maxPageSize?: number,
+    ) => Promise<{ entities: Record<string, unknown>[] }>;
 }
 
 export interface FetchMetadataInput {
@@ -83,15 +83,19 @@ export async function fetchTargetMetadata(
         }
     }
 
-    // 2. Web API EntityDefinitions
-    if (webApi?.retrieveRecord) {
+    // 2. Web API EntityDefinitions — use retrieveMultipleRecords with a
+    //    LogicalName filter. (retrieveRecord refuses non-GUID identifiers
+    //    even when EntityDefinition supports alternate keys.)
+    if (webApi?.retrieveMultipleRecords) {
         try {
-            const rec = await webApi.retrieveRecord(
+            const safe = entityName.replace(/'/g, "''");
+            const result = await webApi.retrieveMultipleRecords(
                 "EntityDefinition",
-                `LogicalName='${entityName}'`,
-                "?$select=PrimaryNameAttribute",
+                `?$select=PrimaryNameAttribute&$filter=LogicalName eq '${safe}'`,
+                1,
             );
-            const primary = (rec as { PrimaryNameAttribute?: string }).PrimaryNameAttribute;
+            const primary = (result.entities?.[0] as { PrimaryNameAttribute?: string } | undefined)
+                ?.PrimaryNameAttribute;
             if (primary) {
                 return {
                     primaryName: primary,
@@ -102,7 +106,7 @@ export async function fetchTargetMetadata(
             }
         } catch (e) {
             // eslint-disable-next-line no-console
-            console.debug(
+            console.warn(
                 "FuzzyLookupControl: EntityDefinitions Web API failed for " +
                     entityName + ", falling back to hardcoded 'name'.",
                 e,

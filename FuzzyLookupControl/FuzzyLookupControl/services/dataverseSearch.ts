@@ -286,7 +286,32 @@ export async function searchRecords(
     }
     try {
         const records = await runSearchQuery(opts);
-        return { records, source: "search" };
+        if (records.length > 0) {
+            return { records, source: "search" };
+        }
+        // Search returned 0 — typically because the target table is not
+        // enabled for Dataverse Search in this environment. In that case
+        // searchquery responds with `Value: []` instead of an error, so we
+        // try the OData fallback ourselves; if *that* finds something, we
+        // know the table is searchable via OData but missing from the
+        // search index and surface the banner. If OData is also empty we
+        // accept the original "0 hits" and stay in search mode.
+        // eslint-disable-next-line no-console
+        console.log(
+            "FuzzyLookupControl: searchquery returned 0 — probing OData " +
+                "contains() in case the table is not Dataverse-Search-indexed.",
+        );
+        const odata = await runODataFallback(webApi, opts);
+        if (odata.length > 0) {
+            return {
+                records: odata,
+                source: "odata",
+                fallbackReason:
+                    "Dataverse Search returned 0 results; OData found matches. " +
+                    "Check that the target table is enabled for Dataverse Search.",
+            };
+        }
+        return { records: [], source: "search" };
     } catch (e) {
         if ((e as { name?: string }).name === "AbortError") throw e;
         const reason = e instanceof Error ? e.message : String(e);
