@@ -70,16 +70,26 @@ function escapeLucene(term: string): string {
 }
 
 /**
- * Build the Lucene query string. We append `~` to every token so each token
- * matches with edit distance up to 2 (Lucene's max). Tokens of length < 4
- * are left exact: fuzzy on short tokens produces too much noise.
+ * Build the Lucene query string. Two transforms per token:
+ *
+ *   - prefix wildcard `token*` — gives the typeahead UX users expect
+ *     (`nym` matches `Nymphenburg`). Without this, Lucene only matches
+ *     exact whole-word tokens in the index.
+ *   - fuzzy `token~` (edit distance up to 2) for tokens ≥ 4 chars — gives
+ *     typo tolerance (`mitcrosoft~` matches `microsoft`). Skipped for short
+ *     tokens because fuzzy on 2–3 chars matches almost anything.
+ *
+ * Both forms are combined with Lucene's default OR so a record matches via
+ * either path. Tokens are space-joined which Lucene interprets as OR as well.
  */
 function buildLuceneQuery(term: string): string {
     const tokens = term.trim().split(/\s+/).filter((t) => t.length > 0);
     return tokens
         .map((t) => {
             const escaped = escapeLucene(t);
-            return t.length >= 4 ? `${escaped}~` : escaped;
+            return t.length >= 4
+                ? `(${escaped}* OR ${escaped}~)`
+                : `${escaped}*`;
         })
         .join(" ");
 }
