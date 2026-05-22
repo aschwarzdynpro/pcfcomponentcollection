@@ -109,9 +109,27 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
         [sections],
     );
 
-    // Debounced search.
+    // Keep the latest webApi accessible without putting it in the effect's
+    // dep array — PCF hands us a *new* `context.webAPI` reference on every
+    // internal render, so including it there would cancel the debounce
+    // timer before it ever fires and the search would never actually run.
+    const webApiRef = React.useRef(webApi);
+    React.useEffect(() => {
+        webApiRef.current = webApi;
+    }, [webApi]);
+
+    // Debounced search. Re-runs only when the inputs that change *what* gets
+    // searched change — never just because the host swapped the webAPI ref.
     React.useEffect(() => {
         const trimmed = term.trim();
+        // eslint-disable-next-line no-console
+        console.debug("FuzzyLookupControl effect", {
+            term: trimmed,
+            targetEntity,
+            columns,
+            primaryName,
+            pageSize,
+        });
         if (debounceRef.current !== null) {
             window.clearTimeout(debounceRef.current);
             debounceRef.current = null;
@@ -129,7 +147,7 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
         debounceRef.current = window.setTimeout(() => {
             const ctrl = new AbortController();
             abortRef.current = ctrl;
-            searchRecords(webApi, {
+            searchRecords(webApiRef.current, {
                 term: trimmed,
                 targetEntity,
                 columns,
@@ -159,7 +177,7 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
                 debounceRef.current = null;
             }
         };
-    }, [term, targetEntity, columns, primaryName, pageSize, webApi]);
+    }, [term, targetEntity, columns, primaryName, pageSize]);
 
     // Close the dropdown when the user clicks outside the control.
     React.useEffect(() => {
