@@ -55,12 +55,17 @@ export class FuzzyLookupControl
         // Resolve metadata (primary name + column display names). Render once
         // we know the primaryName so column 0 is correctly identified even when
         // the maker left every column input blank.
-        const utility = (context as unknown as { utils?: unknown; utility?: unknown }).utility as
-            | Parameters<typeof fetchTargetMetadata>[0]
+        const utility = (context as unknown as { utility?: unknown }).utility as
+            | { getEntityMetadata?: (...args: unknown[]) => Promise<unknown> }
             | undefined;
 
         const meta = this._targetEntity
-            ? await fetchTargetMetadata(utility, this._targetEntity, rawCols)
+            ? await fetchTargetMetadata({
+                  utility: utility as Parameters<typeof fetchTargetMetadata>[0]["utility"],
+                  webApi: context.webAPI as Parameters<typeof fetchTargetMetadata>[0]["webApi"],
+                  entityName: this._targetEntity,
+                  requestedColumns: rawCols,
+              })
             : {
                   primaryName: "name",
                   columnDisplayNames: Object.fromEntries(rawCols.map((c) => [c, c])),
@@ -73,6 +78,22 @@ export class FuzzyLookupControl
         this._columns = orderedCols.slice(0, 4);
         this._columnHeaders = this._columns.map((c) => meta.columnDisplayNames[c] ?? c);
         this._metadataLoaded = true;
+
+        // Diagnostic line — visible exactly once per control instance so the
+        // maker can verify which target table + columns the control resolved
+        // before the first keystroke. Removed once the v2 telemetry pipeline
+        // lands.
+        // eslint-disable-next-line no-console
+        console.info(
+            "FuzzyLookupControl ready",
+            {
+                target: this._targetEntity,
+                primaryName: this._primaryName,
+                columns: this._columns,
+                columnHeaders: this._columnHeaders,
+                configuredColumns: rawCols,
+            },
+        );
 
         this.render();
     }

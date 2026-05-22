@@ -143,6 +143,14 @@ async function runSearchQuery(
     };
 
     const url = `${getClientUrl()}/api/data/v9.2/searchquery`;
+    // eslint-disable-next-line no-console
+    console.debug("FuzzyLookupControl searchquery →", {
+        url,
+        target: opts.targetEntity,
+        term: opts.term,
+        lucene,
+        columns: opts.columns,
+    });
     const res = await fetch(url, {
         method: "POST",
         credentials: "include",
@@ -173,6 +181,11 @@ async function runSearchQuery(
     }
 
     const items = inner.Value ?? [];
+    // eslint-disable-next-line no-console
+    console.debug(
+        `FuzzyLookupControl searchquery ← ${items.length} result(s)`,
+        items.slice(0, 3).map((i) => ({ id: i.Id, name: i.EntityName, score: i.Score, attrs: i.Attributes })),
+    );
     return items.map((it) => {
         const columns = flattenAttributes(it.Attributes ?? {}, opts.columns);
         const highlightsRaw = it.Highlights ?? {};

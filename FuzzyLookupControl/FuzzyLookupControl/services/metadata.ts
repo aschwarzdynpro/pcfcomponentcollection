@@ -1,59 +1,116 @@
 // Fetches the target entity's primary-name attribute and the display names
-// for the configured columns. We use the Utility API for the entity-level
-// metadata (cheap, single round-trip) and the OData EntityDefinitions endpoint
-// for per-attribute display names when needed.
+// for the configured columns. We try three sources in order, because PCF
+// hosts differ in which APIs they expose and which return the data we want:
+//
+//   1. `Xrm.Utility.getEntityMetadata` — fastest, returns both PrimaryName and
+//      Attributes metadata in one round-trip when available.
+//   2. Web API `EntityDefinitions(LogicalName='<entity>')` — guaranteed to
+//      work as long as the user has read access to the table; this is the
+//      fallback that actually fires for most custom tables.
+//   3. Hardcoded `"name"` — last resort. The control still works for OOB
+//      tables but will silently search the wrong column for custom tables
+//      with non-default primaries (`wal_name`, `cr123_displayname`, …).
 
 export interface TargetMetadata {
-    primaryName: string;          // e.g. "name" for account, "fullname" for contact
+    primaryName: string;
     columnDisplayNames: Record<string, string>;
 }
 
 interface PcfUtility {
-    getEntityMetadata: (
+    getEntityMetadata?: (
         entityName: string,
         attributes?: string[],
     ) => Promise<{
-        PrimaryNameAttribute: string;
+        PrimaryNameAttribute?: string;
         Attributes?: {
-            get: (logicalName: string) => { DisplayName?: string } | undefined;
+            get?: (logicalName: string) => { DisplayName?: string } | undefined;
             getAll?: () => { LogicalName: string; DisplayName: string }[];
         };
     }>;
 }
 
-/**
- * Returns the target entity's primary name attribute plus display-name
- * lookups for every column the maker configured.
- *
- * Falls back to title-casing the logical name when getEntityMetadata is not
- * available (offline / test harness).
- */
+interface PcfWebApi {
+    retrieveRecord?: (
+        entityType: string,
+        id: string,
+        options?: string,
+    ) => Promise<Record<string, unknown>>;
+}
+
+export interface FetchMetadataInput {
+    utility: PcfUtility | undefined;
+    webApi: PcfWebApi | undefined;
+    entityName: string;
+    requestedColumns: string[];
+}
+
 export async function fetchTargetMetadata(
-    utility: PcfUtility | undefined,
-    entityName: string,
-    requestedColumns: string[],
+    input: FetchMetadataInput,
 ): Promise<TargetMetadata> {
-    const fallback = (): TargetMetadata => ({
-        primaryName: "name",
+    const { utility, webApi, entityName, requestedColumns } = input;
+
+    const lastResort = (primary = "name"): TargetMetadata => ({
+        primaryName: primary,
         columnDisplayNames: Object.fromEntries(
             requestedColumns.map((c) => [c, titleCase(c)]),
         ),
     });
 
-    if (!utility?.getEntityMetadata) return fallback();
+    if (!entityName) return lastResort();
 
-    try {
-        const meta = await utility.getEntityMetadata(entityName, requestedColumns);
-        const primaryName = meta.PrimaryNameAttribute || "name";
-        const columnDisplayNames: Record<string, string> = {};
-        for (const c of requestedColumns) {
-            const a = meta.Attributes?.get(c);
-            columnDisplayNames[c] = a?.DisplayName || titleCase(c);
+    // 1. Xrm.Utility.getEntityMetadata
+    if (utility?.getEntityMetadata) {
+        try {
+            const meta = await utility.getEntityMetadata(entityName, requestedColumns);
+            if (meta?.PrimaryNameAttribute) {
+                const columnDisplayNames: Record<string, string> = {};
+                for (const c of requestedColumns) {
+                    const a = meta.Attributes?.get?.(c);
+                    columnDisplayNames[c] = a?.DisplayName || titleCase(c);
+                }
+                return {
+                    primaryName: meta.PrimaryNameAttribute,
+                    columnDisplayNames,
+                };
+            }
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.debug(
+                "FuzzyLookupControl: Utility.getEntityMetadata failed for " +
+                    entityName + ", falling back to EntityDefinitions Web API.",
+                e,
+            );
         }
-        return { primaryName, columnDisplayNames };
-    } catch {
-        return fallback();
     }
+
+    // 2. Web API EntityDefinitions
+    if (webApi?.retrieveRecord) {
+        try {
+            const rec = await webApi.retrieveRecord(
+                "EntityDefinition",
+                `LogicalName='${entityName}'`,
+                "?$select=PrimaryNameAttribute",
+            );
+            const primary = (rec as { PrimaryNameAttribute?: string }).PrimaryNameAttribute;
+            if (primary) {
+                return {
+                    primaryName: primary,
+                    columnDisplayNames: Object.fromEntries(
+                        requestedColumns.map((c) => [c, titleCase(c)]),
+                    ),
+                };
+            }
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.debug(
+                "FuzzyLookupControl: EntityDefinitions Web API failed for " +
+                    entityName + ", falling back to hardcoded 'name'.",
+                e,
+            );
+        }
+    }
+
+    return lastResort();
 }
 
 function titleCase(logical: string): string {
