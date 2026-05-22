@@ -12,13 +12,6 @@ interface LookupPropertyRaw {
     entityType: string;
 }
 
-// The TS type generated for `Lookup.Simple` doesn't expose getTargetEntityType
-// directly — it's on the runtime property bag. We reach for it loosely.
-interface LookupPropertyMeta {
-    getTargetEntityType?: () => string;
-    Target?: string;
-}
-
 export class FuzzyLookupControl
     implements ComponentFramework.StandardControl<IInputs, IOutputs>
 {
@@ -132,21 +125,50 @@ export class FuzzyLookupControl
     private readTargetEntity(
         context: ComponentFramework.Context<IInputs>,
     ): string {
-        // Lookup.Simple exposes the target on the parameter's attribute bag.
-        // We dig in loosely because the generated TS types don't cover this.
-        const attrs = (context.parameters.selectedItem as unknown as {
-            attributes?: LookupPropertyMeta;
+        // The Lookup.Simple property surfaces the target table in several
+        // places depending on UCI version. Probe them in priority order:
+        //   1. `selectedItem.getTargetEntityType()` — the standard PCF API
+        //      shown in the official LookupSimpleControl sample.
+        //   2. `selectedItem.attributes.Targets[0]` — `LookupAttributeMetadata`
+        //      exposes the allowed targets as an array (plural). For
+        //      Lookup.Simple it always has exactly one entry.
+        //   3. `selectedItem.raw[0].entityType` — present once a value is
+        //      selected; useful in unit-test harnesses where (1) and (2) are
+        //      not mocked.
+        const prop = context.parameters.selectedItem as unknown as {
             getTargetEntityType?: () => string;
-            Target?: string;
-        });
-        const fromMethod = attrs.attributes?.getTargetEntityType?.();
+            attributes?: { Targets?: string[]; Target?: string };
+            raw?: LookupPropertyRaw[];
+        };
+
+        const fromMethod = prop.getTargetEntityType?.();
         if (fromMethod) return fromMethod;
-        const fromAttr = attrs.attributes?.Target;
-        if (typeof fromAttr === "string" && fromAttr) return fromAttr;
-        // Some hosts surface the target on `.raw[0].entityType` even when
-        // unselected (with a sentinel empty id). Use that as a final fallback.
-        const raw = (context.parameters.selectedItem?.raw as unknown as LookupPropertyRaw[] | undefined);
-        return raw?.[0]?.entityType ?? "";
+
+        const targets = prop.attributes?.Targets;
+        if (Array.isArray(targets) && targets.length > 0 && targets[0]) {
+            return targets[0];
+        }
+
+        const singleTarget = prop.attributes?.Target;
+        if (typeof singleTarget === "string" && singleTarget) {
+            return singleTarget;
+        }
+
+        const fromRaw = prop.raw?.[0]?.entityType;
+        if (typeof fromRaw === "string" && fromRaw) return fromRaw;
+
+        // No path worked — emit a diagnostic so the maker can see exactly what
+        // shape the PCF host returned.
+        // eslint-disable-next-line no-console
+        console.warn(
+            "FuzzyLookupControl: could not resolve target table for the bound " +
+                "Lookup column. The control will not search until this is fixed. " +
+                "selectedItem keys:",
+            Object.keys(prop ?? {}),
+            "attributes keys:",
+            Object.keys(prop?.attributes ?? {}),
+        );
+        return "";
     }
 
     private async openQuickCreate(): Promise<void> {

@@ -265,6 +265,12 @@ export async function searchRecords(
     if (!opts.term.trim()) {
         return { records: [], source: "search" };
     }
+    if (!opts.targetEntity) {
+        // No target table — would only produce an "Entity name is null" UCI
+        // error in the OData fallback. Caller already logs why; just return
+        // empty so the dropdown shows "No matches" instead of throwing.
+        return { records: [], source: "search" };
+    }
     try {
         const records = await runSearchQuery(opts);
         return { records, source: "search" };
