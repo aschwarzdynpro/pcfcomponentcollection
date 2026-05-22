@@ -144,7 +144,7 @@ async function runSearchQuery(
 
     const url = `${getClientUrl()}/api/data/v9.2/searchquery`;
     // eslint-disable-next-line no-console
-    console.debug("FuzzyLookupControl searchquery →", {
+    console.log("FuzzyLookupControl searchquery →", {
         url,
         target: opts.targetEntity,
         term: opts.term,
@@ -182,7 +182,7 @@ async function runSearchQuery(
 
     const items = inner.Value ?? [];
     // eslint-disable-next-line no-console
-    console.debug(
+    console.log(
         `FuzzyLookupControl searchquery ← ${items.length} result(s)`,
         items.slice(0, 3).map((i) => ({ id: i.Id, name: i.EntityName, score: i.Score, attrs: i.Attributes })),
     );

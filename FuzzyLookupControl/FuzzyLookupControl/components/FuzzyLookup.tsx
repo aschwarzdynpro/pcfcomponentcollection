@@ -123,7 +123,7 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
     React.useEffect(() => {
         const trimmed = term.trim();
         // eslint-disable-next-line no-console
-        console.debug("FuzzyLookupControl effect", {
+        console.log("FuzzyLookupControl effect", {
             term: trimmed,
             targetEntity,
             columns,
