@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="FuzzyLookupControl_Display" xml:space="preserve">
+    <value>Recherche floue</value>
+  </data>
+  <data name="FuzzyLookupControl_Desc" xml:space="preserve">
+    <value>Remplacement du contrôle Lookup standard. Utilise Dataverse Search (Lucene avec tolérance aux fautes de frappe) pour la saisie semi-automatique, affiche jusqu'à quatre colonnes configurables par résultat, et prend en charge la création rapide intégrée.</value>
+  </data>
+  <data name="selectedItem_Display" xml:space="preserve">
+    <value>Enregistrement sélectionné</value>
+  </data>
+  <data name="selectedItem_Desc" xml:space="preserve">
+    <value>La colonne Lookup liée. La table cible est récupérée depuis la définition de la colonne.</value>
+  </data>
+  <data name="column1_Display" xml:space="preserve">
+    <value>Colonne 1 (principale)</value>
+  </data>
+  <data name="column1_Desc" xml:space="preserve">
+    <value>Nom logique de la première colonne du panneau de suggestions. Laisser vide pour utiliser l'attribut Nom principal de la table cible.</value>
+  </data>
+  <data name="column2_Display" xml:space="preserve">
+    <value>Colonne 2</value>
+  </data>
+  <data name="column2_Desc" xml:space="preserve">
+    <value>Optionnel. Nom logique de la deuxième colonne du panneau de suggestions.</value>
+  </data>
+  <data name="column3_Display" xml:space="preserve">
+    <value>Colonne 3</value>
+  </data>
+  <data name="column3_Desc" xml:space="preserve">
+    <value>Optionnel. Nom logique de la troisième colonne du panneau de suggestions.</value>
+  </data>
+  <data name="column4_Display" xml:space="preserve">
+    <value>Colonne 4</value>
+  </data>
+  <data name="column4_Desc" xml:space="preserve">
+    <value>Optionnel. Nom logique de la quatrième colonne du panneau de suggestions.</value>
+  </data>
+  <data name="pageSize_Display" xml:space="preserve">
+    <value>Taille de page</value>
+  </data>
+  <data name="pageSize_Desc" xml:space="preserve">
+    <value>Nombre maximum de suggestions par recherche. De 1 à 50 ; valeur par défaut 25.</value>
+  </data>
+  <data name="placeholder_Display" xml:space="preserve">
+    <value>Texte d'invite</value>
+  </data>
+  <data name="placeholder_Desc" xml:space="preserve">
+    <value>Texte d'invite affiché tant qu'aucun enregistrement n'est sélectionné.</value>
+  </data>
+  <data name="enableQuickCreate_Display" xml:space="preserve">
+    <value>Activer la création rapide</value>
+  </data>
+  <data name="enableQuickCreate_Desc" xml:space="preserve">
+    <value>Activé (par défaut) : le menu déroulant affiche un bouton « + Nouveau » qui ouvre le formulaire de création rapide de la table cible. Le nouvel enregistrement est sélectionné automatiquement après l'enregistrement.</value>
+  </data>
+  <data name="enableFavorites_Display" xml:space="preserve">
+    <value>Activer les favoris</value>
+  </data>
+  <data name="enableFavorites_Desc" xml:space="preserve">
+    <value>Activé : les utilisateurs peuvent épingler des enregistrements aux favoris. Les favoris apparaissent au-dessus des résultats de recherche. Stockés par utilisateur dans le localStorage du navigateur ; aucun impact sur le schéma.</value>
+  </data>
+  <data name="enableRecentlyUsed_Display" xml:space="preserve">
+    <value>Activer Récemment utilisés</value>
+  </data>
+  <data name="enableRecentlyUsed_Desc" xml:space="preserve">
+    <value>Activé : le menu déroulant affiche les enregistrements récemment sélectionnés par l'utilisateur. Stockés par utilisateur dans le localStorage du navigateur ; aucun impact sur le schéma.</value>
+  </data>
+</root>

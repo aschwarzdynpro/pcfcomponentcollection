@@ -1,0 +1,261 @@
+/* FuzzyLookupControl — visual style is intentionally close to the UCI
+   Lookup control so it blends into existing forms. Uses CSS variables so
+   makers can re-skin per-form via custom CSS web resources if needed. */
+
+.flc-host-root {
+  --flc-bg: #ffffff;
+  --flc-bg-hover: #f3f2f1;
+  --flc-bg-active: #edebe9;
+  --flc-border: #8a8886;
+  --flc-border-focus: #0078d4;
+  --flc-text: #201f1e;
+  --flc-text-muted: #605e5c;
+  --flc-accent: #0078d4;
+  --flc-mark-bg: #fff4ce;
+  --flc-section-header-bg: #faf9f8;
+  --flc-banner-bg: #fff4ce;
+  --flc-banner-text: #5d4a00;
+  --flc-disabled-bg: #f3f2f1;
+  --flc-fav-on: #ffaa44;
+
+  display: block;
+  width: 100%;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  color: var(--flc-text);
+}
+
+.flc-host {
+  position: relative;
+  width: 100%;
+}
+
+.flc-input-wrap {
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+  border: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  padding: 2px 4px;
+  cursor: text;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+
+.flc-input-wrap:hover {
+  border-bottom-color: var(--flc-border);
+}
+
+.flc-input-wrap:focus-within {
+  border-color: var(--flc-border-focus);
+  background: var(--flc-bg);
+}
+
+.flc-input-wrap.is-disabled {
+  background: var(--flc-disabled-bg);
+  cursor: not-allowed;
+}
+
+.flc-input {
+  flex: 1 1 auto;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  min-width: 0;
+  padding: 4px 0;
+}
+
+.flc-input::placeholder {
+  color: var(--flc-text-muted);
+}
+
+.flc-input-clear,
+.flc-chip-clear {
+  flex: 0 0 auto;
+  background: transparent;
+  border: none;
+  color: var(--flc-text-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 6px;
+  border-radius: 2px;
+}
+
+.flc-input-clear:hover,
+.flc-chip-clear:hover {
+  background: var(--flc-bg-active);
+  color: var(--flc-text);
+}
+
+.flc-chip {
+  display: inline-flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.flc-chip-label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--flc-accent);
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.flc-chip-label:hover {
+  text-decoration: underline;
+}
+
+/* Dropdown panel */
+
+.flc-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  margin-top: 2px;
+  background: var(--flc-bg);
+  border: 1px solid var(--flc-border);
+  border-radius: 2px;
+  box-shadow: 0 6.4px 14.4px 0 rgba(0, 0, 0, 0.13), 0 1.2px 3.6px 0 rgba(0, 0, 0, 0.1);
+  max-height: 360px;
+  overflow-y: auto;
+  font-size: 13px;
+}
+
+.flc-status {
+  padding: 8px 12px;
+  color: var(--flc-text-muted);
+  font-style: italic;
+}
+
+.flc-banner {
+  padding: 6px 12px;
+  background: var(--flc-banner-bg);
+  color: var(--flc-banner-text);
+  font-size: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.flc-section {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.flc-section:last-child {
+  border-bottom: none;
+}
+
+.flc-section-header {
+  padding: 4px 12px;
+  background: var(--flc-section-header-bg);
+  color: var(--flc-text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+/* Result rows: a CSS grid so up to 4 columns + an optional favorite toggle
+   share the available width evenly. */
+
+.flc-row {
+  display: grid;
+  grid-template-columns: repeat(var(--flc-col-count, 1), minmax(0, 1fr));
+  gap: 8px;
+  padding: 6px 12px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.flc-row.flc-row--header {
+  cursor: default;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--flc-text-muted);
+  background: var(--flc-bg);
+  padding-top: 4px;
+  padding-bottom: 2px;
+}
+
+.flc-row.flc-row--data:hover {
+  background: var(--flc-bg-hover);
+}
+
+.flc-row.flc-row--data.is-active {
+  background: var(--flc-bg-active);
+}
+
+.flc-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flc-cell-0 {
+  font-weight: 600;
+}
+
+.flc-cell mark {
+  background: var(--flc-mark-bg);
+  color: inherit;
+  font-weight: 700;
+  padding: 0;
+}
+
+.flc-cell-fav {
+  flex: 0 0 auto;
+  width: 24px;
+  text-align: center;
+}
+
+.flc-fav-btn {
+  background: transparent;
+  border: none;
+  color: var(--flc-text-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.flc-fav-btn:hover {
+  background: var(--flc-bg-active);
+  color: var(--flc-text);
+}
+
+.flc-fav-btn.is-on {
+  color: var(--flc-fav-on);
+}
+
+/* Footer with Quick-Create */
+
+.flc-footer {
+  padding: 4px 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--flc-section-header-bg);
+  text-align: left;
+}
+
+.flc-quick-create {
+  background: transparent;
+  border: none;
+  color: var(--flc-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 2px;
+}
+
+.flc-quick-create:hover {
+  background: var(--flc-bg-active);
+}

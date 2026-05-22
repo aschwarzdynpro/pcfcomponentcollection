@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="FuzzyLookupControl_Display" xml:space="preserve">
+    <value>Fuzzy Lookup</value>
+    <comment>Display name for the control</comment>
+  </data>
+  <data name="FuzzyLookupControl_Desc" xml:space="preserve">
+    <value>Drop-in replacement for the standard Lookup control. Uses Dataverse Search (Lucene fuzzy) for typo-tolerant typeahead, shows up to four configurable columns per result, and supports in-place Quick-Create.</value>
+    <comment>Description for the control</comment>
+  </data>
+  <data name="selectedItem_Display" xml:space="preserve">
+    <value>Selected Record</value>
+  </data>
+  <data name="selectedItem_Desc" xml:space="preserve">
+    <value>The bound Lookup column. Target table is taken from the column definition.</value>
+  </data>
+  <data name="column1_Display" xml:space="preserve">
+    <value>Column 1 (Primary)</value>
+  </data>
+  <data name="column1_Desc" xml:space="preserve">
+    <value>Logical name of the first column shown in the suggestion list. Leave blank to use the target table's primary-name attribute.</value>
+  </data>
+  <data name="column2_Display" xml:space="preserve">
+    <value>Column 2</value>
+  </data>
+  <data name="column2_Desc" xml:space="preserve">
+    <value>Optional. Logical name of the second column shown in the suggestion list.</value>
+  </data>
+  <data name="column3_Display" xml:space="preserve">
+    <value>Column 3</value>
+  </data>
+  <data name="column3_Desc" xml:space="preserve">
+    <value>Optional. Logical name of the third column shown in the suggestion list.</value>
+  </data>
+  <data name="column4_Display" xml:space="preserve">
+    <value>Column 4</value>
+  </data>
+  <data name="column4_Desc" xml:space="preserve">
+    <value>Optional. Logical name of the fourth column shown in the suggestion list.</value>
+  </data>
+  <data name="pageSize_Display" xml:space="preserve">
+    <value>Page Size</value>
+  </data>
+  <data name="pageSize_Desc" xml:space="preserve">
+    <value>Maximum number of suggestions returned per search. 1 to 50; default 25.</value>
+  </data>
+  <data name="placeholder_Display" xml:space="preserve">
+    <value>Placeholder</value>
+  </data>
+  <data name="placeholder_Desc" xml:space="preserve">
+    <value>Placeholder text shown in the input when no record is selected.</value>
+  </data>
+  <data name="enableQuickCreate_Display" xml:space="preserve">
+    <value>Enable Quick-Create</value>
+  </data>
+  <data name="enableQuickCreate_Desc" xml:space="preserve">
+    <value>When on (default), the dropdown shows a "+ New" button that opens the target table's Quick-Create form. After save the new record is selected automatically.</value>
+  </data>
+  <data name="enableFavorites_Display" xml:space="preserve">
+    <value>Enable Favorites</value>
+  </data>
+  <data name="enableFavorites_Desc" xml:space="preserve">
+    <value>When on, users can pin frequently used records as favorites. Favorites appear above the search results. Stored per user in browser localStorage; no schema footprint.</value>
+  </data>
+  <data name="enableRecentlyUsed_Display" xml:space="preserve">
+    <value>Enable Recently Used</value>
+  </data>
+  <data name="enableRecentlyUsed_Desc" xml:space="preserve">
+    <value>When on, the dropdown shows the user's most recently selected records. Stored per user in browser localStorage; no schema footprint.</value>
+  </data>
+</root>

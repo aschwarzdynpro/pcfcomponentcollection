@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="Lookup" constructor="FuzzyLookupControl" version="1.0.0" display-name-key="FuzzyLookupControl_Display" description-key="FuzzyLookupControl_Desc" control-type="standard">
+    <!-- Bound to a Lookup.Simple column. The first Lookup.Simple bound property is
+         the primary lookup. Target table is derived automatically. -->
+    <property name="selectedItem" display-name-key="selectedItem_Display" description-key="selectedItem_Desc" of-type="Lookup.Simple" usage="bound" required="true" />
+
+    <!-- Up to 4 columns shown in the suggestion list. Empty = column not shown.
+         column1 default = the target table's primary-name attribute. -->
+    <property name="column1" display-name-key="column1_Display" description-key="column1_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="column2" display-name-key="column2_Display" description-key="column2_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="column3" display-name-key="column3_Display" description-key="column3_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="column4" display-name-key="column4_Display" description-key="column4_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- Maximum number of results returned per search (1..50). Default 25. -->
+    <property name="pageSize" display-name-key="pageSize_Display" description-key="pageSize_Desc" of-type="Whole.None" usage="input" required="false" />
+
+    <!-- Placeholder shown when no record is selected. -->
+    <property name="placeholder" display-name-key="placeholder_Display" description-key="placeholder_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- When true (default), the dropdown shows a "+ New" button that opens the
+         target table's Quick-Create form. After save, the new record is selected. -->
+    <property name="enableQuickCreate" display-name-key="enableQuickCreate_Display" description-key="enableQuickCreate_Desc" of-type="TwoOptions" usage="input" required="false" />
+
+    <!-- v2 hook. When true, lets users pin favorites; favorites appear in a
+         dedicated section above the search results. Stored per-user in browser
+         localStorage; no schema footprint. -->
+    <property name="enableFavorites" display-name-key="enableFavorites_Display" description-key="enableFavorites_Desc" of-type="TwoOptions" usage="input" required="false" />
+
+    <!-- v2 hook. When true, shows the user's most recently selected records as a
+         dedicated section above the search results. Stored per-user in browser
+         localStorage; no schema footprint. -->
+    <property name="enableRecentlyUsed" display-name-key="enableRecentlyUsed_Display" description-key="enableRecentlyUsed_Desc" of-type="TwoOptions" usage="input" required="false" />
+
+    <!-- resources -->
+    <resources>
+      <code path="index.ts" order="1"/>
+      <css path="css/FuzzyLookupControl.css" order="1" />
+      <resx path="strings/FuzzyLookupControl.1033.resx" version="1.0.0" />
+      <resx path="strings/FuzzyLookupControl.1031.resx" version="1.0.0" />
+      <resx path="strings/FuzzyLookupControl.1036.resx" version="1.0.0" />
+    </resources>
+
+    <!-- WebAPI for Dataverse Search (`searchquery`) and the OData fallback;
+         Navigation for the Quick-Create form; Utility to fetch the target
+         table's primary-name attribute when column1 is left blank. -->
+    <feature-usage>
+      <uses-feature name="WebAPI" required="true" />
+      <uses-feature name="Navigation" required="false" />
+      <uses-feature name="Utility" required="false" />
+    </feature-usage>
+  </control>
+</manifest>

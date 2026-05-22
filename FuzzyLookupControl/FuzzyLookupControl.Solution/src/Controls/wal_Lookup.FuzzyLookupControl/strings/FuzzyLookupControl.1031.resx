@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="FuzzyLookupControl_Display" xml:space="preserve">
+    <value>Fuzzy Lookup</value>
+  </data>
+  <data name="FuzzyLookupControl_Desc" xml:space="preserve">
+    <value>Ersatz für das Standard-Lookup-Control. Nutzt Dataverse Search (Lucene-Fuzzy) für tippfehler-tolerante Suchvorschläge, zeigt bis zu vier konfigurierbare Spalten je Treffer und unterstützt direkte Datensatzanlage über Quick-Create.</value>
+  </data>
+  <data name="selectedItem_Display" xml:space="preserve">
+    <value>Ausgewählter Datensatz</value>
+  </data>
+  <data name="selectedItem_Desc" xml:space="preserve">
+    <value>Die gebundene Lookup-Spalte. Die Zieltabelle wird aus der Spaltendefinition übernommen.</value>
+  </data>
+  <data name="column1_Display" xml:space="preserve">
+    <value>Spalte 1 (primär)</value>
+  </data>
+  <data name="column1_Desc" xml:space="preserve">
+    <value>Logischer Name der ersten Spalte im Vorschlagspanel. Leer lassen, um das Primärnamens-Attribut der Zieltabelle zu verwenden.</value>
+  </data>
+  <data name="column2_Display" xml:space="preserve">
+    <value>Spalte 2</value>
+  </data>
+  <data name="column2_Desc" xml:space="preserve">
+    <value>Optional. Logischer Name der zweiten Spalte im Vorschlagspanel.</value>
+  </data>
+  <data name="column3_Display" xml:space="preserve">
+    <value>Spalte 3</value>
+  </data>
+  <data name="column3_Desc" xml:space="preserve">
+    <value>Optional. Logischer Name der dritten Spalte im Vorschlagspanel.</value>
+  </data>
+  <data name="column4_Display" xml:space="preserve">
+    <value>Spalte 4</value>
+  </data>
+  <data name="column4_Desc" xml:space="preserve">
+    <value>Optional. Logischer Name der vierten Spalte im Vorschlagspanel.</value>
+  </data>
+  <data name="pageSize_Display" xml:space="preserve">
+    <value>Trefferanzahl</value>
+  </data>
+  <data name="pageSize_Desc" xml:space="preserve">
+    <value>Maximale Anzahl Vorschläge je Suche. 1 bis 50; Standard 25.</value>
+  </data>
+  <data name="placeholder_Display" xml:space="preserve">
+    <value>Platzhalter</value>
+  </data>
+  <data name="placeholder_Desc" xml:space="preserve">
+    <value>Platzhaltertext im Eingabefeld, solange kein Datensatz ausgewählt ist.</value>
+  </data>
+  <data name="enableQuickCreate_Display" xml:space="preserve">
+    <value>Quick-Create aktivieren</value>
+  </data>
+  <data name="enableQuickCreate_Desc" xml:space="preserve">
+    <value>Aktiv (Standard): Im Dropdown erscheint ein „+ Neu"-Button, der die Quick-Create-Maske der Zieltabelle öffnet. Nach dem Speichern wird der neue Datensatz automatisch ausgewählt.</value>
+  </data>
+  <data name="enableFavorites_Display" xml:space="preserve">
+    <value>Favoriten aktivieren</value>
+  </data>
+  <data name="enableFavorites_Desc" xml:space="preserve">
+    <value>Aktiv: Datensätze können als Favoriten gepinnt werden. Favoriten erscheinen über den Suchergebnissen. Speicherung pro Benutzer im Browser-localStorage; kein Schema-Footprint.</value>
+  </data>
+  <data name="enableRecentlyUsed_Display" xml:space="preserve">
+    <value>Zuletzt verwendet aktivieren</value>
+  </data>
+  <data name="enableRecentlyUsed_Desc" xml:space="preserve">
+    <value>Aktiv: Das Dropdown zeigt die zuletzt ausgewählten Datensätze des Benutzers. Speicherung pro Benutzer im Browser-localStorage; kein Schema-Footprint.</value>
+  </data>
+</root>
