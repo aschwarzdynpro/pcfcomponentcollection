@@ -26,12 +26,12 @@ export class FuzzyLookupControl
     private _columnHeaders: string[] = [];
     private _metadataLoaded = false;
 
-    public async init(
+    public init(
         context: ComponentFramework.Context<IInputs>,
         notifyOutputChanged: () => void,
         _state: ComponentFramework.Dictionary,
         container: HTMLDivElement,
-    ): Promise<void> {
+    ): void {
         this._context = context;
         this._container = container;
         this._notifyOutputChanged = notifyOutputChanged;
@@ -52,48 +52,48 @@ export class FuzzyLookupControl
             .map((c) => (c ?? "").trim())
             .filter((c) => c.length > 0);
 
-        // Resolve metadata (primary name + column display names). Render once
-        // we know the primaryName so column 0 is correctly identified even when
-        // the maker left every column input blank.
-        const utility = (context as unknown as { utility?: unknown }).utility as
-            | { getEntityMetadata?: (...args: unknown[]) => Promise<unknown> }
-            | undefined;
+        // Render synchronously with a "name" fallback so the UCI form-load
+        // lifecycle is not blocked by our async metadata fetch. The Lookup's
+        // primary name is updated asynchronously below; we re-render once it
+        // arrives. Keeping init synchronous avoids the
+        // `Te._runPostNavigationHandler` crash some UCI versions throw when
+        // a control's init promise is still pending while the form fires
+        // post-navigation handlers.
+        this._primaryName = "name";
+        this._columns = Array.from(new Set([this._primaryName, ...rawCols])).slice(0, 4);
+        this._columnHeaders = this._columns.map((c) => titleCase(c));
+        this._metadataLoaded = true;
+        this.render();
 
-        const meta = this._targetEntity
-            ? await fetchTargetMetadata({
-                  utility: utility as Parameters<typeof fetchTargetMetadata>[0]["utility"],
-                  webApi: context.webAPI as Parameters<typeof fetchTargetMetadata>[0]["webApi"],
-                  entityName: this._targetEntity,
-                  requestedColumns: rawCols,
-              })
-            : {
-                  primaryName: "name",
-                  columnDisplayNames: Object.fromEntries(rawCols.map((c) => [c, c])),
-              };
+        if (this._targetEntity) {
+            void this.loadMetadata(rawCols);
+        }
+    }
+
+    private async loadMetadata(rawCols: string[]): Promise<void> {
+        const utility = (this._context as unknown as { utility?: unknown }).utility as
+            | Parameters<typeof fetchTargetMetadata>[0]["utility"]
+            | undefined;
+        const meta = await fetchTargetMetadata({
+            utility,
+            webApi: this._context.webAPI as Parameters<typeof fetchTargetMetadata>[0]["webApi"],
+            entityName: this._targetEntity,
+            requestedColumns: rawCols,
+        });
 
         this._primaryName = meta.primaryName;
-
-        // Ensure primaryName is always column 0; deduplicate.
         const orderedCols = Array.from(new Set([meta.primaryName, ...rawCols]));
         this._columns = orderedCols.slice(0, 4);
-        this._columnHeaders = this._columns.map((c) => meta.columnDisplayNames[c] ?? c);
-        this._metadataLoaded = true;
+        this._columnHeaders = this._columns.map((c) => meta.columnDisplayNames[c] ?? titleCase(c));
 
-        // Diagnostic line — visible exactly once per control instance so the
-        // maker can verify which target table + columns the control resolved
-        // before the first keystroke. Removed once the v2 telemetry pipeline
-        // lands.
         // eslint-disable-next-line no-console
-        console.info(
-            "FuzzyLookupControl ready",
-            {
-                target: this._targetEntity,
-                primaryName: this._primaryName,
-                columns: this._columns,
-                columnHeaders: this._columnHeaders,
-                configuredColumns: rawCols,
-            },
-        );
+        console.info("FuzzyLookupControl ready", {
+            target: this._targetEntity,
+            primaryName: this._primaryName,
+            columns: this._columns,
+            columnHeaders: this._columnHeaders,
+            configuredColumns: rawCols,
+        });
 
         this.render();
     }
@@ -111,13 +111,19 @@ export class FuzzyLookupControl
         if (!this._selected) {
             return { selectedItem: [] };
         }
+        // Set both `entityType` (PCF reference docs) and `entityTypeName`
+        // (used internally by UCI's FormSignal/PostNavigation handlers).
+        // Missing the latter crashed with
+        // "Cannot read properties of undefined (reading 'entityTypeName')"
+        // on some UCI builds.
         return {
             selectedItem: [
                 {
                     id: this._selected.id,
                     name: this._selected.primaryName,
                     entityType: this._selected.entityName,
-                },
+                    entityTypeName: this._selected.entityName,
+                } as ComponentFramework.LookupValue,
             ],
         };
     }
@@ -129,14 +135,17 @@ export class FuzzyLookupControl
     private readSelected(
         context: ComponentFramework.Context<IInputs>,
     ): LookupRecord | null {
+        // PCF hosts inconsistently surface the target entity on raw lookup
+        // entries as `entityType` vs. `entityTypeName`. Read both.
         const raw = context.parameters.selectedItem?.raw as unknown as
-            | LookupPropertyRaw[]
+            | (LookupPropertyRaw & { entityTypeName?: string })[]
             | undefined;
         const first = raw?.[0];
         if (!first?.id) return null;
+        const entityName = first.entityType || first.entityTypeName || "";
         return {
             id: first.id,
-            entityName: first.entityType,
+            entityName,
             primaryName: first.name ?? "",
             columns: { [this._primaryName]: first.name ?? "" },
             highlights: {},
@@ -293,4 +302,9 @@ function clampPageSize(raw: number | null | undefined): number {
     if (n < 1) return 1;
     if (n > 50) return 50;
     return n;
+}
+
+function titleCase(logical: string): string {
+    const stripped = logical.replace(/^[a-z]+_/, "");
+    return stripped.charAt(0).toUpperCase() + stripped.slice(1);
 }

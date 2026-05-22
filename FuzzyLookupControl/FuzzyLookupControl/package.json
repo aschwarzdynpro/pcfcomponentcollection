@@ -1,6 +1,6 @@
 {
   "name": "fuzzy-lookup-control",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "PCF control for Dataverse Lookup.Simple columns. Drop-in replacement for the standard lookup with Dataverse Search (Lucene-fuzzy) typeahead, up to four configurable result columns, in-place Quick-Create, and architecture hooks for favorites and recently-used records (v2).",
   "keywords": [
     "PCF",
