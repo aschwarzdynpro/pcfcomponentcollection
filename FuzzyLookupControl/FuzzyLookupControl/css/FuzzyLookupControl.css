@@ -2,7 +2,11 @@
    Lookup control so it blends into existing forms. Uses CSS variables so
    makers can re-skin per-form via custom CSS web resources if needed. */
 
-.flc-host-root {
+/* CSS variables are redeclared on the dropdown selector because the dropdown
+   is portalled into document.body and therefore is NOT a descendant of the
+   .flc-host-root element where the variables would normally be defined. */
+.flc-host-root,
+.flc-dropdown {
   --flc-bg: #ffffff;
   --flc-bg-hover: #f3f2f1;
   --flc-bg-active: #edebe9;
@@ -17,7 +21,9 @@
   --flc-banner-text: #5d4a00;
   --flc-disabled-bg: #f3f2f1;
   --flc-fav-on: #ffaa44;
+}
 
+.flc-host-root {
   display: block;
   width: 100%;
   font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -112,7 +118,10 @@
   text-decoration: underline;
 }
 
-/* Dropdown panel */
+/* Dropdown panel — rendered into a React portal under document.body. The
+   inline style on the rendered element sets `position: fixed` + top/left/width
+   so the static positioning rules below are only fallbacks for the
+   (unused) non-portal case. */
 
 .flc-dropdown {
   position: absolute;
@@ -121,10 +130,19 @@
   right: 0;
   z-index: 1000;
   margin-top: 2px;
-  background: var(--flc-bg);
-  border: 1px solid var(--flc-border);
-  border-radius: 2px;
-  box-shadow: 0 6.4px 14.4px 0 rgba(0, 0, 0, 0.13), 0 1.2px 3.6px 0 rgba(0, 0, 0, 0.1);
+  /* Full color set restated here in case the variables were not inherited
+     (portalled instance under document.body). Opaque background is the
+     critical bit — without it the dropdown looks transparent over the
+     underlying form. */
+  background: var(--flc-bg, #ffffff);
+  color: var(--flc-text, #201f1e);
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  border: 1px solid var(--flc-border-focus, #0078d4);
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 12px 28px 0 rgba(0, 0, 0, 0.20),
+    0 2px 4px 0 rgba(0, 0, 0, 0.12);
   max-height: 360px;
   overflow-y: auto;
   font-size: 13px;
@@ -186,11 +204,13 @@
 }
 
 .flc-row.flc-row--data:hover {
-  background: var(--flc-bg-hover);
+  background: #e5f1fb;
+  box-shadow: inset 3px 0 0 var(--flc-accent, #0078d4);
 }
 
 .flc-row.flc-row--data.is-active {
-  background: var(--flc-bg-active);
+  background: #cfe4f7;
+  box-shadow: inset 3px 0 0 var(--flc-accent, #0078d4);
 }
 
 .flc-cell {
