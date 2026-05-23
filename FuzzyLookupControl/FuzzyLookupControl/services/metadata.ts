@@ -83,38 +83,66 @@ export async function fetchTargetMetadata(
         }
     }
 
-    // 2. Web API EntityDefinitions — use retrieveMultipleRecords with a
-    //    LogicalName filter. (retrieveRecord refuses non-GUID identifiers
-    //    even when EntityDefinition supports alternate keys.)
-    if (webApi?.retrieveMultipleRecords) {
-        try {
-            const safe = entityName.replace(/'/g, "''");
-            const result = await webApi.retrieveMultipleRecords(
-                "EntityDefinition",
-                `?$select=PrimaryNameAttribute&$filter=LogicalName eq '${safe}'`,
-                1,
-            );
-            const primary = (result.entities?.[0] as { PrimaryNameAttribute?: string } | undefined)
-                ?.PrimaryNameAttribute;
-            if (primary) {
+    // 2. Direct fetch against the Web API metadata endpoint. We bypass
+    //    PCF's webAPI wrapper here because:
+    //      - retrieveRecord refuses the non-GUID alternate-key form
+    //        (`LogicalName='product'`).
+    //      - retrieveMultipleRecords refuses "EntityDefinition" as the
+    //        entity-type name — UCI complains it doesn't exist.
+    //    The HTTP endpoint itself works fine; the wrappers are just picky.
+    try {
+        const clientUrl = getClientUrl();
+        const safe = entityName.replace(/'/g, "''");
+        const url =
+            `${clientUrl}/api/data/v9.2/EntityDefinitions(LogicalName='${safe}')` +
+            `?$select=PrimaryNameAttribute`;
+        const res = await fetch(url, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Accept": "application/json",
+                "OData-MaxVersion": "4.0",
+                "OData-Version": "4.0",
+            },
+        });
+        if (res.ok) {
+            const data = (await res.json()) as { PrimaryNameAttribute?: string };
+            if (data.PrimaryNameAttribute) {
                 return {
-                    primaryName: primary,
+                    primaryName: data.PrimaryNameAttribute,
                     columnDisplayNames: Object.fromEntries(
                         requestedColumns.map((c) => [c, titleCase(c)]),
                     ),
                 };
             }
-        } catch (e) {
+        } else {
             // eslint-disable-next-line no-console
             console.warn(
-                "FuzzyLookupControl: EntityDefinitions Web API failed for " +
-                    entityName + ", falling back to hardcoded 'name'.",
-                e,
+                "FuzzyLookupControl: EntityDefinitions fetch returned " +
+                    res.status + " for " + entityName + ".",
             );
         }
+    } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn(
+            "FuzzyLookupControl: EntityDefinitions fetch failed for " +
+                entityName + ", falling back to hardcoded 'name'.",
+            e,
+        );
     }
 
     return lastResort();
+}
+
+function getClientUrl(): string {
+    const xrm = (window as unknown as {
+        Xrm?: {
+            Utility?: { getGlobalContext?: () => { getClientUrl: () => string } };
+        };
+    }).Xrm;
+    const fromXrm = xrm?.Utility?.getGlobalContext?.().getClientUrl();
+    if (fromXrm) return fromXrm.replace(/\/$/, "");
+    return window.location.origin;
 }
 
 function titleCase(logical: string): string {
