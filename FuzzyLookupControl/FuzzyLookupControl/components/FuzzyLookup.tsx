@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as ReactDOM from "react-dom";
 import { ResultRow } from "./ResultRow";
 import type { UiStrings } from "./lang";
 import type { LookupRecord, SuggestionSection } from "../services/types";
@@ -75,6 +76,23 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
     const hostRef = React.useRef<HTMLDivElement>(null);
     const abortRef = React.useRef<AbortController | null>(null);
     const debounceRef = React.useRef<number | null>(null);
+
+    // Dropdown is portalled into document.body so containers with
+    // overflow:hidden (Quick-Create side-panels, Business-Process flyouts,
+    // dialogs, …) cannot clip it. The position is computed from the host
+    // div's bounding rect and re-computed on resize / ancestor scroll so
+    // the dropdown follows the input.
+    const [anchorRect, setAnchorRect] = React.useState<{
+        top: number;
+        left: number;
+        width: number;
+    } | null>(null);
+    const recomputeAnchor = React.useCallback(() => {
+        const el = hostRef.current;
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        setAnchorRect({ top: r.bottom, left: r.left, width: r.width });
+    }, []);
 
     const scope: StorageScope = React.useMemo(
         () => ({ userId, entity: targetEntity, primaryName }),
@@ -179,16 +197,39 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
         };
     }, [term, targetEntity, columns, primaryName, pageSize]);
 
-    // Close the dropdown when the user clicks outside the control.
+    // Close the dropdown when the user clicks outside the control. Because
+    // the dropdown lives in a portal under document.body, we have to check
+    // both the host div *and* a tagged "dropdown" element when deciding
+    // whether the click was inside the control.
     React.useEffect(() => {
         if (!open) return;
         const onDocClick = (e: MouseEvent) => {
-            if (!hostRef.current) return;
-            if (!hostRef.current.contains(e.target as Node)) setOpen(false);
+            const target = e.target as Node | null;
+            if (!target) return;
+            if (hostRef.current?.contains(target)) return;
+            if ((target as HTMLElement).closest?.("[data-flc-dropdown]")) return;
+            setOpen(false);
         };
         document.addEventListener("mousedown", onDocClick);
         return () => document.removeEventListener("mousedown", onDocClick);
     }, [open]);
+
+    // While the dropdown is open, keep its position in sync with the host
+    // div — re-measure on every resize and on any ancestor scroll. Using
+    // `capture: true` so scrolls inside arbitrary scroll containers (e.g.
+    // a Quick-Create panel's main scroll area) are picked up too.
+    React.useEffect(() => {
+        if (!open) return;
+        recomputeAnchor();
+        const onResize = () => recomputeAnchor();
+        const onScroll = () => recomputeAnchor();
+        window.addEventListener("resize", onResize);
+        window.addEventListener("scroll", onScroll, true);
+        return () => {
+            window.removeEventListener("resize", onResize);
+            window.removeEventListener("scroll", onScroll, true);
+        };
+    }, [open, recomputeAnchor]);
 
     const commitSelection = (rec: LookupRecord) => {
         if (enableRecentlyUsed) pushRecentlyUsed(scope, rec);
@@ -300,11 +341,18 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
                 )}
             </div>
 
-            {open && !disabled && (
+            {open && !disabled && anchorRect && ReactDOM.createPortal(
                 <div
                     className="flc-dropdown"
                     role="listbox"
+                    data-flc-dropdown
                     style={{
+                        position: "fixed",
+                        top: anchorRect.top + 2,
+                        left: anchorRect.left,
+                        width: anchorRect.width,
+                        right: "auto",
+                        zIndex: 2147483600,
                         // Drive the grid template via CSS variable so the row
                         // layout adapts to the configured column count + the
                         // optional favorite-toggle column.
@@ -368,7 +416,8 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
                             </button>
                         </div>
                     )}
-                </div>
+                </div>,
+                document.body,
             )}
         </div>
     );

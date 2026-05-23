@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="Lookup" constructor="FuzzyLookupControl" version="1.0.8" display-name-key="FuzzyLookupControl_Display" description-key="FuzzyLookupControl_Desc" control-type="standard">
+  <control namespace="Lookup" constructor="FuzzyLookupControl" version="1.0.9" display-name-key="FuzzyLookupControl_Display" description-key="FuzzyLookupControl_Desc" control-type="standard">
     <!-- Bound to a Lookup.Simple column. The first Lookup.Simple bound property is
          the primary lookup. Target table is derived automatically. -->
     <property name="selectedItem" display-name-key="selectedItem_Display" description-key="selectedItem_Desc" of-type="Lookup.Simple" usage="bound" required="true" />
@@ -36,9 +36,9 @@
     <resources>
       <code path="index.ts" order="1"/>
       <css path="css/FuzzyLookupControl.css" order="1" />
-      <resx path="strings/FuzzyLookupControl.1033.resx" version="1.0.8" />
-      <resx path="strings/FuzzyLookupControl.1031.resx" version="1.0.8" />
-      <resx path="strings/FuzzyLookupControl.1036.resx" version="1.0.8" />
+      <resx path="strings/FuzzyLookupControl.1033.resx" version="1.0.9" />
+      <resx path="strings/FuzzyLookupControl.1031.resx" version="1.0.9" />
+      <resx path="strings/FuzzyLookupControl.1036.resx" version="1.0.9" />
     </resources>
 
     <!-- WebAPI for Dataverse Search (`searchquery`) and the OData fallback;
