@@ -82,6 +82,16 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
     // dialogs, …) cannot clip it. The position is computed from the host
     // div's bounding rect and re-computed on resize / ancestor scroll so
     // the dropdown follows the input.
+    //
+    // Width is decoupled from the host width: hosts in Quick-Create or
+    // narrow Business-Process forms are often ~250 px wide, which would
+    // squash 3–4 result columns into 60 px each. We use the host width as
+    // a floor, but expand up to MIN_DROPDOWN_WIDTH so columns stay
+    // readable, and never exceed MAX_DROPDOWN_WIDTH. If the resulting
+    // dropdown would overflow the viewport on the right, we shift it left.
+    const MIN_DROPDOWN_WIDTH = 520;
+    const MAX_DROPDOWN_WIDTH = 760;
+    const VIEWPORT_GUTTER = 8;
     const [anchorRect, setAnchorRect] = React.useState<{
         top: number;
         left: number;
@@ -91,7 +101,15 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
         const el = hostRef.current;
         if (!el) return;
         const r = el.getBoundingClientRect();
-        setAnchorRect({ top: r.bottom, left: r.left, width: r.width });
+        const viewportWidth = window.innerWidth;
+        let width = Math.max(r.width, MIN_DROPDOWN_WIDTH);
+        width = Math.min(width, MAX_DROPDOWN_WIDTH);
+        width = Math.min(width, viewportWidth - 2 * VIEWPORT_GUTTER);
+        let left = r.left;
+        if (left + width + VIEWPORT_GUTTER > viewportWidth) {
+            left = Math.max(VIEWPORT_GUTTER, viewportWidth - width - VIEWPORT_GUTTER);
+        }
+        setAnchorRect({ top: r.bottom, left, width });
     }, []);
 
     const scope: StorageScope = React.useMemo(

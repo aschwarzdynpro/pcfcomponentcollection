@@ -13,7 +13,7 @@
 //                  search-indexed (HTTP 4xx / 5xx response from searchquery).
 
 import type { LookupRecord } from "./types";
-import { clientHighlight } from "./highlight";
+import { clientHighlight, crmhitToHtml } from "./highlight";
 
 export interface SearchOptions {
     term: string;
@@ -192,7 +192,10 @@ async function runSearchQuery(
         const highlights: Record<string, string> = {};
         for (const col of opts.columns) {
             const hit = highlightsRaw[col]?.[0];
-            if (hit) highlights[col] = hit;
+            // Convert `{crmhit}…{/crmhit}` annotations to HTML-safe `<mark>`
+            // before storing, so the renderer can drop the string into
+            // `dangerouslySetInnerHTML` without re-processing.
+            if (hit) highlights[col] = crmhitToHtml(hit);
         }
         return {
             id: it.Id,
