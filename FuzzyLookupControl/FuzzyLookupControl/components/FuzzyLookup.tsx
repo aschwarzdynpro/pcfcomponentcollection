@@ -341,22 +341,6 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
                         aria-expanded={open}
                     />
                 )}
-                {!disabled && selected && (
-                    <button
-                        type="button"
-                        className="flc-input-clear"
-                        aria-label={strings.clearSelection}
-                        title={strings.clearSelection}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onChange(null);
-                            setTerm("");
-                            inputRef.current?.focus();
-                        }}
-                    >
-                        ×
-                    </button>
-                )}
             </div>
 
             {open && !disabled && anchorRect && ReactDOM.createPortal(

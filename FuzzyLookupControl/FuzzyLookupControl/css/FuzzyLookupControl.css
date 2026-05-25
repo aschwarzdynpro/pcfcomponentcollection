@@ -36,26 +36,28 @@
   width: 100%;
 }
 
+/* Container is intentionally borderless to match the look of the OOB UCI
+   Lookup control: it sits flush with the form's column layout, picks up a
+   subtle accent bottom-bar on focus, and a faint hover background.       */
 .flc-input-wrap {
   display: flex;
   align-items: center;
   min-height: 30px;
-  border: 1px solid transparent;
+  border: none;
   border-bottom: 1px solid transparent;
   background: transparent;
   padding: 2px 4px;
   cursor: text;
-  border-radius: 2px;
   box-sizing: border-box;
 }
 
-.flc-input-wrap:hover {
-  border-bottom-color: var(--flc-border);
+.flc-input-wrap:hover:not(.is-disabled) {
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .flc-input-wrap:focus-within {
-  border-color: var(--flc-border-focus);
-  background: var(--flc-bg);
+  border-bottom-color: var(--flc-border-focus, #0078d4);
+  background: var(--flc-bg, #ffffff);
 }
 
 .flc-input-wrap.is-disabled {
@@ -78,7 +80,6 @@
   color: var(--flc-text-muted);
 }
 
-.flc-input-clear,
 .flc-chip-clear {
   flex: 0 0 auto;
   background: transparent;
@@ -91,7 +92,6 @@
   border-radius: 2px;
 }
 
-.flc-input-clear:hover,
 .flc-chip-clear:hover {
   background: var(--flc-bg-active);
   color: var(--flc-text);
