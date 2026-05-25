@@ -381,6 +381,13 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
                     {term.trim().length > 0 && term.trim().length < MIN_CHARS && (
                         <div className="flc-status">{strings.minChars}</div>
                     )}
+                    {/* Empty-state hint — without this the dropdown collapses
+                        to just a 1 px blue border + footer when the user clicks
+                        in but hasn't typed anything yet, which looks like a
+                        stray horizontal line outside the input. */}
+                    {term.trim().length === 0 && !busy && sections.length === 0 && (
+                        <div className="flc-status">{strings.typeToSearch}</div>
+                    )}
                     {busy && <div className="flc-status">{strings.searching}</div>}
                     {!busy && term.trim().length >= MIN_CHARS && flatRecords.length === 0 && (
                         <div className="flc-status">{strings.noResults}</div>

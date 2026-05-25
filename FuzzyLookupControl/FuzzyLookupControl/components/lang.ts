@@ -19,6 +19,7 @@ export interface UiStrings {
     searching: string;
     noResults: string;
     minChars: string;            // "type at least 2 characters"
+    typeToSearch: string;        // empty-state hint when dropdown is open but term is blank
     quickCreate: string;         // "+ New"
     clearSelection: string;      // tooltip on the x button
     openRecord: string;          // tooltip on the open-record button
@@ -36,6 +37,7 @@ export const STRINGS: Record<Lang, UiStrings> = {
         searching: "Searching…",
         noResults: "No matches found.",
         minChars: "Type at least 2 characters to search.",
+        typeToSearch: "Start typing to search…",
         quickCreate: "+ New",
         clearSelection: "Clear selection",
         openRecord: "Open record",
@@ -52,6 +54,7 @@ export const STRINGS: Record<Lang, UiStrings> = {
         searching: "Suche läuft…",
         noResults: "Keine Treffer gefunden.",
         minChars: "Mindestens 2 Zeichen eingeben.",
+        typeToSearch: "Tippen, um zu suchen…",
         quickCreate: "+ Neu",
         clearSelection: "Auswahl zurücksetzen",
         openRecord: "Datensatz öffnen",
@@ -68,6 +71,7 @@ export const STRINGS: Record<Lang, UiStrings> = {
         searching: "Recherche…",
         noResults: "Aucun résultat trouvé.",
         minChars: "Saisissez au moins 2 caractères.",
+        typeToSearch: "Tapez pour rechercher…",
         quickCreate: "+ Nouveau",
         clearSelection: "Effacer la sélection",
         openRecord: "Ouvrir l'enregistrement",
