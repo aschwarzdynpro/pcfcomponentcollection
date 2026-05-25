@@ -25,6 +25,7 @@ export class FuzzyLookupControl
     private _columns: string[] = [];
     private _columnHeaders: string[] = [];
     private _metadataLoaded = false;
+    private _safetyTimeout: number | null = null;
 
     public init(
         context: ComponentFramework.Context<IInputs>,
@@ -36,6 +37,16 @@ export class FuzzyLookupControl
         this._container = container;
         this._notifyOutputChanged = notifyOutputChanged;
         container.classList.add("flc-host-root");
+
+        // Hide the host until metadata finishes resolving — without this we
+        // get a brief flash of the fallback column headers (title-cased
+        // logical names) before the real display names arrive, and the
+        // unstyled input briefly bleeds through the surrounding form layout
+        // before fonts/colors apply. A 1.5 s safety timeout makes sure we
+        // never stay hidden forever if the metadata fetch hangs.
+        container.style.visibility = "hidden";
+        container.style.minHeight = "32px";
+        this._safetyTimeout = window.setTimeout(() => this.reveal(), 1500);
 
         this._selected = this.readSelected(context);
         this._targetEntity = this.readTargetEntity(context);
@@ -67,35 +78,54 @@ export class FuzzyLookupControl
 
         if (this._targetEntity) {
             void this.loadMetadata(rawCols);
+        } else {
+            // Nothing to wait for — reveal immediately.
+            this.reveal();
+        }
+    }
+
+    private reveal(): void {
+        if (this._safetyTimeout !== null) {
+            window.clearTimeout(this._safetyTimeout);
+            this._safetyTimeout = null;
+        }
+        if (this._container) {
+            this._container.style.visibility = "visible";
         }
     }
 
     private async loadMetadata(rawCols: string[]): Promise<void> {
-        const utility = (this._context as unknown as { utility?: unknown }).utility as
-            | Parameters<typeof fetchTargetMetadata>[0]["utility"]
-            | undefined;
-        const meta = await fetchTargetMetadata({
-            utility,
-            webApi: this._context.webAPI as Parameters<typeof fetchTargetMetadata>[0]["webApi"],
-            entityName: this._targetEntity,
-            requestedColumns: rawCols,
-        });
+        try {
+            const utility = (this._context as unknown as { utility?: unknown }).utility as
+                | Parameters<typeof fetchTargetMetadata>[0]["utility"]
+                | undefined;
+            const meta = await fetchTargetMetadata({
+                utility,
+                webApi: this._context.webAPI as Parameters<typeof fetchTargetMetadata>[0]["webApi"],
+                entityName: this._targetEntity,
+                requestedColumns: rawCols,
+            });
 
-        this._primaryName = meta.primaryName;
-        const orderedCols = Array.from(new Set([meta.primaryName, ...rawCols]));
-        this._columns = orderedCols.slice(0, 4);
-        this._columnHeaders = this._columns.map((c) => meta.columnDisplayNames[c] ?? titleCase(c));
+            this._primaryName = meta.primaryName;
+            const orderedCols = Array.from(new Set([meta.primaryName, ...rawCols]));
+            this._columns = orderedCols.slice(0, 4);
+            this._columnHeaders = this._columns.map((c) => meta.columnDisplayNames[c] ?? titleCase(c));
 
-        // eslint-disable-next-line no-console
-        console.info("FuzzyLookupControl ready", {
-            target: this._targetEntity,
-            primaryName: this._primaryName,
-            columns: this._columns,
-            columnHeaders: this._columnHeaders,
-            configuredColumns: rawCols,
-        });
+            // eslint-disable-next-line no-console
+            console.info("FuzzyLookupControl ready", {
+                target: this._targetEntity,
+                primaryName: this._primaryName,
+                columns: this._columns,
+                columnHeaders: this._columnHeaders,
+                configuredColumns: rawCols,
+            });
 
-        this.render();
+            this.render();
+        } finally {
+            // Reveal regardless of whether metadata fetch succeeded — the
+            // user must always see *something* in the lookup column.
+            this.reveal();
+        }
     }
 
     public updateView(context: ComponentFramework.Context<IInputs>): void {
