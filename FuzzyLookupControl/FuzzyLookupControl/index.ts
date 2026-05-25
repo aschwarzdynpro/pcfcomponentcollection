@@ -265,6 +265,55 @@ export class FuzzyLookupControl
         }
     }
 
+    /**
+     * Opens UCI's native "Look Up Records" dialog (the same one the OOB
+     * Lookup control surfaces behind its magnifier button). We hand back any
+     * record the user picks via the same path Quick-Create uses, so the
+     * dirty-flag and notifyOutputChanged plumbing stays consistent.
+     */
+    private async openLookupDialog(): Promise<void> {
+        if (!this._targetEntity) return;
+        try {
+            const utils = (this._context as unknown as {
+                utils?: {
+                    lookupObjects?: (options: {
+                        entityTypes: string[];
+                        allowMultiSelect?: boolean;
+                        defaultEntityType?: string;
+                    }) => Promise<{ id: string; name: string; entityType: string }[]>;
+                };
+            }).utils;
+            const lookupObjects = utils?.lookupObjects;
+            if (!lookupObjects) {
+                // eslint-disable-next-line no-console
+                console.warn(
+                    "FuzzyLookupControl: context.utils.lookupObjects is not available on this host.",
+                );
+                return;
+            }
+            const result = await lookupObjects({
+                entityTypes: [this._targetEntity],
+                allowMultiSelect: false,
+                defaultEntityType: this._targetEntity,
+            });
+            const first = result?.[0];
+            if (first?.id) {
+                this._selected = {
+                    id: first.id,
+                    entityName: first.entityType,
+                    primaryName: first.name,
+                    columns: { [this._primaryName]: first.name },
+                    highlights: {},
+                };
+                this._notifyOutputChanged();
+                this.render();
+            }
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.warn("FuzzyLookupControl: lookupObjects failed", e);
+        }
+    }
+
     private openRecord(rec: LookupRecord): void {
         try {
             void this._context.navigation.openForm({
@@ -318,6 +367,7 @@ export class FuzzyLookupControl
             },
             onOpenRecord: (rec: LookupRecord) => this.openRecord(rec),
             onQuickCreate: () => void this.openQuickCreate(),
+            onOpenLookupDialog: () => void this.openLookupDialog(),
         };
 
         ReactDOM.render(

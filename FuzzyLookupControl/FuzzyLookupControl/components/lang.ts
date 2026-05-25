@@ -23,6 +23,7 @@ export interface UiStrings {
     quickCreate: string;         // "+ New"
     clearSelection: string;      // tooltip on the x button
     openRecord: string;          // tooltip on the open-record button
+    openLookupDialog: string;    // tooltip on the magnifier button
     favoritesHeader: string;
     recentHeader: string;
     resultsHeader: string;
@@ -41,6 +42,7 @@ export const STRINGS: Record<Lang, UiStrings> = {
         quickCreate: "+ New",
         clearSelection: "Clear selection",
         openRecord: "Open record",
+        openLookupDialog: "Open advanced lookup",
         favoritesHeader: "Favorites",
         recentHeader: "Recently used",
         resultsHeader: "Results",
@@ -58,6 +60,7 @@ export const STRINGS: Record<Lang, UiStrings> = {
         quickCreate: "+ Neu",
         clearSelection: "Auswahl zurücksetzen",
         openRecord: "Datensatz öffnen",
+        openLookupDialog: "Erweiterte Suche öffnen",
         favoritesHeader: "Favoriten",
         recentHeader: "Zuletzt verwendet",
         resultsHeader: "Treffer",
@@ -75,6 +78,7 @@ export const STRINGS: Record<Lang, UiStrings> = {
         quickCreate: "+ Nouveau",
         clearSelection: "Effacer la sélection",
         openRecord: "Ouvrir l'enregistrement",
+        openLookupDialog: "Ouvrir la recherche avancée",
         favoritesHeader: "Favoris",
         recentHeader: "Récemment utilisés",
         resultsHeader: "Résultats",

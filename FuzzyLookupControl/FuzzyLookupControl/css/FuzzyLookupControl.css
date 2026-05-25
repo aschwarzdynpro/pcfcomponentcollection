@@ -80,7 +80,8 @@
   color: var(--flc-text-muted);
 }
 
-.flc-chip-clear {
+.flc-chip-clear,
+.flc-input-search {
   flex: 0 0 auto;
   background: transparent;
   border: none;
@@ -90,11 +91,21 @@
   cursor: pointer;
   padding: 0 6px;
   border-radius: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.flc-chip-clear:hover {
+.flc-chip-clear:hover,
+.flc-input-search:hover {
   background: var(--flc-bg-active);
   color: var(--flc-text);
+}
+
+.flc-input-search {
+  height: 24px;
+  width: 24px;
+  padding: 0;
 }
 
 .flc-chip {

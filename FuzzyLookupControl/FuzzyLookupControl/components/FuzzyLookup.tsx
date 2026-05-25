@@ -39,6 +39,7 @@ export interface FuzzyLookupProps {
     onChange: (rec: LookupRecord | null) => void;
     onOpenRecord: (rec: LookupRecord) => void;
     onQuickCreate: () => void;
+    onOpenLookupDialog: () => void;
 }
 
 const DEBOUNCE_MS = 200;
@@ -63,6 +64,7 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
         onChange,
         onOpenRecord,
         onQuickCreate,
+        onOpenLookupDialog,
     } = props;
 
     const [term, setTerm] = React.useState("");
@@ -340,6 +342,26 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
                         aria-autocomplete="list"
                         aria-expanded={open}
                     />
+                )}
+                {!disabled && (
+                    <button
+                        type="button"
+                        className="flc-input-search"
+                        aria-label={strings.openLookupDialog}
+                        title={strings.openLookupDialog}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setOpen(false);
+                            onOpenLookupDialog();
+                        }}
+                    >
+                        <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+                            <path
+                                fill="currentColor"
+                                d="M10.5 11.3a5.6 5.6 0 1 1 .8-.8l3.1 3.1-.8.8-3.1-3.1zm.3-3.8a4.3 4.3 0 1 0-8.6 0 4.3 4.3 0 0 0 8.6 0z"
+                            />
+                        </svg>
+                    </button>
                 )}
             </div>
 
