@@ -24,6 +24,7 @@ export class FuzzyLookupControl
     private _primaryName = "name";
     private _columns: string[] = [];
     private _columnHeaders: string[] = [];
+    private _iconUrl: string | undefined = undefined;
     private _metadataLoaded = false;
     private _safetyTimeout: number | null = null;
 
@@ -110,6 +111,7 @@ export class FuzzyLookupControl
             const orderedCols = Array.from(new Set([meta.primaryName, ...rawCols]));
             this._columns = orderedCols.slice(0, 4);
             this._columnHeaders = this._columns.map((c) => meta.columnDisplayNames[c] ?? titleCase(c));
+            this._iconUrl = meta.iconUrl;
 
             // eslint-disable-next-line no-console
             console.info("FuzzyLookupControl ready", {
@@ -118,6 +120,7 @@ export class FuzzyLookupControl
                 columns: this._columns,
                 columnHeaders: this._columnHeaders,
                 configuredColumns: rawCols,
+                iconUrl: this._iconUrl,
             });
 
             this.render();
@@ -351,6 +354,7 @@ export class FuzzyLookupControl
             primaryName: this._primaryName,
             columns: this._columns,
             columnHeaders: this._columnHeaders,
+            iconUrl: this._iconUrl,
             placeholder,
             pageSize,
             disabled: ctx.mode.isControlDisabled,

@@ -14,6 +14,10 @@
 export interface TargetMetadata {
     primaryName: string;
     columnDisplayNames: Record<string, string>;
+    /** Resolved URL to the table's vector icon (SVG web resource), or
+     * undefined when the table has no custom icon. Used to render the
+     * little table-icon next to the selected record, matching OOB look. */
+    iconUrl?: string;
 }
 
 interface PcfUtility {
@@ -22,11 +26,20 @@ interface PcfUtility {
         attributes?: string[],
     ) => Promise<{
         PrimaryNameAttribute?: string;
+        IconVectorName?: string;
         Attributes?: {
             get?: (logicalName: string) => { DisplayName?: string } | undefined;
             getAll?: () => { LogicalName: string; DisplayName: string }[];
         };
     }>;
+}
+
+function buildIconUrl(clientUrl: string, iconVectorName: string): string {
+    if (iconVectorName.startsWith("/")) return clientUrl + iconVectorName;
+    if (iconVectorName.toLowerCase().startsWith("webresources/")) {
+        return clientUrl + "/" + iconVectorName;
+    }
+    return clientUrl + "/WebResources/" + iconVectorName;
 }
 
 interface PcfWebApi {
@@ -68,9 +81,13 @@ export async function fetchTargetMetadata(
                     const a = meta.Attributes?.get?.(c);
                     columnDisplayNames[c] = a?.DisplayName || titleCase(c);
                 }
+                const iconUrl = meta.IconVectorName
+                    ? buildIconUrl(getClientUrl(), meta.IconVectorName)
+                    : undefined;
                 return {
                     primaryName: meta.PrimaryNameAttribute,
                     columnDisplayNames,
+                    iconUrl,
                 };
             }
         } catch (e) {
@@ -95,7 +112,7 @@ export async function fetchTargetMetadata(
         const safe = entityName.replace(/'/g, "''");
         const url =
             `${clientUrl}/api/data/v9.2/EntityDefinitions(LogicalName='${safe}')` +
-            `?$select=PrimaryNameAttribute`;
+            `?$select=PrimaryNameAttribute,IconVectorName`;
         const res = await fetch(url, {
             method: "GET",
             credentials: "include",
@@ -106,13 +123,20 @@ export async function fetchTargetMetadata(
             },
         });
         if (res.ok) {
-            const data = (await res.json()) as { PrimaryNameAttribute?: string };
+            const data = (await res.json()) as {
+                PrimaryNameAttribute?: string;
+                IconVectorName?: string;
+            };
             if (data.PrimaryNameAttribute) {
+                const iconUrl = data.IconVectorName
+                    ? buildIconUrl(clientUrl, data.IconVectorName)
+                    : undefined;
                 return {
                     primaryName: data.PrimaryNameAttribute,
                     columnDisplayNames: Object.fromEntries(
                         requestedColumns.map((c) => [c, titleCase(c)]),
                     ),
+                    iconUrl,
                 };
             }
         } else {

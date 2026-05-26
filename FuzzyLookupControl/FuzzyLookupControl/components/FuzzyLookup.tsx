@@ -27,6 +27,7 @@ export interface FuzzyLookupProps {
     primaryName: string;
     columns: string[];          // ordered, 1..4 elements; column 0 = primary
     columnHeaders: string[];    // parallel
+    iconUrl?: string;           // table icon (SVG web resource URL), shown next to the chip
     placeholder: string;
     pageSize: number;
     disabled: boolean;
@@ -52,6 +53,7 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
         primaryName,
         columns,
         columnHeaders,
+        iconUrl,
         placeholder,
         pageSize,
         disabled,
@@ -281,6 +283,14 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
         if (!selected) return null;
         return (
             <span className="flc-chip">
+                {iconUrl && (
+                    <img
+                        className="flc-chip-icon"
+                        src={iconUrl}
+                        alt=""
+                        aria-hidden="true"
+                    />
+                )}
                 <span
                     className="flc-chip-label"
                     onClick={() => onOpenRecord(selected)}

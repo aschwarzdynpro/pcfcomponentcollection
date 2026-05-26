@@ -114,6 +114,16 @@
   align-items: center;
   flex: 1 1 auto;
   min-width: 0;
+  gap: 6px;
+}
+
+.flc-chip-icon {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  /* Some Dynamics-supplied SVGs have a fixed dark fill; let them be —
+     OOB renders them at native colors too. */
 }
 
 .flc-chip-label {
