@@ -11,6 +11,7 @@ export interface IInputs {
     column4: ComponentFramework.PropertyTypes.StringProperty;
     pageSize: ComponentFramework.PropertyTypes.WholeNumberProperty;
     placeholder: ComponentFramework.PropertyTypes.StringProperty;
+    additionalFilter: ComponentFramework.PropertyTypes.StringProperty;
     enableQuickCreate: ComponentFramework.PropertyTypes.TwoOptionsProperty;
     enableFavorites: ComponentFramework.PropertyTypes.TwoOptionsProperty;
     enableRecentlyUsed: ComponentFramework.PropertyTypes.TwoOptionsProperty;
