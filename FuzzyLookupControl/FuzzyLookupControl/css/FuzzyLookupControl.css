@@ -203,6 +203,11 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-weight: 600;
+  /* Sticky to the top of the scroll container so the section label
+     (FAVORITEN / TREFFER / …) is always visible while the user scrolls. */
+  position: sticky;
+  top: 0;
+  z-index: 3;
 }
 
 /* Result rows: a CSS grid so up to 4 columns + an optional favorite toggle
@@ -219,6 +224,23 @@
   cursor: pointer;
 }
 
+/* Vertical column separator — a 1 px line in the middle of the grid gap.
+   Skipped for the first cell (no preceding gap). Applies in both header
+   and data rows so the columns line up visually all the way down. */
+.flc-cell {
+  position: relative;
+}
+
+.flc-cell:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(0, 0, 0, 0.10);
+}
+
 .flc-row.flc-row--header {
   cursor: default;
   font-size: 11px;
@@ -228,6 +250,12 @@
   background: var(--flc-bg);
   padding-top: 4px;
   padding-bottom: 2px;
+  /* Stick to the top of the scroll container, just under the section
+     header. Z-index keeps data rows from rendering on top while scrolling. */
+  position: sticky;
+  top: 22px;
+  z-index: 2;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.10);
 }
 
 .flc-row.flc-row--data:hover {
@@ -360,6 +388,12 @@
   .flc-section-header {
     padding: 6px 12px;
     font-size: 12px;
+  }
+
+  .flc-row.flc-row--header {
+    /* Section header is taller on touch (12 px font, 6+6 padding) so the
+       sticky row-header sits a bit further down. */
+    top: 28px;
   }
 
   .flc-status {
