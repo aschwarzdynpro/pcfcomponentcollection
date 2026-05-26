@@ -123,18 +123,24 @@ function flattenAttributes(
 }
 
 /**
- * Dataverse Search's `Filter` parameter is documented to accept OData-style
- * comparisons (`statecode eq 0`, `modifiedon ge …`), but lookup-FK columns
- * (`_xxx_value`) are not reliably honoured by the underlying index:
- *   - Sent as `_xxx_value eq <guid>` → request returns 200 but the filter
- *     is silently dropped (no match constraint applied).
- *   - Sent as `xxx eq <guid>` (the lookup's logical name) → 400 Bad Request,
- *     "invalid expression in the search query".
- * So we detect lookup-FK filters and route those searches straight to the
- * OData fallback, where `_xxx_value eq <guid>` is a first-class filter.
+ * Dataverse Search's underlying Azure Cognitive Search index treats lookup
+ * FK columns as Edm.String, which means GUID literals need to be wrapped in
+ * single quotes — unquoted GUIDs are silently dropped (200 OK, filter
+ * ignored) and translated lookup names without quotes return HTTP 400.
+ * This helper finds bare 8-4-4-4-12 hex GUIDs and quotes them, while
+ * leaving already-quoted GUIDs alone. Case-insensitive so it also handles
+ * UPPER-cased GUIDs that other callers might pass through.
  */
-function containsLookupFKFilter(filter: string): boolean {
-    return /\b_[a-zA-Z][a-zA-Z0-9_]*?_value\b/.test(filter);
+function quoteGuidsInSearchFilter(filter: string): string {
+    return filter.replace(
+        /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+        (guid, offset: number, full: string) => {
+            const before = full[offset - 1];
+            const after = full[offset + guid.length];
+            if (before === "'" && after === "'") return guid;
+            return `'${guid}'`;
+        },
+    );
 }
 
 async function runSearchQuery(
@@ -143,12 +149,16 @@ async function runSearchQuery(
     const lucene = buildLuceneQuery(opts.term);
     if (!lucene) return [];
 
+    const searchFilter = opts.additionalFilter
+        ? quoteGuidsInSearchFilter(opts.additionalFilter)
+        : undefined;
+
     const entities = [
         {
             Name: opts.targetEntity,
             SelectColumns: opts.columns,
             SearchColumns: opts.columns,
-            ...(opts.additionalFilter ? { Filter: opts.additionalFilter } : {}),
+            ...(searchFilter ? { Filter: searchFilter } : {}),
         },
     ];
 
@@ -177,7 +187,8 @@ async function runSearchQuery(
         term: opts.term,
         lucene,
         columns: opts.columns,
-        filter: opts.additionalFilter ?? "(none)",
+        filterOData: opts.additionalFilter ?? "(none)",
+        filterApplied: searchFilter ?? "(none)",
     });
     const res = await fetch(url, {
         method: "POST",
@@ -338,20 +349,6 @@ export async function searchRecords(
         // error in the OData fallback. Caller already logs why; just return
         // empty so the dropdown shows "No matches" instead of throwing.
         return { records: [], source: "search" };
-    }
-
-    // Short-circuit to OData when the filter references a lookup FK column:
-    // Dataverse Search either silently drops such filters or rejects the
-    // request with HTTP 400. OData handles `_xxx_value eq <guid>` natively,
-    // so we skip the wasted round-trip and the cosmetic banner in this case.
-    if (opts.additionalFilter && containsLookupFKFilter(opts.additionalFilter)) {
-        // eslint-disable-next-line no-console
-        console.log(
-            "FuzzyLookupControl: additionalFilter references a lookup FK (_xxx_value); routing directly to OData (Dataverse Search filter doesn't support these reliably).",
-            { filter: opts.additionalFilter },
-        );
-        const records = await runODataFallback(webApi, opts);
-        return { records, source: "odata" };
     }
     try {
         const records = await runSearchQuery(opts);
