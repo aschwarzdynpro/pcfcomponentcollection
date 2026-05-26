@@ -42,7 +42,11 @@ const BU_CACHE = new Map<string, string | null>();
 
 function cleanGuid(g: string | null | undefined): string {
     if (!g || typeof g !== "string") return "";
-    return g.replace(/[{}]/g, "");
+    // Strip enclosing braces and force lowercase. Both OData $filter and
+    // Dataverse Search's `Filter` parameter compare GUIDs case-sensitively
+    // in some backend builds — Xrm.Page hands us UPPERCASE GUIDs for
+    // lookups, which then fail to match the stored lowercase value.
+    return g.replace(/[{}]/g, "").toLowerCase();
 }
 
 interface XrmAttribute {

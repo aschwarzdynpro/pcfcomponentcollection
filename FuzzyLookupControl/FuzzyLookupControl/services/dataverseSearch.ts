@@ -155,6 +155,7 @@ async function runSearchQuery(
         term: opts.term,
         lucene,
         columns: opts.columns,
+        filter: opts.additionalFilter ?? "(none)",
     });
     const res = await fetch(url, {
         method: "POST",
@@ -250,6 +251,11 @@ async function runODataFallback(
         `&$filter=${encodeURIComponent(filter)}` +
         `&$top=${opts.pageSize}`;
 
+    // eslint-disable-next-line no-console
+    console.log("FuzzyLookupControl OData fallback →", {
+        target: opts.targetEntity,
+        filter,
+    });
     const result = await webApi.retrieveMultipleRecords(
         opts.targetEntity,
         query,
