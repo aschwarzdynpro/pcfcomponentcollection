@@ -87,15 +87,16 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
     // div's bounding rect and re-computed on resize / ancestor scroll so
     // the dropdown follows the input.
     //
-    // Width is decoupled from the host width: hosts in Quick-Create or
-    // narrow Business-Process forms are often ~250 px wide, which would
-    // squash 3–4 result columns into 60 px each. We use the host width as
-    // a floor, but expand up to MIN_DROPDOWN_WIDTH so columns stay
-    // readable, and never exceed MAX_DROPDOWN_WIDTH. If the resulting
-    // dropdown would overflow the viewport on the right, we shift it left.
+    // Sizing rules:
+    //   - Desktop: floor at MIN_DROPDOWN_WIDTH so 3-4 columns stay readable,
+    //     ceiling at MAX_DROPDOWN_WIDTH, viewport-aware shift if needed.
+    //   - Mobile (viewport < MOBILE_BREAKPOINT): fill the viewport edge to
+    //     edge (minus a small gutter) and anchor at the viewport's left edge
+    //     so the dropdown lines up with the surrounding form padding.
     const MIN_DROPDOWN_WIDTH = 520;
     const MAX_DROPDOWN_WIDTH = 760;
     const VIEWPORT_GUTTER = 8;
+    const MOBILE_BREAKPOINT = 640;
     const [anchorRect, setAnchorRect] = React.useState<{
         top: number;
         left: number;
@@ -106,12 +107,21 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
         if (!el) return;
         const r = el.getBoundingClientRect();
         const viewportWidth = window.innerWidth;
-        let width = Math.max(r.width, MIN_DROPDOWN_WIDTH);
-        width = Math.min(width, MAX_DROPDOWN_WIDTH);
-        width = Math.min(width, viewportWidth - 2 * VIEWPORT_GUTTER);
-        let left = r.left;
-        if (left + width + VIEWPORT_GUTTER > viewportWidth) {
-            left = Math.max(VIEWPORT_GUTTER, viewportWidth - width - VIEWPORT_GUTTER);
+        const isMobile = viewportWidth < MOBILE_BREAKPOINT;
+
+        let width: number;
+        let left: number;
+        if (isMobile) {
+            width = viewportWidth - 2 * VIEWPORT_GUTTER;
+            left = VIEWPORT_GUTTER;
+        } else {
+            width = Math.max(r.width, MIN_DROPDOWN_WIDTH);
+            width = Math.min(width, MAX_DROPDOWN_WIDTH);
+            width = Math.min(width, viewportWidth - 2 * VIEWPORT_GUTTER);
+            left = r.left;
+            if (left + width + VIEWPORT_GUTTER > viewportWidth) {
+                left = Math.max(VIEWPORT_GUTTER, viewportWidth - width - VIEWPORT_GUTTER);
+            }
         }
         setAnchorRect({ top: r.bottom, left, width });
     }, []);
@@ -387,11 +397,13 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
                         width: anchorRect.width,
                         right: "auto",
                         zIndex: 2147483600,
-                        // Drive the grid template via CSS variable so the row
-                        // layout adapts to the configured column count + the
-                        // optional favorite-toggle column.
-                        ["--flc-col-count" as unknown as string]:
-                            columns.length + (enableFavorites ? 1 : 0),
+                        // Drive the grid template via a CSS custom property so
+                        // the row layout adapts to the configured column count.
+                        // Data columns flex equally; the favorite-toggle gets a
+                        // fixed narrow track because a star doesn't need 1fr.
+                        ["--flc-grid-template" as unknown as string]:
+                            columns.map(() => "minmax(0, 1fr)").join(" ")
+                                + (enableFavorites ? " 28px" : ""),
                     }}
                 >
                     {term.trim().length > 0 && term.trim().length < MIN_CHARS && (

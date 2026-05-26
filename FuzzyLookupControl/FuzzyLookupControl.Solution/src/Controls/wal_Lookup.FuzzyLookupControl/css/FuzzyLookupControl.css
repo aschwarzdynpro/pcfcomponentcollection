@@ -210,7 +210,9 @@
 
 .flc-row {
   display: grid;
-  grid-template-columns: repeat(var(--flc-col-count, 1), minmax(0, 1fr));
+  /* Filled inline by FuzzyLookup.tsx: data columns are minmax(0, 1fr), the
+     optional favorite-toggle is a fixed 28 px track. */
+  grid-template-columns: var(--flc-grid-template, minmax(0, 1fr));
   gap: 8px;
   padding: 6px 12px;
   align-items: center;
@@ -256,9 +258,10 @@
 }
 
 .flc-cell-fav {
-  flex: 0 0 auto;
-  width: 24px;
+  /* Grid track is sized via --flc-grid-template; this cell just centres
+     the star icon inside that 28 px track. */
   text-align: center;
+  padding: 0;
 }
 
 .flc-fav-btn {
@@ -268,7 +271,9 @@
   font-size: 16px;
   line-height: 1;
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 2px;
+  width: 24px;
+  height: 24px;
   border-radius: 2px;
 }
 
@@ -303,4 +308,87 @@
 
 .flc-quick-create:hover {
   background: var(--flc-bg-active);
+}
+
+/* ---------------------------------------------------------------
+   Mobile / touch overrides
+   - Narrow viewports get an edge-to-edge dropdown anchored by JS
+   - Touch hit areas inflate to >= 44 × 44 px (Apple HIG / WCAG 2.5.5)
+   - 16 px base font-size on the input prevents iOS zoom on focus
+   --------------------------------------------------------------- */
+@media (max-width: 640px), (hover: none) and (pointer: coarse) {
+  .flc-input-wrap {
+    min-height: 40px;
+    padding: 4px 8px;
+  }
+
+  .flc-input {
+    font-size: 16px;
+    padding: 6px 0;
+  }
+
+  .flc-chip-clear,
+  .flc-input-search {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .flc-input-search svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .flc-dropdown {
+    max-height: 70vh;
+    border-radius: 6px;
+  }
+
+  .flc-row {
+    padding: 10px 12px;
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  .flc-row.flc-row--header {
+    /* Headers stay compact even on touch — they aren't interactive. */
+    min-height: 0;
+    padding-top: 6px;
+    padding-bottom: 4px;
+  }
+
+  .flc-section-header {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .flc-status {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .flc-footer {
+    padding: 8px;
+  }
+
+  .flc-quick-create {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  /* Keep the star button inside the 28 px grid track and expand its tap
+     area via a transparent ::before, so the touch target is comfortably
+     above the WCAG 44 px guideline without forcing the column wider. */
+  .flc-fav-btn {
+    width: 26px;
+    height: 26px;
+    font-size: 18px;
+    position: relative;
+  }
+
+  .flc-fav-btn::before {
+    content: "";
+    position: absolute;
+    inset: -9px;
+  }
 }
