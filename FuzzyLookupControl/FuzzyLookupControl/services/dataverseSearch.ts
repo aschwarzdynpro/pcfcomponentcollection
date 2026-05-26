@@ -159,6 +159,13 @@ async function runSearchQuery(
         options: JSON.stringify({
             querytype: "lucene",
             besteffortsearchenabled: "true",
+            // Force every Lucene token to match (across all searched
+            // columns, but each token must be present *somewhere*). Default
+            // is `any` which OR-joins terms, so "NYM 2211" would surface
+            // every record containing either token. `all` is the user's
+            // expectation: "NYM 2211" returns rows where both fragments
+            // appear, regardless of which column each fragment is in.
+            searchmode: "all",
         }),
     };
 
@@ -251,10 +258,24 @@ async function runODataFallback(
     const term = opts.term.trim();
     if (!term) return [];
 
-    const safe = escapeOData(term);
-    const containsFilter = opts.columns
-        .map((c) => `contains(${c},'${safe}')`)
-        .join(" or ");
+    // Split the search term on whitespace into tokens and require every
+    // token to be present in at least one configured column. Within a
+    // token we OR across columns ("NYM" matches in either name or
+    // productnumber); across tokens we AND, so "NYM 2211" requires both
+    // "NYM" and "2211" to land somewhere — even if they live in different
+    // columns of the same row. That makes the cross-column UX behave the
+    // way users naturally expect: typing the lookup name from one column
+    // and the productnumber from another column still narrows down to the
+    // expected record.
+    const tokens = term.split(/\s+/).filter((t) => t.length > 0);
+    const tokenClauses = tokens.map((token) => {
+        const safe = escapeOData(token);
+        const perColumn = opts.columns
+            .map((c) => `contains(${c},'${safe}')`)
+            .join(" or ");
+        return `(${perColumn})`;
+    });
+    const containsFilter = tokenClauses.join(" and ");
     // AND-join the user-defined filter (already token-resolved) with the
     // contains() filter so both constraints must match.
     const filter = opts.additionalFilter
