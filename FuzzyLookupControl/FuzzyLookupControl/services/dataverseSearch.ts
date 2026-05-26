@@ -123,18 +123,18 @@ function flattenAttributes(
 }
 
 /**
- * Dataverse Search indexes lookup columns under the *lookup logical name*
- * (e.g. `msdyn_companyid`), not under the OData foreign-key convention
- * (`_msdyn_companyid_value`). The opposite is true for the OData fallback,
- * which only understands `_..._value` for lookups.
- *
- * Makers configure `additionalFilter` in OData syntax (consistent with
- * everything they already know), and we translate to Search syntax on the
- * way out. Word-boundary anchors keep us from mangling unrelated
- * substrings.
+ * Dataverse Search's `Filter` parameter is documented to accept OData-style
+ * comparisons (`statecode eq 0`, `modifiedon ge …`), but lookup-FK columns
+ * (`_xxx_value`) are not reliably honoured by the underlying index:
+ *   - Sent as `_xxx_value eq <guid>` → request returns 200 but the filter
+ *     is silently dropped (no match constraint applied).
+ *   - Sent as `xxx eq <guid>` (the lookup's logical name) → 400 Bad Request,
+ *     "invalid expression in the search query".
+ * So we detect lookup-FK filters and route those searches straight to the
+ * OData fallback, where `_xxx_value eq <guid>` is a first-class filter.
  */
-function odataFilterToSearchFilter(filter: string): string {
-    return filter.replace(/\b_([a-zA-Z][a-zA-Z0-9_]*?)_value\b/g, "$1");
+function containsLookupFKFilter(filter: string): boolean {
+    return /\b_[a-zA-Z][a-zA-Z0-9_]*?_value\b/.test(filter);
 }
 
 async function runSearchQuery(
@@ -143,16 +143,12 @@ async function runSearchQuery(
     const lucene = buildLuceneQuery(opts.term);
     if (!lucene) return [];
 
-    const searchFilter = opts.additionalFilter
-        ? odataFilterToSearchFilter(opts.additionalFilter)
-        : undefined;
-
     const entities = [
         {
             Name: opts.targetEntity,
             SelectColumns: opts.columns,
             SearchColumns: opts.columns,
-            ...(searchFilter ? { Filter: searchFilter } : {}),
+            ...(opts.additionalFilter ? { Filter: opts.additionalFilter } : {}),
         },
     ];
 
@@ -174,8 +170,7 @@ async function runSearchQuery(
         term: opts.term,
         lucene,
         columns: opts.columns,
-        filterOData: opts.additionalFilter ?? "(none)",
-        filterApplied: searchFilter ?? "(none)",
+        filter: opts.additionalFilter ?? "(none)",
     });
     const res = await fetch(url, {
         method: "POST",
@@ -322,6 +317,20 @@ export async function searchRecords(
         // error in the OData fallback. Caller already logs why; just return
         // empty so the dropdown shows "No matches" instead of throwing.
         return { records: [], source: "search" };
+    }
+
+    // Short-circuit to OData when the filter references a lookup FK column:
+    // Dataverse Search either silently drops such filters or rejects the
+    // request with HTTP 400. OData handles `_xxx_value eq <guid>` natively,
+    // so we skip the wasted round-trip and the cosmetic banner in this case.
+    if (opts.additionalFilter && containsLookupFKFilter(opts.additionalFilter)) {
+        // eslint-disable-next-line no-console
+        console.log(
+            "FuzzyLookupControl: additionalFilter references a lookup FK (_xxx_value); routing directly to OData (Dataverse Search filter doesn't support these reliably).",
+            { filter: opts.additionalFilter },
+        );
+        const records = await runODataFallback(webApi, opts);
+        return { records, source: "odata" };
     }
     try {
         const records = await runSearchQuery(opts);
