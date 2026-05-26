@@ -1,0 +1,428 @@
+/* FuzzyLookupControl — visual style is intentionally close to the UCI
+   Lookup control so it blends into existing forms. Uses CSS variables so
+   makers can re-skin per-form via custom CSS web resources if needed. */
+
+/* CSS variables are redeclared on the dropdown selector because the dropdown
+   is portalled into document.body and therefore is NOT a descendant of the
+   .flc-host-root element where the variables would normally be defined. */
+.flc-host-root,
+.flc-dropdown {
+  --flc-bg: #ffffff;
+  --flc-bg-hover: #f3f2f1;
+  --flc-bg-active: #edebe9;
+  --flc-border: #8a8886;
+  --flc-border-focus: #0078d4;
+  --flc-text: #201f1e;
+  --flc-text-muted: #605e5c;
+  --flc-accent: #0078d4;
+  --flc-mark-bg: #fff4ce;
+  --flc-section-header-bg: #faf9f8;
+  --flc-banner-bg: #fff4ce;
+  --flc-banner-text: #5d4a00;
+  --flc-disabled-bg: #f3f2f1;
+  --flc-fav-on: #ffaa44;
+}
+
+.flc-host-root {
+  display: block;
+  width: 100%;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  color: var(--flc-text);
+}
+
+.flc-host {
+  position: relative;
+  width: 100%;
+}
+
+/* Container mimics the OOB UCI Lookup chrome: subtle Fluent neutral-2
+   background by default, slightly darker on hover, opaque white on focus
+   with a 1 px accent bottom-bar.                                        */
+.flc-input-wrap {
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+  border: none;
+  border-bottom: 1px solid transparent;
+  background: #faf9f8;
+  padding: 2px 8px;
+  cursor: text;
+  box-sizing: border-box;
+  border-radius: 2px;
+}
+
+.flc-input-wrap:hover:not(.is-disabled) {
+  background: #f3f2f1;
+}
+
+.flc-input-wrap:focus-within {
+  border-bottom-color: var(--flc-border-focus, #0078d4);
+  background: var(--flc-bg, #ffffff);
+}
+
+.flc-input-wrap.is-disabled {
+  background: var(--flc-disabled-bg);
+  cursor: not-allowed;
+}
+
+.flc-input {
+  flex: 1 1 auto;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  min-width: 0;
+  padding: 4px 0;
+}
+
+.flc-input::placeholder {
+  color: var(--flc-text-muted);
+}
+
+.flc-chip-clear,
+.flc-input-search {
+  flex: 0 0 auto;
+  background: transparent;
+  border: none;
+  color: var(--flc-text-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 6px;
+  border-radius: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flc-chip-clear:hover,
+.flc-input-search:hover {
+  background: var(--flc-bg-active);
+  color: var(--flc-text);
+}
+
+.flc-input-search {
+  height: 24px;
+  width: 24px;
+  padding: 0;
+}
+
+.flc-chip {
+  display: inline-flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 6px;
+}
+
+.flc-chip-icon {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  /* Some Dynamics-supplied SVGs have a fixed dark fill; let them be —
+     OOB renders them at native colors too. */
+}
+
+.flc-chip-label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--flc-accent);
+  cursor: pointer;
+  padding: 4px 0;
+  /* Always-on underline to match the OOB Lookup's hyperlink look. */
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.flc-chip-label:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Dropdown panel — rendered into a React portal under document.body. The
+   inline style on the rendered element sets `position: fixed` + top/left/width
+   so the static positioning rules below are only fallbacks for the
+   (unused) non-portal case. */
+
+.flc-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  margin-top: 2px;
+  /* Full color set restated here in case the variables were not inherited
+     (portalled instance under document.body). Opaque background is the
+     critical bit — without it the dropdown looks transparent over the
+     underlying form. */
+  background: var(--flc-bg, #ffffff);
+  color: var(--flc-text, #201f1e);
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  border: 1px solid var(--flc-border-focus, #0078d4);
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 12px 28px 0 rgba(0, 0, 0, 0.20),
+    0 2px 4px 0 rgba(0, 0, 0, 0.12);
+  max-height: 360px;
+  overflow-y: auto;
+  font-size: 13px;
+}
+
+.flc-status {
+  padding: 8px 12px;
+  color: var(--flc-text-muted);
+  font-style: italic;
+}
+
+.flc-banner {
+  padding: 6px 12px;
+  background: var(--flc-banner-bg);
+  color: var(--flc-banner-text);
+  font-size: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.flc-section {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.flc-section:last-child {
+  border-bottom: none;
+}
+
+.flc-section-header {
+  padding: 4px 12px;
+  background: var(--flc-section-header-bg);
+  color: var(--flc-text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  /* Sticky to the top of the scroll container so the section label
+     (FAVORITEN / TREFFER / …) is always visible while the user scrolls. */
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+/* Result rows: a CSS grid so up to 4 columns + an optional favorite toggle
+   share the available width evenly. */
+
+.flc-row {
+  display: grid;
+  /* Filled inline by FuzzyLookup.tsx: data columns are minmax(0, 1fr), the
+     optional favorite-toggle is a fixed 28 px track. */
+  grid-template-columns: var(--flc-grid-template, minmax(0, 1fr));
+  gap: 8px;
+  padding: 6px 12px;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* Vertical column separator — a 1 px line in the middle of the grid gap.
+   Skipped for the first cell (no preceding gap). Applies in both header
+   and data rows so the columns line up visually all the way down. */
+.flc-cell {
+  position: relative;
+}
+
+.flc-cell:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(0, 0, 0, 0.10);
+}
+
+.flc-row.flc-row--header {
+  cursor: default;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--flc-text-muted);
+  background: var(--flc-bg);
+  padding-top: 4px;
+  padding-bottom: 2px;
+  /* Stick to the top of the scroll container, just under the section
+     header. Z-index keeps data rows from rendering on top while scrolling. */
+  position: sticky;
+  top: 22px;
+  z-index: 2;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.10);
+}
+
+.flc-row.flc-row--data:hover {
+  background: #e5f1fb;
+  box-shadow: inset 3px 0 0 var(--flc-accent, #0078d4);
+}
+
+.flc-row.flc-row--data.is-active {
+  background: #cfe4f7;
+  box-shadow: inset 3px 0 0 var(--flc-accent, #0078d4);
+}
+
+.flc-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flc-cell-0 {
+  font-weight: 600;
+}
+
+.flc-cell mark {
+  background: var(--flc-mark-bg);
+  color: inherit;
+  font-weight: 700;
+  padding: 0;
+}
+
+.flc-cell-fav {
+  /* Grid track is sized via --flc-grid-template; this cell just centres
+     the star icon inside that 28 px track. */
+  text-align: center;
+  padding: 0;
+}
+
+.flc-fav-btn {
+  background: transparent;
+  border: none;
+  color: var(--flc-text-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 2px;
+}
+
+.flc-fav-btn:hover {
+  background: var(--flc-bg-active);
+  color: var(--flc-text);
+}
+
+.flc-fav-btn.is-on {
+  color: var(--flc-fav-on);
+}
+
+/* Footer with Quick-Create */
+
+.flc-footer {
+  padding: 4px 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--flc-section-header-bg);
+  text-align: left;
+}
+
+.flc-quick-create {
+  background: transparent;
+  border: none;
+  color: var(--flc-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 2px;
+}
+
+.flc-quick-create:hover {
+  background: var(--flc-bg-active);
+}
+
+/* ---------------------------------------------------------------
+   Mobile / touch overrides
+   - Narrow viewports get an edge-to-edge dropdown anchored by JS
+   - Touch hit areas inflate to >= 44 × 44 px (Apple HIG / WCAG 2.5.5)
+   - 16 px base font-size on the input prevents iOS zoom on focus
+   --------------------------------------------------------------- */
+@media (max-width: 640px), (hover: none) and (pointer: coarse) {
+  .flc-input-wrap {
+    min-height: 40px;
+    padding: 4px 8px;
+  }
+
+  .flc-input {
+    font-size: 16px;
+    padding: 6px 0;
+  }
+
+  .flc-chip-clear,
+  .flc-input-search {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .flc-input-search svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .flc-dropdown {
+    max-height: 70vh;
+    border-radius: 6px;
+  }
+
+  .flc-row {
+    padding: 10px 12px;
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  .flc-row.flc-row--header {
+    /* Headers stay compact even on touch — they aren't interactive. */
+    min-height: 0;
+    padding-top: 6px;
+    padding-bottom: 4px;
+  }
+
+  .flc-section-header {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .flc-row.flc-row--header {
+    /* Section header is taller on touch (12 px font, 6+6 padding) so the
+       sticky row-header sits a bit further down. */
+    top: 28px;
+  }
+
+  .flc-status {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .flc-footer {
+    padding: 8px;
+  }
+
+  .flc-quick-create {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  /* Keep the star button inside the 28 px grid track and expand its tap
+     area via a transparent ::before, so the touch target is comfortably
+     above the WCAG 44 px guideline without forcing the column wider. */
+  .flc-fav-btn {
+    width: 26px;
+    height: 26px;
+    font-size: 18px;
+    position: relative;
+  }
+
+  .flc-fav-btn::before {
+    content: "";
+    position: absolute;
+    inset: -9px;
+  }
+}
