@@ -23,7 +23,6 @@ export class FuzzyLookupControl
     private _targetEntity = "";
     private _primaryName = "name";
     private _columns: string[] = [];
-    private _columnHeaders: string[] = [];
     private _iconUrl: string | undefined = undefined;
     private _metadataLoaded = false;
     private _safetyTimeout: number | null = null;
@@ -73,7 +72,6 @@ export class FuzzyLookupControl
         // post-navigation handlers.
         this._primaryName = "name";
         this._columns = Array.from(new Set([this._primaryName, ...rawCols])).slice(0, 4);
-        this._columnHeaders = this._columns.map((c) => titleCase(c));
         this._metadataLoaded = true;
         this.render();
 
@@ -110,7 +108,6 @@ export class FuzzyLookupControl
             this._primaryName = meta.primaryName;
             const orderedCols = Array.from(new Set([meta.primaryName, ...rawCols]));
             this._columns = orderedCols.slice(0, 4);
-            this._columnHeaders = this._columns.map((c) => meta.columnDisplayNames[c] ?? titleCase(c));
             this._iconUrl = meta.iconUrl;
 
             // eslint-disable-next-line no-console
@@ -118,7 +115,6 @@ export class FuzzyLookupControl
                 target: this._targetEntity,
                 primaryName: this._primaryName,
                 columns: this._columns,
-                columnHeaders: this._columnHeaders,
                 configuredColumns: rawCols,
                 iconUrl: this._iconUrl,
             });
@@ -366,7 +362,6 @@ export class FuzzyLookupControl
             targetEntity: this._targetEntity,
             primaryName: this._primaryName,
             columns: this._columns,
-            columnHeaders: this._columnHeaders,
             iconUrl: this._iconUrl,
             additionalFilter,
             placeholder,
@@ -400,9 +395,4 @@ function clampPageSize(raw: number | null | undefined): number {
     if (n < 1) return 1;
     if (n > 50) return 50;
     return n;
-}
-
-function titleCase(logical: string): string {
-    const stripped = logical.replace(/^[a-z]+_/, "");
-    return stripped.charAt(0).toUpperCase() + stripped.slice(1);
 }

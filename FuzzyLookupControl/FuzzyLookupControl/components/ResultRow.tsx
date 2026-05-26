@@ -3,11 +3,19 @@ import type { LookupRecord } from "../services/types";
 
 export interface ResultRowProps {
     record: LookupRecord;
-    columns: string[];          // ordered, length 1..4
-    columnHeaders: string[];    // parallel to columns
+    /** Logical column names in display order. `columns[0]` becomes the card
+     * title (primary line); `columns[1..]` are stacked as subtitle lines
+     * underneath. Empty values are skipped entirely so a missing column2
+     * doesn't leave a blank line. */
+    columns: string[];
+    /** Logical name of the target table's primary-name attribute. Used as a
+     * tooltip on the title so the user can hover-confirm what they're
+     * about to select even if the rendered text is truncated. */
     primaryName: string;
+    /** Optional table icon shown to the left of the card body. Sourced
+     * from the entity metadata (IconVectorName web resource). */
+    iconUrl?: string;
     isActive: boolean;
-    showHeaderRow: boolean;     // first row of a section shows header
     showFavoriteToggle: boolean;
     isFavorite: boolean;
     onSelect: (rec: LookupRecord) => void;
@@ -21,9 +29,9 @@ export const ResultRow: React.FC<ResultRowProps> = (props) => {
     const {
         record,
         columns,
-        columnHeaders,
+        primaryName,
+        iconUrl,
         isActive,
-        showHeaderRow,
         showFavoriteToggle,
         isFavorite,
         onSelect,
@@ -40,56 +48,67 @@ export const ResultRow: React.FC<ResultRowProps> = (props) => {
         onSelect(record);
     };
 
+    const titleCol = columns[0];
+    const subtitleCols = columns.slice(1);
+
+    const titleRaw = record.columns[titleCol] ?? "";
+    const titleHtml = record.highlights[titleCol] || escapeHtml(titleRaw);
+
     return (
-        <>
-            {showHeaderRow && (
-                <div className="flc-row flc-row--header" aria-hidden="true">
-                    {columns.map((c, i) => (
-                        <div key={c} className={`flc-cell flc-cell-${i}`}>
-                            {columnHeaders[i] ?? c}
-                        </div>
-                    ))}
-                    {showFavoriteToggle && <div className="flc-cell flc-cell-fav" />}
-                </div>
+        <div
+            role="option"
+            aria-selected={isActive}
+            className={`flc-card-row ${isActive ? "is-active" : ""}`}
+            onClick={onClick}
+            onMouseEnter={onMouseEnter}
+        >
+            {iconUrl && (
+                <img
+                    className="flc-card-icon"
+                    src={iconUrl}
+                    alt=""
+                    aria-hidden="true"
+                />
             )}
-            <div
-                role="option"
-                aria-selected={isActive}
-                className={`flc-row flc-row--data ${isActive ? "is-active" : ""}`}
-                onClick={onClick}
-                onMouseEnter={onMouseEnter}
-            >
-                {columns.map((c, i) => {
-                    const html = record.highlights[c] || escapeHtml(record.columns[c] ?? "");
+            <div className="flc-card-body">
+                <div
+                    className="flc-card-title"
+                    title={titleRaw || primaryName}
+                    dangerouslySetInnerHTML={{ __html: titleHtml }}
+                />
+                {subtitleCols.map((c) => {
+                    const raw = record.columns[c] ?? "";
+                    // Skip empty subtitles so a missing column doesn't leave
+                    // a blank line in the card.
+                    if (!raw) return null;
+                    const html = record.highlights[c] || escapeHtml(raw);
                     return (
                         <div
                             key={c}
-                            className={`flc-cell flc-cell-${i}`}
-                            title={record.columns[c] ?? ""}
+                            className="flc-card-subtitle"
+                            title={raw}
                             dangerouslySetInnerHTML={{ __html: html }}
                         />
                     );
                 })}
-                {showFavoriteToggle && (
-                    <div className="flc-cell flc-cell-fav">
-                        <button
-                            type="button"
-                            data-fav-toggle
-                            aria-pressed={isFavorite}
-                            aria-label={isFavorite ? unpinTooltip : pinTooltip}
-                            title={isFavorite ? unpinTooltip : pinTooltip}
-                            className={`flc-fav-btn ${isFavorite ? "is-on" : ""}`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onToggleFavorite(record);
-                            }}
-                        >
-                            {isFavorite ? "★" : "☆"}
-                        </button>
-                    </div>
-                )}
             </div>
-        </>
+            {showFavoriteToggle && (
+                <button
+                    type="button"
+                    data-fav-toggle
+                    aria-pressed={isFavorite}
+                    aria-label={isFavorite ? unpinTooltip : pinTooltip}
+                    title={isFavorite ? unpinTooltip : pinTooltip}
+                    className={`flc-card-fav ${isFavorite ? "is-on" : ""}`}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleFavorite(record);
+                    }}
+                >
+                    {isFavorite ? "★" : "☆"}
+                </button>
+            )}
+        </div>
     );
 };
 

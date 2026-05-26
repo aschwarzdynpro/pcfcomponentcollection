@@ -3,8 +3,9 @@
 **Kurzbeschreibung:** PCF-Field-Control für Dataverse-Lookup-Spalten
 (`Lookup.Simple`). Drop-in-Ersatz für das Standard-Lookup-Control im
 Model-Driven-App-Formular. Nutzt **Dataverse Search** (Azure Cognitive Search)
-für tippfehler-tolerante Vorschläge, zeigt bis zu **vier konfigurierbare
-Spalten** je Treffer und unterstützt direkte Datensatzanlage über
+für tippfehler-tolerante Vorschläge, rendert jeden Treffer als **Karte**
+(konfigurierte Primärspalte als Titel, bis zu drei weitere Spalten als
+Untertitel-Zeilen darunter) und unterstützt direkte Datensatzanlage über
 **Quick-Create**. Architektur-Hooks für **Favoriten** und **Zuletzt
 verwendet** sind enthalten (in v1 abschaltbar; finale UI-Politur folgt in v2).
 
@@ -29,20 +30,29 @@ verwendet** sind enthalten (in v1 abschaltbar; finale UI-Politur folgt in v2).
   `{crmhit}…{/crmhit}`-Tags; das Control rendert diese HTML-sicher in
   `<mark>`-Tags um.
 
-### Bis zu vier konfigurierbare Spalten
+### Karten-Layout für Treffer
 
-- Properties `column1` … `column4` nehmen logische Spaltennamen entgegen.
-- Leere Properties werden ausgeblendet — der Maker kann z. B. nur 2 Spalten
-  konfigurieren.
-- `column1` leer → das Primärnamen-Attribut der Ziel-Tabelle wird automatisch
-  vorgezogen (per `Utility.getEntityMetadata`).
-- Spaltenüberschriften werden ebenfalls aus der Entity-Metadata gelesen
-  (Display-Name); Fallback ist eine Title-Case-Variante des logischen
-  Namens, falls die Metadata-API nicht verfügbar ist.
+- Jeder Treffer wird als eigenständige Karte gerendert — nicht als
+  Tabellenzeile mit mehreren Spalten.
+- Properties `column1` … `column4` nehmen logische Spaltennamen entgegen:
+  - `column1` ist die **Titel-Zeile** der Karte (fett, primärfarben).
+    Leer → das Primärnamen-Attribut der Ziel-Tabelle wird automatisch
+    vorgezogen (per `Utility.getEntityMetadata`).
+  - `column2` … `column4` werden als **Untertitel-Zeilen** untereinander
+    unter dem Titel angezeigt (12 px, gedämpfte Farbe). Leere Properties
+    werden komplett ausgeblendet, ebenso Zeilen für die der konkrete
+    Datensatz keinen Wert enthält — eine fehlende `productnumber`
+    erzeugt also keine leere Zeile.
+- Links neben jeder Karte erscheint — falls in der Entity-Metadata
+  hinterlegt — das Tabellen-Icon (`IconVectorName`-Webresource).
+- Lange Werte (z. B. zusammengesetzte Artikelnummern) brechen in eine
+  zweite Zeile um, statt mitten im Token abgeschnitten zu werden.
 - Werte werden — wenn vorhanden — über das Feld
   `<col>@OData.Community.Display.V1.FormattedValue` gerendert
   (Lookup-Anzeigenamen, Choice-Labels, Datumswerte sehen damit identisch
   zu OOB aus).
+- Die Dropdown-Breite ist für das schmale Karten-Layout optimiert:
+  Min 360 px, Max 480 px (Desktop), Mobile edge-to-edge.
 
 ### Quick-Create („+ Neu")
 

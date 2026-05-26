@@ -26,9 +26,8 @@ export interface FuzzyLookupProps {
     selected: LookupRecord | null;
     targetEntity: string;
     primaryName: string;
-    columns: string[];          // ordered, 1..4 elements; column 0 = primary
-    columnHeaders: string[];    // parallel
-    iconUrl?: string;           // table icon (SVG web resource URL), shown next to the chip
+    columns: string[];          // ordered, 1..4 elements; column 0 = card title, 1..n stacked subtitles
+    iconUrl?: string;           // table icon (SVG web resource URL), shown next to the chip and on each card
     additionalFilter?: string;  // maker-defined OData filter with {record.…}/{user.…} tokens
     placeholder: string;
     pageSize: number;
@@ -54,7 +53,6 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
         targetEntity,
         primaryName,
         columns,
-        columnHeaders,
         iconUrl,
         additionalFilter,
         placeholder,
@@ -90,14 +88,17 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
     // div's bounding rect and re-computed on resize / ancestor scroll so
     // the dropdown follows the input.
     //
-    // Sizing rules:
-    //   - Desktop: floor at MIN_DROPDOWN_WIDTH so 3-4 columns stay readable,
-    //     ceiling at MAX_DROPDOWN_WIDTH, viewport-aware shift if needed.
-    //   - Mobile (viewport < MOBILE_BREAKPOINT): fill the viewport edge to
-    //     edge (minus a small gutter) and anchor at the viewport's left edge
-    //     so the dropdown lines up with the surrounding form padding.
-    const MIN_DROPDOWN_WIDTH = 520;
-    const MAX_DROPDOWN_WIDTH = 760;
+    // Sizing rules (card layout — single column, title + stacked subtitles):
+    //   - Desktop: floor at MIN_DROPDOWN_WIDTH so a couple of subtitles
+    //     fit in one line, ceiling at MAX_DROPDOWN_WIDTH so the cards
+    //     don't grow obnoxiously wide on big displays. Aligned with the
+    //     visual weight of the OOB UCI Lookup (~360-440 px).
+    //   - Mobile (viewport < MOBILE_BREAKPOINT): fill the viewport edge
+    //     to edge (minus a small gutter) and anchor at the viewport's
+    //     left edge so the dropdown lines up with the surrounding form
+    //     padding.
+    const MIN_DROPDOWN_WIDTH = 360;
+    const MAX_DROPDOWN_WIDTH = 480;
     const VIEWPORT_GUTTER = 8;
     const MOBILE_BREAKPOINT = 640;
     const [anchorRect, setAnchorRect] = React.useState<{
@@ -431,13 +432,6 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
                         width: anchorRect.width,
                         right: "auto",
                         zIndex: 2147483600,
-                        // Drive the grid template via a CSS custom property so
-                        // the row layout adapts to the configured column count.
-                        // Data columns flex equally; the favorite-toggle gets a
-                        // fixed narrow track because a star doesn't need 1fr.
-                        ["--flc-grid-template" as unknown as string]:
-                            columns.map(() => "minmax(0, 1fr)").join(" ")
-                                + (enableFavorites ? " 28px" : ""),
                     }}
                 >
                     {term.trim().length > 0 && term.trim().length < MIN_CHARS && (
@@ -472,10 +466,9 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
                                             key={`${section.kind}-${rec.id}`}
                                             record={rec}
                                             columns={columns}
-                                            columnHeaders={columnHeaders}
                                             primaryName={primaryName}
+                                            iconUrl={iconUrl}
                                             isActive={absoluteIdx === activeIdx}
-                                            showHeaderRow={i === 0}
                                             showFavoriteToggle={enableFavorites}
                                             isFavorite={enableFavorites && isFavoriteFn(scope, rec.id)}
                                             onSelect={commitSelection}
