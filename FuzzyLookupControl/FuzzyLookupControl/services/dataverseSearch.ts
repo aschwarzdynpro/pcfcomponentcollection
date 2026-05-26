@@ -122,18 +122,37 @@ function flattenAttributes(
     return out;
 }
 
+/**
+ * Dataverse Search indexes lookup columns under the *lookup logical name*
+ * (e.g. `msdyn_companyid`), not under the OData foreign-key convention
+ * (`_msdyn_companyid_value`). The opposite is true for the OData fallback,
+ * which only understands `_..._value` for lookups.
+ *
+ * Makers configure `additionalFilter` in OData syntax (consistent with
+ * everything they already know), and we translate to Search syntax on the
+ * way out. Word-boundary anchors keep us from mangling unrelated
+ * substrings.
+ */
+function odataFilterToSearchFilter(filter: string): string {
+    return filter.replace(/\b_([a-zA-Z][a-zA-Z0-9_]*?)_value\b/g, "$1");
+}
+
 async function runSearchQuery(
     opts: SearchOptions,
 ): Promise<LookupRecord[]> {
     const lucene = buildLuceneQuery(opts.term);
     if (!lucene) return [];
 
+    const searchFilter = opts.additionalFilter
+        ? odataFilterToSearchFilter(opts.additionalFilter)
+        : undefined;
+
     const entities = [
         {
             Name: opts.targetEntity,
             SelectColumns: opts.columns,
             SearchColumns: opts.columns,
-            ...(opts.additionalFilter ? { Filter: opts.additionalFilter } : {}),
+            ...(searchFilter ? { Filter: searchFilter } : {}),
         },
     ];
 
@@ -155,7 +174,8 @@ async function runSearchQuery(
         term: opts.term,
         lucene,
         columns: opts.columns,
-        filter: opts.additionalFilter ?? "(none)",
+        filterOData: opts.additionalFilter ?? "(none)",
+        filterApplied: searchFilter ?? "(none)",
     });
     const res = await fetch(url, {
         method: "POST",
