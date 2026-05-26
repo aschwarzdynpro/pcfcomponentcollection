@@ -303,7 +303,14 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
                 )}
                 <span
                     className="flc-chip-label"
-                    onClick={() => onOpenRecord(selected)}
+                    onClick={(e) => {
+                        // Prevent the click from bubbling to the input wrap,
+                        // which would otherwise open the suggestion dropdown
+                        // just as we're navigating away to the linked record.
+                        e.stopPropagation();
+                        setOpen(false);
+                        onOpenRecord(selected);
+                    }}
                     title={strings.openRecord + ": " + selected.primaryName}
                 >
                     {selected.primaryName}
