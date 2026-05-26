@@ -123,24 +123,39 @@ function flattenAttributes(
 }
 
 /**
- * Dataverse Search's underlying Azure Cognitive Search index treats lookup
- * FK columns as Edm.String, which means GUID literals need to be wrapped in
- * single quotes — unquoted GUIDs are silently dropped (200 OK, filter
- * ignored) and translated lookup names without quotes return HTTP 400.
- * This helper finds bare 8-4-4-4-12 hex GUIDs and quotes them, while
- * leaving already-quoted GUIDs alone. Case-insensitive so it also handles
- * UPPER-cased GUIDs that other callers might pass through.
+ * Translate a maker-authored OData $filter expression into the dialect the
+ * Dataverse `searchquery` action actually expects. The official docs imply
+ * the two are identical; empirically (verified against a real Dual-Write
+ * env, see project memory) they differ in two ways for lookup FKs:
+ *
+ *   1. **Column name**: must be the lookup's plain logical name, NOT the
+ *      OData `_<col>_value` annotation. `_msdyn_companyid_value eq …`
+ *      returns 200 OK with the filter silently ignored.
+ *   2. **GUID literal**: must be wrapped in single quotes. Bare GUIDs cause
+ *      HTTP 400 `0x80048d0b "invalid expression in the search query"`.
+ *
+ * Also worth noting (we don't rewrite for this, but document it):
+ *   - The `not` operator is rejected; use `ne` instead.
+ *   - Not every searchable column is filterable; if your filter silently
+ *     returns 0 the column may not be marked filterable in the search index.
  */
-function quoteGuidsInSearchFilter(filter: string): string {
-    return filter.replace(
-        /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
-        (guid, offset: number, full: string) => {
-            const before = full[offset - 1];
-            const after = full[offset + guid.length];
-            if (before === "'" && after === "'") return guid;
-            return `'${guid}'`;
-        },
-    );
+function odataFilterToSearchFilter(filter: string): string {
+    return filter
+        // Step 1: `_xxx_value` → `xxx`. Word-boundary anchored so we don't
+        // mangle unrelated identifiers that happen to contain "_value".
+        .replace(/\b_([a-zA-Z][a-zA-Z0-9_]*?)_value\b/g, "$1")
+        // Step 2: wrap bare GUIDs in single quotes. Skip GUIDs that are
+        // already quoted (the maker quoted them manually, or a previous
+        // pass through this function already did).
+        .replace(
+            /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+            (guid, offset: number, full: string) => {
+                const before = full[offset - 1];
+                const after = full[offset + guid.length];
+                if (before === "'" && after === "'") return guid;
+                return `'${guid}'`;
+            },
+        );
 }
 
 async function runSearchQuery(
@@ -150,7 +165,7 @@ async function runSearchQuery(
     if (!lucene) return [];
 
     const searchFilter = opts.additionalFilter
-        ? quoteGuidsInSearchFilter(opts.additionalFilter)
+        ? odataFilterToSearchFilter(opts.additionalFilter)
         : undefined;
 
     const entities = [
