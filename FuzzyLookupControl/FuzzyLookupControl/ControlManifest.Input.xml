@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="Lookup" constructor="FuzzyLookupControl" version="1.0.20" display-name-key="FuzzyLookupControl_Display" description-key="FuzzyLookupControl_Desc" control-type="standard">
+  <control namespace="Lookup" constructor="FuzzyLookupControl" version="1.0.21" display-name-key="FuzzyLookupControl_Display" description-key="FuzzyLookupControl_Desc" control-type="standard">
     <!-- Bound to a Lookup.Simple column. The first Lookup.Simple bound property is
          the primary lookup. Target table is derived automatically. -->
     <property name="selectedItem" display-name-key="selectedItem_Display" description-key="selectedItem_Desc" of-type="Lookup.Simple" usage="bound" required="true" />
@@ -17,6 +17,20 @@
 
     <!-- Placeholder shown when no record is selected. -->
     <property name="placeholder" display-name-key="placeholder_Display" description-key="placeholder_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- Optional OData filter applied on top of every search. Supports tokens
+         that are resolved at runtime against the current record / user:
+           {record.<column>}  — value from the current form attribute
+                                (Lookups → guid, text → string, choice → int)
+           {user.id}          — current user id (guid)
+           {user.bu}          — current user's business unit id (guid)
+         If a token cannot be resolved (e.g. the source field is empty), the
+         entire filter is dropped for that search so we don't emit invalid
+         OData. Examples:
+           statecode eq 0
+           _msdyn_companyid_value eq {record.sst_company_ref}
+           statecode eq 0 and _ownerid_value eq {user.id} -->
+    <property name="additionalFilter" display-name-key="additionalFilter_Display" description-key="additionalFilter_Desc" of-type="SingleLine.Text" usage="input" required="false" />
 
     <!-- When true (default), the dropdown shows a "+ New" button that opens the
          target table's Quick-Create form. After save, the new record is selected. -->
@@ -36,9 +50,9 @@
     <resources>
       <code path="index.ts" order="1"/>
       <css path="css/FuzzyLookupControl.css" order="1" />
-      <resx path="strings/FuzzyLookupControl.1033.resx" version="1.0.20" />
-      <resx path="strings/FuzzyLookupControl.1031.resx" version="1.0.20" />
-      <resx path="strings/FuzzyLookupControl.1036.resx" version="1.0.20" />
+      <resx path="strings/FuzzyLookupControl.1033.resx" version="1.0.21" />
+      <resx path="strings/FuzzyLookupControl.1031.resx" version="1.0.21" />
+      <resx path="strings/FuzzyLookupControl.1036.resx" version="1.0.21" />
     </resources>
 
     <!-- WebAPI for Dataverse Search (`searchquery`) and the OData fallback;

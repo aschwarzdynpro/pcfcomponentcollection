@@ -21,6 +21,10 @@ export interface SearchOptions {
     columns: string[];      // ordered, includes primaryName as first element
     primaryName: string;
     pageSize: number;
+    /** Pre-resolved OData filter (tokens already substituted by the caller).
+     * Applied via `entities[].filter` on searchquery and AND-joined with the
+     * `contains()` filter on the OData fallback path. */
+    additionalFilter?: string;
     signal?: AbortSignal;
 }
 
@@ -129,6 +133,7 @@ async function runSearchQuery(
             Name: opts.targetEntity,
             SelectColumns: opts.columns,
             SearchColumns: opts.columns,
+            ...(opts.additionalFilter ? { Filter: opts.additionalFilter } : {}),
         },
     ];
 
@@ -231,9 +236,14 @@ async function runODataFallback(
     if (!term) return [];
 
     const safe = escapeOData(term);
-    const filter = opts.columns
+    const containsFilter = opts.columns
         .map((c) => `contains(${c},'${safe}')`)
         .join(" or ");
+    // AND-join the user-defined filter (already token-resolved) with the
+    // contains() filter so both constraints must match.
+    const filter = opts.additionalFilter
+        ? `(${containsFilter}) and (${opts.additionalFilter})`
+        : containsFilter;
     const select = opts.columns.join(",");
     const query =
         `?$select=${encodeURIComponent(select)}` +

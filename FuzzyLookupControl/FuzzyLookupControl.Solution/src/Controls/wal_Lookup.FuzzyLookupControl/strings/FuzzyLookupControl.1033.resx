@@ -108,6 +108,12 @@
   <data name="placeholder_Desc" xml:space="preserve">
     <value>Placeholder text shown in the input when no record is selected.</value>
   </data>
+  <data name="additionalFilter_Display" xml:space="preserve">
+    <value>Additional Filter</value>
+  </data>
+  <data name="additionalFilter_Desc" xml:space="preserve">
+    <value>Optional OData filter applied to every search on top of the user's term. Supports tokens replaced at runtime: {record.&lt;column&gt;} for a value on the current form, {user.id} for the current user, {user.bu} for the current user's business unit. If any token can't be resolved (source field empty) the filter is skipped for that search. Example: _msdyn_companyid_value eq {record.sst_company_ref}</value>
+  </data>
   <data name="enableQuickCreate_Display" xml:space="preserve">
     <value>Enable Quick-Create</value>
   </data>

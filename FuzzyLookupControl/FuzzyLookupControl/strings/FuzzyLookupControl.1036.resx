@@ -106,6 +106,12 @@
   <data name="placeholder_Desc" xml:space="preserve">
     <value>Texte d'invite affiché tant qu'aucun enregistrement n'est sélectionné.</value>
   </data>
+  <data name="additionalFilter_Display" xml:space="preserve">
+    <value>Filtre supplémentaire</value>
+  </data>
+  <data name="additionalFilter_Desc" xml:space="preserve">
+    <value>Filtre OData optionnel appliqué à chaque recherche en plus du terme saisi. Prend en charge les jetons résolus à l'exécution : {record.&lt;colonne&gt;} pour une valeur du formulaire courant, {user.id} pour l'utilisateur actuel, {user.bu} pour son unité commerciale. Si un jeton ne peut pas être résolu (champ source vide), le filtre est ignoré pour cette recherche. Exemple : _msdyn_companyid_value eq {record.sst_company_ref}</value>
+  </data>
   <data name="enableQuickCreate_Display" xml:space="preserve">
     <value>Activer la création rapide</value>
   </data>

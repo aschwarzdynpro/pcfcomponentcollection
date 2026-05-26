@@ -106,6 +106,12 @@
   <data name="placeholder_Desc" xml:space="preserve">
     <value>Platzhaltertext im Eingabefeld, solange kein Datensatz ausgewählt ist.</value>
   </data>
+  <data name="additionalFilter_Display" xml:space="preserve">
+    <value>Zusätzlicher Filter</value>
+  </data>
+  <data name="additionalFilter_Desc" xml:space="preserve">
+    <value>Optionaler OData-Filter, der bei jeder Suche zusätzlich angewendet wird. Unterstützt Platzhalter, die zur Laufzeit ersetzt werden: {record.&lt;Spalte&gt;} für einen Wert aus dem aktuellen Datensatz, {user.id} für den aktuellen Benutzer, {user.bu} für dessen Business Unit. Lässt sich ein Platzhalter nicht auflösen (Quell-Feld ist leer), wird der gesamte Filter für diese Suche übersprungen. Beispiel: _msdyn_companyid_value eq {record.sst_company_ref}</value>
+  </data>
   <data name="enableQuickCreate_Display" xml:space="preserve">
     <value>Quick-Create aktivieren</value>
   </data>

@@ -12,6 +12,7 @@ import {
     type StorageScope,
 } from "../services/storage";
 import { searchRecords, type SearchOutcome } from "../services/dataverseSearch";
+import { resolveFilterTokens } from "../services/tokens";
 
 interface PcfWebApi {
     retrieveMultipleRecords: (
@@ -28,6 +29,7 @@ export interface FuzzyLookupProps {
     columns: string[];          // ordered, 1..4 elements; column 0 = primary
     columnHeaders: string[];    // parallel
     iconUrl?: string;           // table icon (SVG web resource URL), shown next to the chip
+    additionalFilter?: string;  // maker-defined OData filter with {record.…}/{user.…} tokens
     placeholder: string;
     pageSize: number;
     disabled: boolean;
@@ -54,6 +56,7 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
         columns,
         columnHeaders,
         iconUrl,
+        additionalFilter,
         placeholder,
         pageSize,
         disabled,
@@ -194,15 +197,39 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
             return;
         }
         setBusy(true);
-        debounceRef.current = window.setTimeout(() => {
+        debounceRef.current = window.setTimeout(async () => {
             const ctrl = new AbortController();
             abortRef.current = ctrl;
+
+            // Resolve {record.…} / {user.…} tokens against the live form +
+            // user. If any token can't be resolved (source field empty) we
+            // skip the filter entirely for this search rather than emit
+            // broken OData.
+            let effectiveFilter: string | undefined;
+            if (additionalFilter) {
+                const { resolved, complete } = await resolveFilterTokens(
+                    additionalFilter,
+                    { userId, webApi: webApiRef.current },
+                );
+                if (ctrl.signal.aborted) return;
+                if (complete) {
+                    effectiveFilter = resolved;
+                } else {
+                    // eslint-disable-next-line no-console
+                    console.warn(
+                        "FuzzyLookupControl: additionalFilter has unresolved tokens, skipping the filter for this search.",
+                        { template: additionalFilter, partial: resolved },
+                    );
+                }
+            }
+
             searchRecords(webApiRef.current, {
                 term: trimmed,
                 targetEntity,
                 columns,
                 primaryName,
                 pageSize,
+                additionalFilter: effectiveFilter,
                 signal: ctrl.signal,
             })
                 .then((outcome) => {
@@ -227,7 +254,7 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
                 debounceRef.current = null;
             }
         };
-    }, [term, targetEntity, columns, primaryName, pageSize]);
+    }, [term, targetEntity, columns, primaryName, pageSize, additionalFilter, userId]);
 
     // Close the dropdown when the user clicks outside the control. Because
     // the dropdown lives in a portal under document.body, we have to check

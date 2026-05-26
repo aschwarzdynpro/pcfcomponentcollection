@@ -276,6 +276,18 @@ export class FuzzyLookupControl
      */
     private async openLookupDialog(): Promise<void> {
         if (!this._targetEntity) return;
+        // UCI's lookupObjects() takes a FetchXML filter, not OData, so we
+        // cannot forward the maker's additionalFilter as-is. Warn so makers
+        // notice if their filter is being silently skipped when the user
+        // opens the advanced dialog.
+        if (this._context.parameters.additionalFilter?.raw?.trim()) {
+            // eslint-disable-next-line no-console
+            console.warn(
+                "FuzzyLookupControl: additionalFilter is OData-syntax; UCI's advanced lookup dialog needs FetchXML. " +
+                    "The filter is applied to inline search but NOT to the lookupObjects dialog. " +
+                    "Until v2 ships an OData→FetchXML converter, advise users to use the inline search for filtered results.",
+            );
+        }
         try {
             const utils = (this._context as unknown as {
                 utils?: {
@@ -347,6 +359,7 @@ export class FuzzyLookupControl
         const enableRecentlyUsed = ctx.parameters.enableRecentlyUsed?.raw === true;
 
         const userId = (ctx.userSettings?.userId ?? "").replace(/[{}]/g, "");
+        const additionalFilter = ctx.parameters.additionalFilter?.raw?.trim() || undefined;
 
         const props = {
             selected: this._selected,
@@ -355,6 +368,7 @@ export class FuzzyLookupControl
             columns: this._columns,
             columnHeaders: this._columnHeaders,
             iconUrl: this._iconUrl,
+            additionalFilter,
             placeholder,
             pageSize,
             disabled: ctx.mode.isControlDisabled,
