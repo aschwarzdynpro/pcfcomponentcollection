@@ -2,10 +2,10 @@
 
 A drop-in replacement for the standard model-driven Lookup control. It uses
 **Dataverse Search** (Azure Cognitive Search under the hood) for typo-tolerant
-typeahead, shows up to **four configurable columns** per suggestion, and
-supports in-place **Quick-Create** of new records. Architecture hooks for
-**Favorites** and **Recently used** records are wired in v1 (off by default;
-enable per form).
+typeahead, renders each suggestion as a **card** (primary column as title,
+up to three configured columns stacked as subtitles), and supports in-place
+**Quick-Create** of new records. Architecture hooks for **Favorites** and
+**Recently used** records are wired in v1 (off by default; enable per form).
 
 ## How it works
 
@@ -30,10 +30,10 @@ knows to enable search.
 | Name                  | Type                          | Description                                                                                                              |
 | --------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `selectedItem`        | bound — `Lookup.Simple`       | The Lookup column the control replaces. Target table is read automatically from the column definition.                   |
-| `column1`             | input — `SingleLine.Text`     | Logical name of the first column shown in suggestions. Empty → target table's primary-name attribute.                    |
-| `column2`             | input — `SingleLine.Text`     | Logical name of the second column. Empty → hidden.                                                                       |
-| `column3`             | input — `SingleLine.Text`     | Logical name of the third column. Empty → hidden.                                                                        |
-| `column4`             | input — `SingleLine.Text`     | Logical name of the fourth column. Empty → hidden.                                                                       |
+| `column1`             | input — `SingleLine.Text`     | Logical name of the column used as the **card title** (bold primary line). Empty → target table's primary-name attribute. |
+| `column2`             | input — `SingleLine.Text`     | Logical name of the first **subtitle** line under the title. Empty → hidden.                                              |
+| `column3`             | input — `SingleLine.Text`     | Logical name of the second subtitle line. Empty → hidden.                                                                |
+| `column4`             | input — `SingleLine.Text`     | Logical name of the third subtitle line. Empty → hidden.                                                                 |
 | `pageSize`            | input — `Whole.None`          | Maximum suggestions returned per search. Clamped to `1..50`; default `25`.                                               |
 | `placeholder`         | input — `SingleLine.Text`     | Placeholder shown when no record is selected. Empty → localized default ("Search…" / "Suchen…" / "Rechercher…").          |
 | `enableQuickCreate`   | input — `TwoOptions`          | Shows a `+ New` button that opens the target table's Quick-Create form. Default **on**.                                  |
@@ -64,6 +64,21 @@ The control binds to `Lookup.Simple` columns only. Polymorphic lookups
 supported** in v1 — those expose `Lookup.Customer` / `Lookup.Owner` /
 `Lookup.Regarding` types that the manifest cannot cover with a single bound
 property.
+
+## Card layout
+
+Each suggestion is rendered as a single-column card (not a multi-column
+grid). The first configured column becomes the **title** at the top of the
+card (bold, 13 px), and each further column is stacked underneath as a
+**subtitle line** (12 px, muted colour). Long values wrap to a second line
+rather than being truncated mid-token — important when the subtitles
+contain structured strings like article numbers or composite keys.
+
+If the target table has an icon (`IconVectorName` web resource), it's shown
+to the left of each card. The favorite-toggle, when enabled, sits at the
+right edge of the card vertically centred. Subtitle lines whose underlying
+column value is empty for a given record are silently skipped so a missing
+value doesn't leave a blank line in the card.
 
 ## Keyboard
 
