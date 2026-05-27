@@ -298,6 +298,12 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
             if (!target) return;
             if (hostRef.current?.contains(target)) return;
             if ((target as HTMLElement).closest?.("[data-flc-dropdown]")) return;
+            // The long-press preview modal lives in its own portal and is
+            // not a descendant of the dropdown. A click inside it (× button,
+            // backdrop, "Select" button) must NOT collapse the suggestion
+            // list — the user expects to return to it after dismissing the
+            // preview.
+            if ((target as HTMLElement).closest?.("[data-flc-preview]")) return;
             setOpen(false);
         };
         document.addEventListener("mousedown", onDocClick);
@@ -631,6 +637,7 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
             {previewRecord && ReactDOM.createPortal(
                 <div
                     className="flc-preview-backdrop"
+                    data-flc-preview
                     onClick={() => setPreviewRecord(null)}
                 >
                     <div
