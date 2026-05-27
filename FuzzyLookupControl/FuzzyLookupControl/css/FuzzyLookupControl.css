@@ -213,7 +213,54 @@
 /* Result rows — card layout. Each suggestion is a single-column "card":
    icon (optional) left, body (title + stacked subtitles) centre, favorite
    toggle (optional) right. Subtitles word-wrap so long product codes /
-   structured strings don't get truncated mid-token. */
+   structured strings don't get truncated mid-token.
+
+   Each card is wrapped in `.flc-card-wrapper`, a relatively-positioned
+   container with `overflow: hidden`. The wrapper owns the row separator,
+   and it also hosts the swipe-reveal background (`.flc-card-swipe-bg`)
+   that sits visually *behind* the card while the user drags the card
+   right with a finger to favourite it. */
+
+.flc-card-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.flc-card-wrapper:last-child {
+  border-bottom: none;
+}
+
+/* Swipe-to-favorite background: a coloured strip with a star icon that
+   peeks out from underneath the card as the user drags it right. We hide
+   it by default (zero opacity) to avoid a faint coloured fringe on rows
+   that aren't being interacted with — the wrapper's `is-revealing` class
+   turns it on the moment the swipe starts. */
+.flc-card-swipe-bg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 24px;
+  background: var(--flc-fav-on);
+  color: #ffffff;
+  font-size: 22px;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.flc-card-swipe-bg.is-unpin {
+  /* When unpinning (the row is already a favourite), use a neutral grey
+     instead of the warm "favourite-on" colour so the action reads as
+     "remove" rather than "add". */
+  background: var(--flc-text-muted);
+}
+
+.flc-card-wrapper.is-revealing .flc-card-swipe-bg {
+  opacity: 1;
+}
 
 .flc-card-row {
   display: flex;
@@ -221,11 +268,25 @@
   gap: 10px;
   padding: 8px 12px;
   cursor: pointer;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  /* Opaque background so the swipe-reveal beneath doesn't bleed through
+     the card itself — only the part exposed by the translate is coloured. */
+  background: var(--flc-bg);
+  /* Snap-back animation when the user releases below the swipe threshold.
+     Disabled (`is-swiping` class) while the finger is actively dragging
+     so the card tracks the finger 1:1. */
+  transition: transform 0.18s ease-out;
+  /* Tell the browser we want to handle horizontal pans ourselves; vertical
+     pans (page scroll) should still pass through to the dropdown's
+     scroll container. Without this, mobile browsers will own the
+     horizontal axis too and our swipe gesture never fires. */
+  touch-action: pan-y;
+  /* Keep the card painted above the swipe-reveal layer. */
+  position: relative;
+  z-index: 1;
 }
 
-.flc-card-row:last-child {
-  border-bottom: none;
+.flc-card-row.is-swiping {
+  transition: none;
 }
 
 .flc-card-row:hover {
@@ -327,6 +388,146 @@
 }
 
 /* ---------------------------------------------------------------
+   Long-press preview modal
+   --------------------------------------------------------------- */
+.flc-preview-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2147483601;
+  padding: 16px;
+  /* The modal is its own focus context; tapping the backdrop dismisses,
+     so it needs to be pointer-receptive across its full area. */
+}
+
+.flc-preview-card {
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100vh - 32px);
+  background: var(--flc-bg, #ffffff);
+  color: var(--flc-text, #201f1e);
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 24px 48px 0 rgba(0, 0, 0, 0.30),
+    0 4px 8px 0 rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  /* Subtle entry animation so the modal feels intentional after the
+     long-press wait, instead of popping in instantly. */
+  animation: flc-preview-in 0.16s ease-out;
+}
+
+@keyframes flc-preview-in {
+  from { transform: scale(0.96); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.flc-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.flc-preview-icon {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.flc-preview-title {
+  flex: 1 1 auto;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  color: var(--flc-text);
+}
+
+.flc-preview-close {
+  flex: 0 0 auto;
+  background: transparent;
+  border: none;
+  color: var(--flc-text-muted);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  border-radius: 2px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flc-preview-close:hover {
+  background: var(--flc-bg-active);
+  color: var(--flc-text);
+}
+
+.flc-preview-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.flc-preview-row {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--flc-text);
+  /* No truncation in the preview — that's the whole point of the modal:
+     show the value in full, even if it spans multiple lines. */
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.flc-preview-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.flc-preview-footer {
+  padding: 10px 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--flc-section-header-bg);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.flc-preview-select {
+  background: var(--flc-accent);
+  color: #ffffff;
+  border: none;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 4px;
+  min-height: 36px;
+}
+
+.flc-preview-select:hover {
+  background: #106ebe;
+}
+
+/* ---------------------------------------------------------------
    Mobile / touch overrides
    - Narrow viewports get an edge-to-edge dropdown anchored by JS
    - Touch hit areas inflate to >= 44 × 44 px (Apple HIG / WCAG 2.5.5)
@@ -368,6 +569,35 @@
 
   .flc-card-subtitle {
     font-size: 13px;
+  }
+
+  .flc-preview-card {
+    /* Full-screen modal on phones — easier to read, easier to dismiss
+       by tapping the close button which now sits comfortably in the
+       top-right thumb zone. */
+    max-width: none;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .flc-preview-title {
+    font-size: 17px;
+  }
+
+  .flc-preview-row {
+    font-size: 15px;
+  }
+
+  .flc-preview-close {
+    width: 44px;
+    height: 44px;
+    font-size: 28px;
+  }
+
+  .flc-preview-select {
+    min-height: 44px;
+    padding: 10px 20px;
+    font-size: 15px;
   }
 
   .flc-section-header {

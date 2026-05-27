@@ -76,6 +76,11 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
     const [searchOutcome, setSearchOutcome] = React.useState<SearchOutcome | null>(null);
     const [activeIdx, setActiveIdx] = React.useState(0);
     const [favoritesTick, setFavoritesTick] = React.useState(0);
+    // Preview modal — opened by a long-press on a card (ResultRow). Holds
+    // the record being previewed; null means no modal is showing. The modal
+    // shares the dropdown's portal so it lives above any UCI overflow:hidden
+    // container, same as the suggestion list itself.
+    const [previewRecord, setPreviewRecord] = React.useState<LookupRecord | null>(null);
 
     const inputRef = React.useRef<HTMLInputElement>(null);
     const hostRef = React.useRef<HTMLDivElement>(null);
@@ -273,6 +278,21 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
         document.addEventListener("mousedown", onDocClick);
         return () => document.removeEventListener("mousedown", onDocClick);
     }, [open]);
+
+    // Escape closes the long-press preview modal. We don't bind unless the
+    // modal is actually open so we're not eating Esc presses meant for the
+    // dropdown or the surrounding form.
+    React.useEffect(() => {
+        if (!previewRecord) return;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                e.stopPropagation();
+                setPreviewRecord(null);
+            }
+        };
+        document.addEventListener("keydown", onKey, true);
+        return () => document.removeEventListener("keydown", onKey, true);
+    }, [previewRecord]);
 
     // While the dropdown is open, keep its position in sync with the host
     // div — re-measure on every resize and on any ancestor scroll. Using
@@ -476,6 +496,7 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
                                                 toggleFavoriteFn(scope, r);
                                                 setFavoritesTick((t) => t + 1);
                                             }}
+                                            onLongPress={(r) => setPreviewRecord(r)}
                                             pinTooltip={strings.pinTooltip}
                                             unpinTooltip={strings.unpinTooltip}
                                             onMouseEnter={() => setActiveIdx(absoluteIdx)}
@@ -496,6 +517,75 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
                             </button>
                         </div>
                     )}
+                </div>,
+                document.body,
+            )}
+
+            {/* Long-press preview modal. Lives in its own portal under
+                document.body so it overlays the dropdown (and any UCI
+                overflow:hidden container). Backdrop click and the close
+                button both dismiss; the footer button selects and closes
+                in one motion. Escape-key handling is wired in the effect
+                below.*/}
+            {previewRecord && ReactDOM.createPortal(
+                <div
+                    className="flc-preview-backdrop"
+                    onClick={() => setPreviewRecord(null)}
+                >
+                    <div
+                        className="flc-preview-card"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label={strings.previewTitle}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flc-preview-header">
+                            {iconUrl && (
+                                <img
+                                    className="flc-preview-icon"
+                                    src={iconUrl}
+                                    alt=""
+                                    aria-hidden="true"
+                                />
+                            )}
+                            <div className="flc-preview-title">
+                                {previewRecord.columns[primaryName] || previewRecord.primaryName}
+                            </div>
+                            <button
+                                type="button"
+                                className="flc-preview-close"
+                                aria-label={strings.previewClose}
+                                title={strings.previewClose}
+                                onClick={() => setPreviewRecord(null)}
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div className="flc-preview-body">
+                            {columns.map((c) => {
+                                const raw = previewRecord.columns[c] ?? "";
+                                if (!raw) return null;
+                                return (
+                                    <div key={c} className="flc-preview-row">
+                                        {raw}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div className="flc-preview-footer">
+                            <button
+                                type="button"
+                                className="flc-preview-select"
+                                onClick={() => {
+                                    const rec = previewRecord;
+                                    setPreviewRecord(null);
+                                    commitSelection(rec);
+                                }}
+                            >
+                                {strings.previewSelect}
+                            </button>
+                        </div>
+                    </div>
                 </div>,
                 document.body,
             )}

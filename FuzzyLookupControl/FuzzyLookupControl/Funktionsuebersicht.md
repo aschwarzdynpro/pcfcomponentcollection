@@ -90,6 +90,22 @@ verwendet** sind enthalten (in v1 abschaltbar; finale UI-Politur folgt in v2).
   fehlende Search-Aktivierung hinweist (lokalisiert).
 - OData-Apostrophe (`O'Reilly`) werden korrekt escapiert.
 
+### Touch-Gesten (Mobile / Tablet, Außendienst)
+
+Auf Touch-Geräten greifen zwei native Mobile-Gesten, die per Pointer-Events-API
+implementiert sind (funktioniert gleichermaßen mit Finger, Pen und Maus):
+
+| Geste                                  | Effekt                                                                                                                                                                                                                                                                                                                                                                                |
+|----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Wischen nach rechts** auf einer Karte | Favorit umschalten (anpinnen / entfernen). Die Karte folgt dem Finger; jenseits ~72 px Wischweite löst die Aktion beim Loslassen aus, dann schnappt die Karte zurück. Der enthüllte Hintergrundstreifen ist orange beim Anpinnen, grau beim Entfernen. Nur aktiv, wenn `enableFavorites` an ist.                                                                                       |
+| **Lange drücken** (~500 ms) auf einer Karte | Öffnet eine **Vorschau-Modal** mit allen konfigurierten Spalten **ungekürzt** und mit voll lesbaren Zeilenumbrüchen, plus „Diesen Datensatz wählen"-Button im Footer. Praktisch bei zusammengesetzten Artikelnummern, die in der Kartenansicht umbrechen — der Monteur kann den vollen String in Ruhe lesen, bevor er übernimmt. Backdrop-Tap, × oder Escape schließen die Vorschau. |
+
+Vertikales Scrollen wird **nie** unterbrochen: die Wisch-Geste committet sich
+erst, wenn die horizontale Bewegung die vertikale deutlich dominiert. Der
+Long-Press-Timer wird abgebrochen, sobald der Finger sich mehr als eine
+Fingerspitze bewegt — versehentliches Halten beim Scrollen löst also keine
+Vorschau aus.
+
 ### Tastatur & Bedienung
 
 | Taste            | Aktion                                |

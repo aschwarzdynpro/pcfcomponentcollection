@@ -80,6 +80,24 @@ right edge of the card vertically centred. Subtitle lines whose underlying
 column value is empty for a given record are silently skipped so a missing
 value doesn't leave a blank line in the card.
 
+## Touch gestures (mobile / tablet)
+
+The card layout pulls double duty for finger-driven interaction in field-
+service scenarios. Two gestures are wired on every card and work via the
+Pointer Events API, so they cover mouse, pen and touch from a single code
+path:
+
+| Gesture | Effect |
+|---------|--------|
+| **Swipe right** on a card | Toggle favourite (pin / unpin). The card slides with the finger; release past ~72 px triggers the toggle and the card snaps back. The reveal strip is orange when adding a favourite, grey when removing one. Only active when `enableFavorites` is on. |
+| **Long-press** (≈ 500 ms) on a card | Opens a preview modal showing every configured column **untruncated**, with a "Select" footer button. Useful when composite product codes wrap and you want to read the full string before committing. Tap the backdrop, the × button, or press Escape to dismiss. |
+
+Vertical scrolling through the suggestion list is never hijacked — the
+gesture only commits to "swipe" once horizontal movement clearly
+dominates vertical. The long-press timer cancels the moment the finger
+moves more than a fingertip's worth, so accidental hold-while-scrolling
+won't pop the preview.
+
 ## Keyboard
 
 | Key            | Action                                |

@@ -30,6 +30,9 @@ export interface UiStrings {
     pinTooltip: string;
     unpinTooltip: string;
     searchUnavailableHint: string; // banner shown when search degrades
+    previewTitle: string;        // aria-label on the long-press preview dialog
+    previewClose: string;        // tooltip / aria-label on the modal close button
+    previewSelect: string;       // label on the modal "select this record" button
 }
 
 export const STRINGS: Record<Lang, UiStrings> = {
@@ -50,6 +53,9 @@ export const STRINGS: Record<Lang, UiStrings> = {
         unpinTooltip: "Remove from favorites",
         searchUnavailableHint:
             "Dataverse Search is not available — using basic text contains. Enable Dataverse Search for better results.",
+        previewTitle: "Record preview",
+        previewClose: "Close preview",
+        previewSelect: "Select this record",
     },
     de: {
         placeholderDefault: "Suchen…",
@@ -68,6 +74,9 @@ export const STRINGS: Record<Lang, UiStrings> = {
         unpinTooltip: "Aus Favoriten entfernen",
         searchUnavailableHint:
             "Dataverse Search nicht verfügbar — es wird die einfache Textsuche genutzt. Aktivieren Sie Dataverse Search für bessere Treffer.",
+        previewTitle: "Datensatz-Vorschau",
+        previewClose: "Vorschau schließen",
+        previewSelect: "Diesen Datensatz wählen",
     },
     fr: {
         placeholderDefault: "Rechercher…",
@@ -86,5 +95,8 @@ export const STRINGS: Record<Lang, UiStrings> = {
         unpinTooltip: "Retirer des favoris",
         searchUnavailableHint:
             "Dataverse Search indisponible — recherche textuelle simple utilisée. Activez Dataverse Search pour de meilleurs résultats.",
+        previewTitle: "Aperçu de l'enregistrement",
+        previewClose: "Fermer l'aperçu",
+        previewSelect: "Sélectionner cet enregistrement",
     },
 };
