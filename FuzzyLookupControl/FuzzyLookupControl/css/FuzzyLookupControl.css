@@ -2,11 +2,14 @@
    Lookup control so it blends into existing forms. Uses CSS variables so
    makers can re-skin per-form via custom CSS web resources if needed. */
 
-/* CSS variables are redeclared on the dropdown selector because the dropdown
-   is portalled into document.body and therefore is NOT a descendant of the
-   .flc-host-root element where the variables would normally be defined. */
+/* CSS variables are redeclared on every portalled root because portals
+   under document.body are NOT descendants of .flc-host-root and therefore
+   don't inherit. Missing one of these and the affected element silently
+   loses its colour — e.g. .flc-preview-select used to become invisible
+   because `background: var(--flc-accent)` resolved to `transparent`. */
 .flc-host-root,
-.flc-dropdown {
+.flc-dropdown,
+.flc-preview-backdrop {
   --flc-bg: #ffffff;
   --flc-bg-hover: #f3f2f1;
   --flc-bg-active: #edebe9;
