@@ -90,6 +90,33 @@ verwendet** sind enthalten (in v1 abschaltbar; finale UI-Politur folgt in v2).
   fehlende Search-Aktivierung hinweist (lokalisiert).
 - OData-Apostrophe (`O'Reilly`) werden korrekt escapiert.
 
+### Quick-View-Formular als Vorschau-Quelle (optional)
+
+- Über die neue Property `previewFormId` kann der Maker die GUID eines
+  vorhandenen **Quick-View-Formulars (QVF)** der Ziel-Tabelle angeben.
+- Beim Long-Press auf eine Karte rendert das Vorschau-Modal dann die im
+  QVF definierten Felder — inklusive Abschnitten, Feld-Labels und
+  Anzeigereihenfolge — mit frisch abgerufenen Live-Werten, statt nur der
+  4 Such-Spalten der Karte.
+- Bedienung für den Maker: QVF im Maker-Portal entwerfen, `formid` aus
+  der URL kopieren, in `previewFormId` einfügen. Leere Property →
+  Standard-Vorschau (konfigurierte Spalten) wie bisher.
+- Die QVF-Metadaten werden **einmal pro Browser-Session** geholt
+  (Cache nach `formId`), nur der eigentliche Datensatz-Fetch passiert
+  bei jedem Öffnen — also schnell und sparsam.
+- Robustheit: ungültige GUID, falsche Ziel-Entity oder Fehler beim
+  Fetch → das Modal fällt **stillschweigend** auf die Spalten-Vorschau
+  zurück und schreibt eine Warnung in die Browser-Console.
+- Formatierte Werte werden bevorzugt
+  (`@OData.Community.Display.V1.FormattedValue`): Lookups erscheinen mit
+  Primärnamen, Auswahlfelder mit Label, Datumswerte im User-Format.
+- Bewusste Designentscheidung: wir **iframen** das Microsoft-eigene
+  Quick-View-Rendering NICHT. Das QVF dient nur als Metadaten-Quelle —
+  gerendert wird im eigenen Modal mit konsistentem Card-Theme. Vorteile:
+  funktioniert in Dialogen / Side-Panels (keine Auth-Kontext-Brüche),
+  spart ~200–500 kB JS pro Öffnen, kein CSS-Konflikt mit dem
+  UCI-Renderer.
+
 ### Touch-Gesten (Mobile / Tablet, Außendienst)
 
 Auf Touch-Geräten greifen zwei native Mobile-Gesten, die per Pointer-Events-API

@@ -13,6 +13,12 @@ import {
 } from "../services/storage";
 import { searchRecords, type SearchOutcome } from "../services/dataverseSearch";
 import { resolveFilterTokens } from "../services/tokens";
+import {
+    fetchQuickViewForm,
+    fetchRecordValues,
+    type QuickViewForm,
+    type QvfRecordValues,
+} from "../services/quickViewForm";
 
 interface PcfWebApi {
     retrieveMultipleRecords: (
@@ -25,10 +31,19 @@ interface PcfWebApi {
 export interface FuzzyLookupProps {
     selected: LookupRecord | null;
     targetEntity: string;
+    /** Plural URL segment for the target entity. Required for the
+     * Quick-View-Form preview record fetch; ignored when previewFormId
+     * is unset. Sourced from EntityDefinitions.EntitySetName. */
+    entitySetName?: string;
     primaryName: string;
     columns: string[];          // ordered, 1..4 elements; column 0 = card title, 1..n stacked subtitles
     iconUrl?: string;           // table icon (SVG web resource URL), shown next to the chip and on each card
     additionalFilter?: string;  // maker-defined OData filter with {record.…}/{user.…} tokens
+    /** Optional Quick-View-Form GUID. When set, the long-press preview
+     * modal renders the form's fields (sections + labels + live values)
+     * instead of just the configured columns. Falls back silently to
+     * the configured-columns view if the form can't be loaded. */
+    previewFormId?: string;
     placeholder: string;
     pageSize: number;
     disabled: boolean;
@@ -51,10 +66,12 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
     const {
         selected,
         targetEntity,
+        entitySetName,
         primaryName,
         columns,
         iconUrl,
         additionalFilter,
+        previewFormId,
         placeholder,
         pageSize,
         disabled,
@@ -81,6 +98,14 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
     // shares the dropdown's portal so it lives above any UCI overflow:hidden
     // container, same as the suggestion list itself.
     const [previewRecord, setPreviewRecord] = React.useState<LookupRecord | null>(null);
+    // When the maker configured a `previewFormId`, the modal renders the
+    // Quick-View-Form's fields instead of the default columns. We hold the
+    // parsed form definition + the freshly-fetched record values here.
+    // Both null means either no QVF configured, or the fetch hasn't
+    // resolved yet (covered by `previewLoading`).
+    const [previewForm, setPreviewForm] = React.useState<QuickViewForm | null>(null);
+    const [previewValues, setPreviewValues] = React.useState<QvfRecordValues | null>(null);
+    const [previewLoading, setPreviewLoading] = React.useState(false);
 
     const inputRef = React.useRef<HTMLInputElement>(null);
     const hostRef = React.useRef<HTMLDivElement>(null);
@@ -293,6 +318,82 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
         document.addEventListener("keydown", onKey, true);
         return () => document.removeEventListener("keydown", onKey, true);
     }, [previewRecord]);
+
+    // Quick-View-Form preview loader. Fires whenever the user long-presses
+    // a card AND the maker configured `previewFormId`. Two round-trips:
+    // one for the form metadata (cached after the first hit) and one for
+    // the live record values. On any failure we silently fall back to the
+    // default-columns preview by leaving `previewForm` null.
+    React.useEffect(() => {
+        if (!previewRecord) {
+            // Closing the modal — clean up any half-loaded state so the
+            // next open starts fresh.
+            setPreviewForm(null);
+            setPreviewValues(null);
+            setPreviewLoading(false);
+            return;
+        }
+        if (!previewFormId) {
+            // No QVF configured — default-columns rendering will use
+            // `previewRecord.columns` directly.
+            return;
+        }
+        if (!entitySetName) {
+            // EntityDefinitions didn't resolve the plural URL segment —
+            // can't fetch the record. Log and stay in default mode.
+            // eslint-disable-next-line no-console
+            console.warn(
+                "FuzzyLookupControl: previewFormId is set but entitySetName is unknown for " +
+                    targetEntity + " — falling back to default preview.",
+            );
+            return;
+        }
+
+        const ctrl = new AbortController();
+        setPreviewLoading(true);
+        setPreviewForm(null);
+        setPreviewValues(null);
+
+        (async () => {
+            try {
+                const form = await fetchQuickViewForm(previewFormId);
+                if (ctrl.signal.aborted) return;
+                if (!form || form.fields.length === 0) {
+                    // Either the form fetch failed or the form contains no
+                    // field-bearing cells. Either way: stay in default mode.
+                    setPreviewLoading(false);
+                    return;
+                }
+                if (form.objectTypeCode !== targetEntity) {
+                    // eslint-disable-next-line no-console
+                    console.warn(
+                        "FuzzyLookupControl: previewFormId belongs to entity \"" +
+                            form.objectTypeCode + "\" but lookup target is \"" +
+                            targetEntity + "\". Falling back to default preview.",
+                    );
+                    setPreviewLoading(false);
+                    return;
+                }
+                const values = await fetchRecordValues({
+                    entitySetName,
+                    recordId: previewRecord.id,
+                    fields: form.fields.map((f) => f.logicalName),
+                    signal: ctrl.signal,
+                });
+                if (ctrl.signal.aborted) return;
+                setPreviewForm(form);
+                setPreviewValues(values ?? {});
+            } catch (e) {
+                if ((e as { name?: string })?.name === "AbortError") return;
+                // eslint-disable-next-line no-console
+                console.warn("FuzzyLookupControl: QVF preview load failed.", e);
+            } finally {
+                if (!ctrl.signal.aborted) setPreviewLoading(false);
+            }
+        })();
+
+        return () => ctrl.abort();
+    }, [previewRecord, previewFormId, entitySetName, targetEntity]);
 
     // While the dropdown is open, keep its position in sync with the host
     // div — re-measure on every resize and on any ancestor scroll. Using
@@ -562,7 +663,53 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
                             </button>
                         </div>
                         <div className="flc-preview-body">
-                            {columns.map((c) => {
+                            {/* QVF mode: render the form's fields with section
+                                headers + per-field labels. Falls back to the
+                                default-columns view below if the form data
+                                isn't (yet) available. */}
+                            {previewLoading && (
+                                <div className="flc-preview-status">
+                                    {strings.previewLoading}
+                                </div>
+                            )}
+                            {!previewLoading && previewForm && previewValues && (
+                                <>
+                                    {(() => {
+                                        // Group consecutive fields by section
+                                        // for clean section headers; null
+                                        // sectionLabel means "no header".
+                                        let lastSection: string | null | undefined = undefined;
+                                        return previewForm.fields.map((f, i) => {
+                                            const value = previewValues[f.logicalName];
+                                            if (value === undefined || value === "") return null;
+                                            const showSectionHeader =
+                                                f.sectionLabel !== null
+                                                && f.sectionLabel !== undefined
+                                                && f.sectionLabel !== lastSection;
+                                            lastSection = f.sectionLabel;
+                                            return (
+                                                <React.Fragment key={`${f.logicalName}-${i}`}>
+                                                    {showSectionHeader && (
+                                                        <div className="flc-preview-section-header">
+                                                            {f.sectionLabel}
+                                                        </div>
+                                                    )}
+                                                    <div className="flc-preview-field">
+                                                        <div className="flc-preview-label">{f.label}</div>
+                                                        <div className="flc-preview-value">{value}</div>
+                                                    </div>
+                                                </React.Fragment>
+                                            );
+                                        });
+                                    })()}
+                                </>
+                            )}
+                            {/* Default mode: configured columns straight from
+                                the search response. Used when there's no QVF,
+                                while a QVF is loading don't render to avoid
+                                a visible flicker between the two modes, and
+                                when QVF load fails (form/values stay null). */}
+                            {!previewLoading && !previewForm && columns.map((c) => {
                                 const raw = previewRecord.columns[c] ?? "";
                                 if (!raw) return null;
                                 return (

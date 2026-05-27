@@ -130,4 +130,10 @@
   <data name="enableRecentlyUsed_Desc" xml:space="preserve">
     <value>Activé : le menu déroulant affiche les enregistrements récemment sélectionnés par l'utilisateur. Stockés par utilisateur dans le localStorage du navigateur ; aucun impact sur le schéma.</value>
   </data>
+  <data name="previewFormId_Display" xml:space="preserve">
+    <value>ID du formulaire d'aperçu</value>
+  </data>
+  <data name="previewFormId_Desc" xml:space="preserve">
+    <value>GUID optionnel d'un formulaire d'aperçu rapide (Quick View Form) pour la table cible. Lorsqu'il est défini, l'aperçu en appui long affiche les champs définis par ce formulaire (sections, libellés, valeurs complètes) au lieu des seules colonnes configurées. Concevez un Quick View Form pour la table cible dans Power Apps, copiez son formid et collez-le ici. Vide = aperçu par défaut.</value>
+  </data>
 </root>

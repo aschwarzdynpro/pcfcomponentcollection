@@ -15,6 +15,7 @@ export interface IInputs {
     enableQuickCreate: ComponentFramework.PropertyTypes.TwoOptionsProperty;
     enableFavorites: ComponentFramework.PropertyTypes.TwoOptionsProperty;
     enableRecentlyUsed: ComponentFramework.PropertyTypes.TwoOptionsProperty;
+    previewFormId: ComponentFramework.PropertyTypes.StringProperty;
 }
 export interface IOutputs {
     selectedItem?: ComponentFramework.LookupValue[];

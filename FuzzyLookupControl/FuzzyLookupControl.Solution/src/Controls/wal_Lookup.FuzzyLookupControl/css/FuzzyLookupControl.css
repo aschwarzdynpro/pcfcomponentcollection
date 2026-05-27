@@ -505,6 +505,66 @@
   padding-bottom: 0;
 }
 
+/* Quick-View-Form preview: label-above-value rows, optionally grouped
+   under section headers. The section header sticks to the scroll
+   container's top so the user always sees which section they're in. */
+.flc-preview-section-header {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  color: var(--flc-text-muted);
+  background: var(--flc-section-header-bg);
+  padding: 6px 0;
+  margin: 4px -14px 0;
+  padding-left: 14px;
+  padding-right: 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.flc-preview-section-header:first-child {
+  border-top: none;
+  margin-top: -12px;
+}
+
+.flc-preview-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.flc-preview-field:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.flc-preview-label {
+  font-size: 11px;
+  color: var(--flc-text-muted);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.flc-preview-value {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--flc-text);
+  /* Same wrap behaviour as the default-mode rows — values never truncate
+     in the preview. */
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.flc-preview-status {
+  padding: 24px 14px;
+  text-align: center;
+  color: var(--flc-text-muted);
+  font-style: italic;
+}
+
 .flc-preview-footer {
   padding: 10px 14px;
   border-top: 1px solid rgba(0, 0, 0, 0.08);

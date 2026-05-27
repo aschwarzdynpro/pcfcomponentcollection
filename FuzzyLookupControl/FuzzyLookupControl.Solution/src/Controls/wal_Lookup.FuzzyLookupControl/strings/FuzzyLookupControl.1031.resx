@@ -130,4 +130,10 @@
   <data name="enableRecentlyUsed_Desc" xml:space="preserve">
     <value>Aktiv: Das Dropdown zeigt die zuletzt ausgewählten Datensätze des Benutzers. Speicherung pro Benutzer im Browser-localStorage; kein Schema-Footprint.</value>
   </data>
+  <data name="previewFormId_Display" xml:space="preserve">
+    <value>Vorschau-Formular-ID</value>
+  </data>
+  <data name="previewFormId_Desc" xml:space="preserve">
+    <value>Optionale GUID eines Quick-View-Formulars für die Ziel-Tabelle. Wenn gesetzt, zeigt die Long-Press-Vorschau die im Formular definierten Felder (Abschnitte, Labels, volle Werte) statt nur der konfigurierten Spalten. Designe ein Quick-View-Formular für die Ziel-Tabelle im Power-Apps-Maker-Portal, kopiere die formid und füge sie hier ein. Leer = Standard-Vorschau.</value>
+  </data>
 </root>
