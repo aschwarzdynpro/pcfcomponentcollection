@@ -18,6 +18,12 @@ export interface TargetMetadata {
      * undefined when the table has no custom icon. Used to render the
      * little table-icon next to the selected record, matching OOB look. */
     iconUrl?: string;
+    /** Plural URL segment for record fetches via Web API
+     * (e.g. `product` → `products`, `msdyn_workorder` → `msdyn_workorders`).
+     * The naive "append s" rule misses cases like "entity" → "entities",
+     * so we always read this from EntityDefinitions instead of guessing.
+     * Used by the Quick-View-Form preview to fetch the live record. */
+    entitySetName?: string;
 }
 
 interface PcfUtility {
@@ -27,6 +33,7 @@ interface PcfUtility {
     ) => Promise<{
         PrimaryNameAttribute?: string;
         IconVectorName?: string;
+        EntitySetName?: string;
         Attributes?: {
             get?: (logicalName: string) => { DisplayName?: string } | undefined;
             getAll?: () => { LogicalName: string; DisplayName: string }[];
@@ -88,6 +95,7 @@ export async function fetchTargetMetadata(
                     primaryName: meta.PrimaryNameAttribute,
                     columnDisplayNames,
                     iconUrl,
+                    entitySetName: meta.EntitySetName,
                 };
             }
         } catch (e) {
@@ -112,7 +120,7 @@ export async function fetchTargetMetadata(
         const safe = entityName.replace(/'/g, "''");
         const url =
             `${clientUrl}/api/data/v9.2/EntityDefinitions(LogicalName='${safe}')` +
-            `?$select=PrimaryNameAttribute,IconVectorName`;
+            `?$select=PrimaryNameAttribute,IconVectorName,EntitySetName`;
         const res = await fetch(url, {
             method: "GET",
             credentials: "include",
@@ -126,6 +134,7 @@ export async function fetchTargetMetadata(
             const data = (await res.json()) as {
                 PrimaryNameAttribute?: string;
                 IconVectorName?: string;
+                EntitySetName?: string;
             };
             if (data.PrimaryNameAttribute) {
                 const iconUrl = data.IconVectorName
@@ -137,6 +146,7 @@ export async function fetchTargetMetadata(
                         requestedColumns.map((c) => [c, titleCase(c)]),
                     ),
                     iconUrl,
+                    entitySetName: data.EntitySetName,
                 };
             }
         } else {

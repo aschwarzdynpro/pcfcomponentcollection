@@ -132,4 +132,10 @@
   <data name="enableRecentlyUsed_Desc" xml:space="preserve">
     <value>When on, the dropdown shows the user's most recently selected records. Stored per user in browser localStorage; no schema footprint.</value>
   </data>
+  <data name="previewFormId_Display" xml:space="preserve">
+    <value>Preview Form ID</value>
+  </data>
+  <data name="previewFormId_Desc" xml:space="preserve">
+    <value>Optional GUID of a Quick View Form for the target table. When set, the long-press preview modal renders the fields defined by that form (sections, labels, full values) instead of just the configured columns. Design a Quick View Form for the target table in Power Apps, copy its formid and paste it here. Leave empty for the default preview.</value>
+  </data>
 </root>

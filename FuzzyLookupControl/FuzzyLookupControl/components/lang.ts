@@ -33,6 +33,7 @@ export interface UiStrings {
     previewTitle: string;        // aria-label on the long-press preview dialog
     previewClose: string;        // tooltip / aria-label on the modal close button
     previewSelect: string;       // label on the modal "select this record" button
+    previewLoading: string;      // status shown in the modal while the QVF / record is being fetched
 }
 
 export const STRINGS: Record<Lang, UiStrings> = {
@@ -56,6 +57,7 @@ export const STRINGS: Record<Lang, UiStrings> = {
         previewTitle: "Record preview",
         previewClose: "Close preview",
         previewSelect: "Select this record",
+        previewLoading: "Loading details…",
     },
     de: {
         placeholderDefault: "Suchen…",
@@ -77,6 +79,7 @@ export const STRINGS: Record<Lang, UiStrings> = {
         previewTitle: "Datensatz-Vorschau",
         previewClose: "Vorschau schließen",
         previewSelect: "Diesen Datensatz wählen",
+        previewLoading: "Details werden geladen…",
     },
     fr: {
         placeholderDefault: "Rechercher…",
@@ -98,5 +101,6 @@ export const STRINGS: Record<Lang, UiStrings> = {
         previewTitle: "Aperçu de l'enregistrement",
         previewClose: "Fermer l'aperçu",
         previewSelect: "Sélectionner cet enregistrement",
+        previewLoading: "Chargement des détails…",
     },
 };

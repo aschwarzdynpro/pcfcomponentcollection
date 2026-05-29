@@ -39,6 +39,7 @@ knows to enable search.
 | `enableQuickCreate`   | input — `TwoOptions`          | Shows a `+ New` button that opens the target table's Quick-Create form. Default **on**.                                  |
 | `enableFavorites`     | input — `TwoOptions`          | Shows a per-user "Favorites" section. Each row gets a pin button. Stored in `localStorage`. Default **off**.             |
 | `enableRecentlyUsed`  | input — `TwoOptions`          | Shows a per-user "Recently used" section above the search results. Stored in `localStorage`. Default **off**.            |
+| `previewFormId`       | input — `SingleLine.Text`     | Optional GUID of a **Quick View Form** for the target table. When set, the long-press preview modal renders that form's fields (sections, labels, full values). Empty → default preview (configured columns only). |
 
 ## Environment prerequisites
 
@@ -90,13 +91,41 @@ path:
 | Gesture | Effect |
 |---------|--------|
 | **Swipe right** on a card | Toggle favourite (pin / unpin). The card slides with the finger; release past ~72 px triggers the toggle and the card snaps back. The reveal strip is orange when adding a favourite, grey when removing one. Only active when `enableFavorites` is on. |
-| **Long-press** (≈ 500 ms) on a card | Opens a preview modal showing every configured column **untruncated**, with a "Select" footer button. Useful when composite product codes wrap and you want to read the full string before committing. Tap the backdrop, the × button, or press Escape to dismiss. |
+| **Long-press** (≈ 500 ms) on a card | Opens a preview modal. Default: shows every configured column **untruncated**. When `previewFormId` is set, the modal instead renders the Quick View Form's fields with section headers + labels + freshly-fetched live values (see below). Footer "Select" button commits the record. Tap the backdrop, the × button, or press Escape to dismiss. |
 
 Vertical scrolling through the suggestion list is never hijacked — the
 gesture only commits to "swipe" once horizontal movement clearly
 dominates vertical. The long-press timer cancels the moment the finger
 moves more than a fingertip's worth, so accidental hold-while-scrolling
 won't pop the preview.
+
+## Quick View Form preview (optional)
+
+Set the `previewFormId` property to the GUID of a **Quick View Form**
+(QVF) designed for the target table. On long-press the modal then
+renders the QVF's fields — respecting its sections, labels, and field
+order — with freshly fetched live values instead of just the four
+columns configured for the inline suggestion card.
+
+How to find the GUID:
+- Open the QVF in Power Apps maker portal; the URL contains `formId=…`.
+- Or list QVFs in your solution: each shows its id in the detail pane.
+
+Behavior details:
+- The form metadata is fetched **once per session** (cached per `formId`)
+  so opening many previews only does the small record-fetch round-trip.
+- If the GUID is invalid, the form belongs to a different entity, or the
+  fetch fails for any reason, the modal **silently falls back** to the
+  default-columns preview and logs a warning to the console.
+- The fields render in the order they appear in the QVF. Sections with
+  multiple cells get a header; single-section forms get no header at all.
+- Formatted values are used where the server provides them
+  (`@OData.Community.Display.V1.FormattedValue`), so lookups show their
+  primary-name, choices show their label, dates show user-locale format.
+- We do **not** iframe Microsoft's Quick View renderer — the QVF is used
+  as a *metadata source* only and rendered in our own card-themed modal
+  to keep styling consistent and avoid auth-context issues inside
+  dialogs / side panels.
 
 ## Keyboard
 
