@@ -77,7 +77,11 @@ function escapeLucene(term: string): string {
 // parser delegates to Java's regex grammar — so we escape *its* meta chars,
 // not Lucene query meta chars. Without this, a literal "(" in a search term
 // would be parsed as a regex group opener inside the `/.../` block.
-const REGEX_SPECIAL = /[.*+?^${}()|[\]\\]/g;
+//
+// Every meta is individually backslash-escaped inside the character class
+// because TypeScript's lexer can misinterpret an unescaped `${` inside a
+// regex literal as a template-interpolation opener.
+const REGEX_SPECIAL = /[\\\^\$\.\*\+\?\(\)\[\]\{\}\|]/g;
 function escapeRegex(s: string): string {
     return s.replace(REGEX_SPECIAL, "\\$&");
 }
@@ -88,19 +92,19 @@ function escapeRegex(s: string): string {
  * AND-joined at the top level by `searchmode: "all"` (set in the
  * caller's options blob).
  *
- *   1. **prefix wildcard** `token*` — typeahead UX
+ *   1. PREFIX WILDCARD `token*` -- typeahead UX
  *      (`nym*` matches `Nymphenburg`).
- *   2. **fuzzy** `token~` (edit distance up to 2) for tokens ≥ 4 chars —
+ *   2. FUZZY `token~` (edit distance up to 2) for tokens of 4+ chars --
  *      typo tolerance (`mitcrosoft~` matches `microsoft`). Skipped for
  *      short tokens because fuzzy on 2-3 chars matches almost anything.
- *   3. **infix regex** `/.*token.*/` — substring match anywhere in an
+ *   3. INFIX REGEX `/.<*>token.<*>/` -- substring match anywhere in an
  *      indexed token. This is the one that catches cases like searching
  *      `810` and expecting it to find the product number `15012810`,
  *      where prefix alone would fail (the token `15012810` doesn't
  *      *start* with `810`). Without this, multi-token queries that
  *      mix a prefix-friendly name token with a substring-of-id token
  *      (e.g. `ny 810`) returned 0 results via Search while OData's
- *      `contains()` found them — confusing UX where the OData fallback
+ *      `contains()` found them -- confusing UX where the OData fallback
  *      kicked in and the user saw a "Search unavailable" banner.
  *
  * Performance note: leading wildcards / regex are flagged by Lucene
