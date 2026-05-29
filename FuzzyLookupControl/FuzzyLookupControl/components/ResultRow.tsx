@@ -228,6 +228,18 @@ export const ResultRow: React.FC<ResultRowProps> = (props) => {
         onSelect(record);
     };
 
+    // Keep the active (keyboard-highlighted) card visible inside the
+    // scrollable dropdown. `block: "nearest"` means: only scroll when the
+    // element is not already fully visible — so mouse hover (active card
+    // already in viewport) is a no-op, but arrow-down past the visible
+    // bottom edge scrolls just enough to bring the next card into view.
+    const wrapperRef = React.useRef<HTMLDivElement>(null);
+    React.useEffect(() => {
+        if (isActive && wrapperRef.current) {
+            wrapperRef.current.scrollIntoView({ block: "nearest", inline: "nearest" });
+        }
+    }, [isActive]);
+
     // Cleanup on unmount — if a gesture is still in flight (timer pending),
     // clear it so we don't fire onLongPress on a disposed component.
     React.useEffect(() => {
@@ -248,7 +260,7 @@ export const ResultRow: React.FC<ResultRowProps> = (props) => {
     const revealVisible = showFavoriteToggle && swipeOffset > 0;
 
     return (
-        <div className={`flc-card-wrapper ${revealVisible ? "is-revealing" : ""}`}>
+        <div ref={wrapperRef} className={`flc-card-wrapper ${revealVisible ? "is-revealing" : ""}`}>
             {showFavoriteToggle && (
                 <div
                     className={`flc-card-swipe-bg ${isFavorite ? "is-unpin" : "is-pin"}`}
