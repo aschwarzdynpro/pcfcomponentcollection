@@ -180,6 +180,39 @@
   padding: 8px 12px;
   color: var(--flc-text-muted);
   font-style: italic;
+  /* Flex layout so a spinner (rendered as a sibling in the busy state)
+     aligns horizontally next to the text instead of stacking. Existing
+     text-only statuses (no-results, min-chars, type-to-search) collapse
+     to a single child and look identical to before. */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Indeterminate ring spinner, rendered in front of the "Searching…" text
+   so the user can't mistake an in-flight search for a frozen dropdown.
+   Decorative — the surrounding text already conveys the state to
+   assistive tech, so `aria-hidden` on the element itself. */
+.flc-spinner {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 0, 0, 0.15);
+  border-top-color: var(--flc-accent, #0078d4);
+  border-radius: 50%;
+  animation: flc-spin 0.8s linear infinite;
+}
+
+@keyframes flc-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Respect the user's "reduce motion" preference — stop the spinner from
+   rotating and rely on the text alone. */
+@media (prefers-reduced-motion: reduce) {
+  .flc-spinner {
+    animation: none;
+  }
 }
 
 .flc-banner {

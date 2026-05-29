@@ -571,7 +571,12 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
                     {term.trim().length === 0 && !busy && sections.length === 0 && (
                         <div className="flc-status">{strings.typeToSearch}</div>
                     )}
-                    {busy && <div className="flc-status">{strings.searching}</div>}
+                    {busy && (
+                        <div className="flc-status" role="status">
+                            <span className="flc-spinner" aria-hidden="true" />
+                            <span>{strings.searching}</span>
+                        </div>
+                    )}
                     {!busy && term.trim().length >= MIN_CHARS && flatRecords.length === 0 && (
                         <div className="flc-status">{strings.noResults}</div>
                     )}
