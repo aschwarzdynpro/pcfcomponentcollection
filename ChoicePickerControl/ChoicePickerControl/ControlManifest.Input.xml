@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="ChoicePicker" constructor="ChoicePickerControl" version="1.0.0" display-name-key="ChoicePickerControl_Display" description-key="ChoicePickerControl_Desc" control-type="standard">
+    <!-- The bound Choice column. The type-group below lets the SAME control bind
+         to a single Choice (OptionSet) AND a multi-select Choices
+         (MultiSelectOptionSet). The control sniffs which one at runtime; the
+         maker can force it via `selectionMode`. -->
+    <property name="selectedValue" display-name-key="selectedValue_Display" description-key="selectedValue_Desc" of-type-group="choices" usage="bound" required="true" />
+
+    <!-- single / multiple override. "auto" (default) detects the bound column
+         type; set explicitly if the auto-detection ever guesses wrong. -->
+    <property name="selectionMode" display-name-key="selectionMode_Display" description-key="selectionMode_Desc" of-type="Enum" usage="input" required="false" default-value="auto">
+      <value name="auto" display-name-key="selectionMode_Auto_Display" description-key="selectionMode_Auto_Desc">auto</value>
+      <value name="single" display-name-key="selectionMode_Single_Display" description-key="selectionMode_Single_Desc">single</value>
+      <value name="multiple" display-name-key="selectionMode_Multiple_Display" description-key="selectionMode_Multiple_Desc">multiple</value>
+    </property>
+
+    <!-- Optional placeholder shown when nothing is selected (overrides the
+         localized default). -->
+    <property name="placeholder" display-name-key="placeholder_Display" description-key="placeholder_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- When to show the search/filter box inside the dropdown. "auto" (default)
+         shows it once there are 8+ options. -->
+    <property name="searchBox" display-name-key="searchBox_Display" description-key="searchBox_Desc" of-type="Enum" usage="input" required="false" default-value="auto">
+      <value name="auto" display-name-key="searchBox_Auto_Display" description-key="searchBox_Auto_Desc">auto</value>
+      <value name="always" display-name-key="searchBox_Always_Display" description-key="searchBox_Always_Desc">always</value>
+      <value name="never" display-name-key="searchBox_Never_Display" description-key="searchBox_Never_Desc">never</value>
+    </property>
+
+    <!-- Render the Dataverse choice colors as dots / chip tints. "on" by default;
+         when a choice has no color configured, a stable palette color is used. -->
+    <property name="colorMode" display-name-key="colorMode_Display" description-key="colorMode_Desc" of-type="Enum" usage="input" required="false" default-value="on">
+      <value name="on" display-name-key="colorMode_On_Display" description-key="colorMode_On_Desc">on</value>
+      <value name="off" display-name-key="colorMode_Off_Display" description-key="colorMode_Off_Desc">off</value>
+    </property>
+
+    <!-- Show the inline clear (×) button. "on" by default. -->
+    <property name="clearButton" display-name-key="clearButton_Display" description-key="clearButton_Desc" of-type="Enum" usage="input" required="false" default-value="on">
+      <value name="on" display-name-key="clearButton_On_Display" description-key="clearButton_On_Desc">on</value>
+      <value name="off" display-name-key="clearButton_Off_Display" description-key="clearButton_Off_Desc">off</value>
+    </property>
+
+    <type-group name="choices">
+      <type>OptionSet</type>
+      <type>MultiSelectOptionSet</type>
+    </type-group>
+
+    <!-- resources -->
+    <resources>
+      <code path="index.ts" order="1"/>
+      <css path="css/ChoicePickerControl.css" order="1" />
+      <resx path="strings/ChoicePickerControl.1033.resx" version="1.0.0" />
+    </resources>
+  </control>
+</manifest>

@@ -1,0 +1,395 @@
+/* =========================================================================
+   ChoicePickerControl — a modern React picker for Dataverse Choice columns.
+   Prefix: cpc-  |  The dropdown is portaled to <body>, so design tokens are
+   declared on BOTH the host root and the .cpc-dropdown selector (CSS custom
+   properties don't cross a React portal to a non-descendant DOM root).
+   ========================================================================= */
+
+.cpc-host {
+    --cpc-accent: #0f6cbd;
+    --cpc-accent-hover: #115ea3;
+    --cpc-border: #d1d1d1;
+    --cpc-text: #242424;
+    --cpc-subtle: #616161;
+    --cpc-bg: #ffffff;
+    --cpc-hover: #f3f7fb;
+    --cpc-selected: #e9f1fb;
+
+    width: 100%;
+    box-sizing: border-box;
+    font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system,
+        BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+    font-size: 14px;
+    color: var(--cpc-text);
+}
+
+.cpc-root {
+    position: relative;
+    width: 100%;
+}
+
+/* ---------- trigger ---------- */
+.cpc-trigger {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-height: 32px;
+    box-sizing: border-box;
+    padding: 3px 6px 3px 10px;
+    border: 1px solid var(--cpc-border);
+    border-radius: 6px;
+    background: var(--cpc-bg);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 120ms ease, box-shadow 120ms ease,
+        background-color 120ms ease;
+}
+
+.cpc-trigger:hover {
+    border-color: #a6a6a6;
+}
+
+.cpc-trigger:focus-visible,
+.cpc-root.cpc-open .cpc-trigger {
+    border-color: var(--cpc-accent);
+    box-shadow: 0 0 0 1px var(--cpc-accent);
+}
+
+.cpc-root.cpc-disabled .cpc-trigger {
+    background: #f5f5f5;
+    color: #8a8a8a;
+    cursor: not-allowed;
+    box-shadow: none;
+    border-color: var(--cpc-border);
+}
+
+.cpc-value {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+}
+
+.cpc-placeholder {
+    color: #a0a0a0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* single selection */
+.cpc-single {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.cpc-single-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* color dot */
+.cpc-dot {
+    flex: 0 0 auto;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12) inset;
+}
+
+.cpc-dot-sm {
+    width: 8px;
+    height: 8px;
+}
+
+/* multi chips */
+.cpc-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-width: 0;
+    padding: 1px 0;
+}
+
+.cpc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 100%;
+    padding: 1px 4px 1px 7px;
+    border: 1px solid var(--cpc-border);
+    border-radius: 12px;
+    background: #f0f0f0;
+    font-size: 12.5px;
+    line-height: 18px;
+    animation: cpc-chip-in 120ms ease;
+}
+
+@keyframes cpc-chip-in {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.cpc-chip-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cpc-chip-remove {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--cpc-subtle);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 100ms ease, color 100ms ease;
+}
+
+.cpc-chip-remove:hover {
+    background: rgba(0, 0, 0, 0.12);
+    color: #c50f1f;
+}
+
+/* clear + caret */
+.cpc-clear {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #8a8a8a;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 100ms ease, color 100ms ease;
+}
+
+.cpc-clear:hover {
+    background: #efefef;
+    color: #c50f1f;
+}
+
+.cpc-caret {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    color: #8a8a8a;
+    transition: transform 160ms ease, color 120ms ease;
+}
+
+.cpc-root.cpc-open .cpc-caret {
+    transform: rotate(180deg);
+    color: var(--cpc-accent);
+}
+
+/* ---------- portaled dropdown ---------- */
+.cpc-dropdown {
+    --cpc-accent: #0f6cbd;
+    --cpc-border: #d1d1d1;
+    --cpc-text: #242424;
+    --cpc-subtle: #616161;
+    --cpc-bg: #ffffff;
+    --cpc-hover: #f3f7fb;
+    --cpc-selected: #e9f1fb;
+
+    z-index: 10000;
+    min-width: 200px;
+    max-height: 320px;
+    display: flex;
+    flex-direction: column;
+    background: var(--cpc-bg);
+    border: 1px solid var(--cpc-border);
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+    font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system,
+        BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+    font-size: 14px;
+    color: var(--cpc-text);
+    transform-origin: top center;
+    animation: cpc-pop 140ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes cpc-pop {
+    from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.cpc-search-wrap {
+    padding: 8px 8px 4px;
+}
+
+.cpc-search {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 10px;
+    border: 1px solid var(--cpc-border);
+    border-radius: 6px;
+    font: inherit;
+    outline: none;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.cpc-search:focus {
+    border-color: var(--cpc-accent);
+    box-shadow: 0 0 0 1px var(--cpc-accent);
+}
+
+.cpc-list {
+    list-style: none;
+    margin: 0;
+    padding: 4px;
+    overflow-y: auto;
+    flex: 1 1 auto;
+}
+
+.cpc-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.cpc-option-active {
+    background: var(--cpc-hover);
+}
+
+.cpc-option-selected {
+    background: var(--cpc-selected);
+}
+
+.cpc-option-selected.cpc-option-active {
+    background: #ddeaf9;
+}
+
+.cpc-option-label {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cpc-option-tick {
+    flex: 0 0 auto;
+    color: var(--cpc-accent);
+    display: inline-flex;
+}
+
+/* multi checkbox */
+.cpc-check {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid #b3b3b3;
+    border-radius: 4px;
+    background: #ffffff;
+    transition: background-color 100ms ease, border-color 100ms ease;
+}
+
+.cpc-check-on {
+    background: var(--cpc-accent);
+    border-color: var(--cpc-accent);
+}
+
+.cpc-empty {
+    padding: 14px 12px;
+    text-align: center;
+    color: #8a8a8a;
+}
+
+/* multi footer */
+.cpc-footer {
+    display: flex;
+    gap: 8px;
+    padding: 6px 10px;
+    border-top: 1px solid #ededed;
+}
+
+.cpc-footer-btn {
+    flex: 0 0 auto;
+    padding: 4px 8px;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--cpc-accent);
+    font: inherit;
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: background-color 100ms ease;
+}
+
+.cpc-footer-btn:hover:not(:disabled) {
+    background: var(--cpc-hover);
+}
+
+.cpc-footer-btn:disabled {
+    color: #b3b3b3;
+    cursor: default;
+}
+
+/* ---------- accessibility / preference media queries ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .cpc-dropdown,
+    .cpc-chip {
+        animation: none;
+    }
+    .cpc-caret,
+    .cpc-trigger,
+    .cpc-search,
+    .cpc-check,
+    .cpc-chip-remove,
+    .cpc-clear {
+        transition: none;
+    }
+}
+
+@media (prefers-contrast: more), (forced-colors: active) {
+    .cpc-trigger {
+        border-color: CanvasText;
+    }
+    .cpc-dropdown {
+        border-color: CanvasText;
+    }
+    .cpc-option-selected,
+    .cpc-option-active {
+        outline: 1px solid CanvasText;
+    }
+}
