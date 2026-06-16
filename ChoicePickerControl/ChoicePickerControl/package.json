@@ -1,6 +1,6 @@
 {
   "name": "choice-picker-control",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "PCF control that replaces the standard Dataverse Choice dropdown with a modern React picker. Works with single Choice (OptionSet) and multi-select Choices (MultiSelectOptionSet): colored option dots, searchable list, removable chips, full keyboard navigation, trilingual UI (DE / EN / FR).",
   "keywords": [
     "PCF",

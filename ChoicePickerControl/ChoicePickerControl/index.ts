@@ -16,18 +16,39 @@ interface OptionMeta {
 interface ChoiceParam {
     raw: number | number[] | null;
     type?: string;
-    attributes?: { Options?: OptionMeta[]; DefaultValue?: number };
+    attributes?: {
+        Options?: OptionMeta[];
+        DefaultValue?: number;
+        LogicalName?: string;
+    };
 }
 
-/**
- * Decides whether the bound column is a multi-select Choice. The maker's
- * `selectionMode` wins; in "auto" we sniff the runtime shape:
- *   - a populated array `raw` is unambiguously multi-select;
- *   - otherwise the parameter's `type` string ("MultiSelectOptionSet" /
- *     "Multiple") is the tie-breaker for the empty case.
- * Falls back to single — the conservative default — and the maker can always
- * override via `selectionMode`.
- */
+type Selection = number | number[] | null;
+
+// --- recent-selection cache (module-level, survives a destroy/re-init) --------
+// A form `onChange` script that toggles control visibility / required levels can
+// make the host briefly RE-INITIALIZE the PCF, or fire extra `updateView`s while
+// the bound column still carries the PREVIOUS value. Either way an in-instance
+// flag is lost or bypassed and the fresh pick gets clobbered (symptom: the value
+// is wiped and only "sticks" on the second pick). We remember the user's most
+// recent pick per (record × column) at module scope and treat a stale incoming
+// value as ignorable until the host echoes the picked value back (or a short
+// window elapses).
+interface RecentPick {
+    value: Selection;
+    ts: number;
+}
+const RECENT: Record<string, RecentPick> = {};
+const RECENT_WINDOW_MS = 6000;
+
+function now(): number {
+    try {
+        return Date.now();
+    } catch {
+        return 0;
+    }
+}
+
 function resolveMulti(
     param: ChoiceParam,
     mode: "auto" | "single" | "multiple" | undefined,
@@ -48,29 +69,31 @@ function readOptions(param: ChoiceParam): ChoiceOption[] {
     }));
 }
 
-/** Normalize the bound `raw` to a single value (number | null). */
 function readSingle(param: ChoiceParam): number | null {
     if (typeof param.raw === "number") return param.raw;
     if (Array.isArray(param.raw) && param.raw.length) return param.raw[0];
     return null;
 }
 
-/** Normalize the bound `raw` to a value array. */
 function readMulti(param: ChoiceParam): number[] {
     if (Array.isArray(param.raw)) return [...param.raw];
     if (typeof param.raw === "number") return [param.raw];
     return [];
 }
 
-/** Set-equality for value arrays (order-independent). */
-function sameValues(a: number[], b: number[]): boolean {
-    if (a.length !== b.length) return false;
-    const sa = [...a].sort((x, y) => x - y);
-    const sb = [...b].sort((x, y) => x - y);
-    for (let i = 0; i < sa.length; i++) {
-        if (sa[i] !== sb[i]) return false;
+function sameSelection(a: Selection, b: Selection): boolean {
+    if (Array.isArray(a) || Array.isArray(b)) {
+        const aa = Array.isArray(a) ? a : a === null ? [] : [a];
+        const bb = Array.isArray(b) ? b : b === null ? [] : [b];
+        if (aa.length !== bb.length) return false;
+        const sa = [...aa].sort((x, y) => x - y);
+        const sb = [...bb].sort((x, y) => x - y);
+        for (let i = 0; i < sa.length; i++) {
+            if (sa[i] !== sb[i]) return false;
+        }
+        return true;
     }
-    return true;
+    return a === b;
 }
 
 export class ChoicePickerControl
@@ -84,18 +107,7 @@ export class ChoicePickerControl
     // Internal selection. Single → number | null; multi → number[].
     private _single: number | null = null;
     private _multiValues: number[] = [];
-
-    // --- echo / pending guard -------------------------------------------------
-    // After the user picks a value we emit it optimistically and wait for the
-    // host to echo it back through updateView. A form `onChange` script can fire
-    // an extra updateView while the bound property still carries the PREVIOUS
-    // value — without this guard that stale value clobbers the fresh selection
-    // (symptom: the pick is wiped and only "sticks" on the second try). We keep
-    // the optimistic value until the host confirms it, and ignore a late echo
-    // that still carries the prior value.
-    private _pending = false;
-    private _prevSingle: number | null = null;
-    private _prevMulti: number[] = [];
+    private _cacheKey: string | null = null;
 
     public init(
         context: ComponentFramework.Context<IInputs>,
@@ -134,11 +146,28 @@ export class ChoicePickerControl
         ReactDOM.unmountComponentAtNode(this._container);
     }
 
+    /** Stable key for the bound field on the current record. */
+    private buildCacheKey(
+        context: ComponentFramework.Context<IInputs>,
+        param: ChoiceParam,
+    ): string | null {
+        const logical = param.attributes?.LogicalName;
+        if (!logical) return null;
+        const page = (context as unknown as {
+            page?: { entityTypeName?: string; entityId?: string };
+        }).page;
+        const entityName = page?.entityTypeName ?? "";
+        const entityId = page?.entityId
+            ? page.entityId.replace(/[{}]/g, "")
+            : "";
+        return `${entityName}:${entityId}:${logical}`;
+    }
+
     /**
      * Pull the current selection + mode out of the (possibly re-instanced)
-     * context, honoring the pending/echo guard so a stale updateView (e.g.
-     * triggered by a form onChange script before the new value propagated)
-     * cannot overwrite a just-made selection.
+     * context. A recent user pick (module cache) wins over a stale incoming
+     * value until the host echoes the picked value back, so a form onChange
+     * script can't roll the selection back.
      */
     private syncFromContext(context: ComponentFramework.Context<IInputs>): void {
         const param = context.parameters.selectedValue as unknown as ChoiceParam;
@@ -149,45 +178,42 @@ export class ChoicePickerControl
             | undefined;
 
         this._multi = resolveMulti(param, mode);
+        this._cacheKey = this.buildCacheKey(context, param);
 
+        const incoming: Selection = this._multi
+            ? this.orderByOptions(param, readMulti(param))
+            : readSingle(param);
+
+        // Respect a fresh, not-yet-confirmed user pick.
+        const cached = this._cacheKey ? RECENT[this._cacheKey] : undefined;
+        if (cached && now() - cached.ts < RECENT_WINDOW_MS) {
+            if (sameSelection(incoming, cached.value)) {
+                // Host caught up — the pick is confirmed; stop protecting so
+                // genuine external changes apply from here on.
+                if (this._cacheKey) delete RECENT[this._cacheKey];
+            } else {
+                // Host still carries a stale value — keep the optimistic pick.
+                this.applySelection(cached.value);
+                return;
+            }
+        }
+
+        this.applySelection(incoming);
+    }
+
+    private applySelection(sel: Selection): void {
         if (this._multi) {
-            const incoming = this.orderByOptions(param, readMulti(param));
-            if (this._pending) {
-                if (sameValues(incoming, this._multiValues)) {
-                    // Host confirmed our optimistic value.
-                    this._pending = false;
-                    this._prevMulti = incoming;
-                } else if (sameValues(incoming, this._prevMulti)) {
-                    // Late echo of the prior value — ignore, keep optimistic.
-                    return;
-                } else {
-                    // A genuine external change to a different value — adopt it.
-                    this._pending = false;
-                    this._multiValues = incoming;
-                    this._prevMulti = incoming;
-                }
-            } else {
-                this._multiValues = incoming;
-                this._prevMulti = incoming;
-            }
+            this._multiValues = Array.isArray(sel)
+                ? sel
+                : sel === null
+                  ? []
+                  : [sel];
         } else {
-            const incoming = readSingle(param);
-            if (this._pending) {
-                if (incoming === this._single) {
-                    this._pending = false;
-                    this._prevSingle = incoming;
-                } else if (incoming === this._prevSingle) {
-                    // Late echo of the prior value — ignore, keep optimistic.
-                    return;
-                } else {
-                    this._pending = false;
-                    this._single = incoming;
-                    this._prevSingle = incoming;
-                }
-            } else {
-                this._single = incoming;
-                this._prevSingle = incoming;
-            }
+            this._single = Array.isArray(sel)
+                ? sel.length
+                    ? sel[0]
+                    : null
+                : sel;
         }
     }
 
@@ -224,15 +250,19 @@ export class ChoicePickerControl
             clearable,
             lang,
             onChange: (next: number | number[] | null) => {
-                if (this._multi) {
-                    this._multiValues = Array.isArray(next) ? next : [];
-                } else {
-                    this._single = typeof next === "number" ? next : null;
+                const value: Selection = this._multi
+                    ? Array.isArray(next)
+                        ? next
+                        : []
+                    : typeof next === "number"
+                      ? next
+                      : null;
+                this.applySelection(value);
+                // Remember this pick so a stale updateView (or a destroy/re-init
+                // caused by a form onChange script) can't roll it back.
+                if (this._cacheKey) {
+                    RECENT[this._cacheKey] = { value, ts: now() };
                 }
-                // Mark the value as pending so the next stale updateView (from a
-                // form onChange script) can't roll it back; it's cleared once the
-                // host echoes the value we just emitted.
-                this._pending = true;
                 this._notifyOutputChanged();
                 // Re-render immediately so the UI reflects the change before the
                 // host echoes the new value back through updateView.

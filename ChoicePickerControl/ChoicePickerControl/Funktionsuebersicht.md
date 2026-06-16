@@ -72,7 +72,7 @@ Tastatur-Bedienung.
   Basistyp `Property` (`raw: any`, Output `any`); das Control liest `raw`,
   `attributes.Options` (Label / Value / **Color**) und den Laufzeit-`type` über
   eine getypte Sicht in `index.ts`.
-- **Solution-Version:** `1.0.1.0`, **Control-Version:** `1.0.1`,
+- **Solution-Version:** `1.0.2.0`, **Control-Version:** `1.0.2`,
   Publisher `HerbertWaldmann`, Prefix `wal`
 - **Unique Name:** `wal_ChoicePicker.ChoicePickerControl`
 
