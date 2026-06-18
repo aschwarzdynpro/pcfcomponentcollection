@@ -608,7 +608,23 @@
     border-color: #0f6cbd;
 }
 
-.wtsg-report-name {
+.wtsg-report-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.wtsg-report-number {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wtsg-report-sub {
+    font-size: 11px;
+    color: #909090;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

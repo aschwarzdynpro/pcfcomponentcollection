@@ -68,6 +68,8 @@ export const TIMEREPORT = {
     entitySet: "sst_timereportses",
     /** Primary name on the Lieferschein. */
     name: "sst_name",
+    /** Delivery-note number (autonumber, e.g. AZN-015554) — for display. */
+    number: "sst_deliverynotenumberassembly_str",
     /** Work-order lookup nav on the Lieferschein (→ msdyn_workorders). */
     workorderNav: "sst_Arbeitsauftrag",
     /** Lookup value of the Lieferschein on the entry (the "assign" filter). */

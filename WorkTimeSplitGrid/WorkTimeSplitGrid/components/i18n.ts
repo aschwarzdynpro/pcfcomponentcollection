@@ -36,7 +36,6 @@ export interface Strings {
     /** Picker shown when "create & open" produced several delivery notes. */
     pickReportTitle: (n: number) => string;
     pickReportPrompt: string;
-    openAll: string;
     closeLabel: string;
     loading: string;
     loadingSubtypes: string;
@@ -89,7 +88,6 @@ export const STRINGS: Record<Lang, Strings> = {
             "Only entries that are not yet assigned to a delivery note can be processed.",
         pickReportTitle: (n) => `${n} delivery notes created`,
         pickReportPrompt: "Which delivery note would you like to open?",
-        openAll: "Open all",
         closeLabel: "Close",
         loading: "Loading entries…",
         loadingSubtypes: "Loading subtypes…",
@@ -145,7 +143,6 @@ export const STRINGS: Record<Lang, Strings> = {
             "Es können nur Zeiteinträge verarbeitet werden, die noch keinem Lieferschein zugeordnet wurden.",
         pickReportTitle: (n) => `${n} Lieferscheine erstellt`,
         pickReportPrompt: "Welchen Lieferschein möchtest du öffnen?",
-        openAll: "Alle öffnen",
         closeLabel: "Schließen",
         loading: "Einträge werden geladen…",
         loadingSubtypes: "Subtypes werden geladen…",
@@ -201,7 +198,6 @@ export const STRINGS: Record<Lang, Strings> = {
             "Seules les entrées non encore affectées à un bon de livraison peuvent être traitées.",
         pickReportTitle: (n) => `${n} bons de livraison créés`,
         pickReportPrompt: "Quel bon de livraison souhaitez-vous ouvrir ?",
-        openAll: "Tout ouvrir",
         closeLabel: "Fermer",
         loading: "Chargement des entrées…",
         loadingSubtypes: "Chargement des sous-types…",

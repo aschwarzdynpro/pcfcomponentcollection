@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <manifest>
-  <control namespace="WorkTime" constructor="WorkTimeSplitGrid" version="1.7.5" display-name-key="WorkTimeSplitGrid_Display" description-key="WorkTimeSplitGrid_Desc" control-type="standard" api-version="1.3.18">
+  <control namespace="WorkTime" constructor="WorkTimeSplitGrid" version="1.7.6" display-name-key="WorkTimeSplitGrid_Display" description-key="WorkTimeSplitGrid_Desc" control-type="standard" api-version="1.3.18">
     <data-set name="entries" display-name-key="entries_Display" description-key="entries_Desc"/>
     <property name="totalField" display-name-key="totalField_Display" description-key="totalField_Desc" of-type="SingleLine.Text" usage="input" required="false"/>
     <property name="dateField" display-name-key="dateField_Display" description-key="dateField_Desc" of-type="SingleLine.Text" usage="input" required="false"/>

@@ -42,8 +42,9 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
     Liste (entsteht genau ein Lieferschein, wird er trotzdem geöffnet).
   - **Erstellen & öffnen ↗** — dasselbe, öffnet danach das Ergebnis: ein einzelner
     Lieferschein wird direkt geöffnet; wurden **mehrere** erstellt, erscheint ein
-    Auswahl-Overlay, in dem der Benutzer wählt, welchen er öffnet (oder **Alle
-    öffnen**).
+    Auswahl-Overlay, das sie nach **Lieferscheinnummer**
+    (`sst_deliverynotenumberassembly_str`, mit dem Arbeitsauftrag als Unterzeile)
+    auflistet, sodass der Benutzer wählt, welchen er öffnet.
   Beide erstellen **je Arbeitsauftrag** einen Lieferschein (`sst_timereports`,
   `sst_name` = „Report <WO> On <Datum>", `sst_Arbeitsauftrag` → msdyn_workorder)
   und verknüpfen jeden ausgewählten Eintrag via `sst_TimeReport` mit dem

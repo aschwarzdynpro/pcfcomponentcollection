@@ -464,6 +464,8 @@ export interface CreatedReport {
     id: string;
     name: string;
     woName: string;
+    /** Delivery-note number (autonumber) — preferred display label. */
+    number: string;
 }
 
 export interface CreateReportsResult {
@@ -554,7 +556,25 @@ export async function createTimeReports(
                 [`${TIMEREPORT.workorderNav}@odata.bind`]: `/${WORKORDER_SET}(${wo.woId})`,
             });
             reportId = created.id;
-            reports.push({ id: created.id, name: reportName, woName: wo.woName });
+            // The delivery-note number is an autonumber (set synchronously on
+            // create); fetch it for the picker label. Best-effort.
+            let number = "";
+            try {
+                const back: any = await webApi.retrieveRecord(
+                    TIMEREPORT.logicalName,
+                    reportId,
+                    `?$select=${TIMEREPORT.number}`,
+                );
+                number = String(back?.[TIMEREPORT.number] ?? "");
+            } catch {
+                /* number stays empty → picker falls back to the WO name */
+            }
+            reports.push({
+                id: reportId,
+                name: reportName,
+                woName: wo.woName,
+                number,
+            });
         } catch {
             failed += wo.entryIds.length; // report creation failed → its entries fail
             continue;

@@ -41,7 +41,8 @@ deletes the original.
     exactly one note results it still opens automatically).
   - **Create & open ↗** — does the same, then opens the result: a single
     delivery note opens directly; if **several** were created, a picker overlay
-    lists them so the user chooses which to open (or **Open all**).
+    lists them by **delivery-note number** (`sst_deliverynotenumberassembly_str`,
+    with the work order as a sub-line) so the user chooses which to open.
   Both create one delivery note (`sst_timereports`) per work order across the
   selection and link each selected entry to its work order's note via
   `sst_TimeReport`. Entries already assigned to a delivery note are rejected.

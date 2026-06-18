@@ -482,14 +482,21 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                     key={rep.id}
                                     type="button"
                                     className="wtsg-report-item"
-                                    title={rep.name}
+                                    title={rep.number || rep.woName || rep.name}
                                     onClick={() => {
                                         openReport(rep.id);
                                         setReportPicker(null);
                                     }}
                                 >
-                                    <span className="wtsg-report-name">
-                                        {rep.woName || rep.name}
+                                    <span className="wtsg-report-text">
+                                        <span className="wtsg-report-number">
+                                            {rep.number || rep.woName || rep.name}
+                                        </span>
+                                        {rep.number && rep.woName && (
+                                            <span className="wtsg-report-sub">
+                                                {rep.woName}
+                                            </span>
+                                        )}
                                     </span>
                                     <span
                                         className="wtsg-report-open"
@@ -507,18 +514,6 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 onClick={() => setReportPicker(null)}
                             >
                                 {t.closeLabel}
-                            </button>
-                            <button
-                                type="button"
-                                className="wtsg-btn-primary"
-                                onClick={() => {
-                                    reportPicker.forEach((rep) =>
-                                        openReport(rep.id),
-                                    );
-                                    setReportPicker(null);
-                                }}
-                            >
-                                {t.openAll}
                             </button>
                         </div>
                     </div>
