@@ -11,6 +11,8 @@ export interface WorkTimeSplitGridProps {
     webApi: ComponentFramework.WebApi;
     utils: ComponentFramework.Utility;
     fields: FieldConfig;
+    /** Phone form factor → single-pane, touch-first layout. */
+    isMobile: boolean;
     disabled: boolean;
     lang: Lang;
 }
@@ -168,8 +170,11 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         );
     }
 
+    const detailOpen = props.isMobile && !!selected;
+
     return (
-        <div className="wtsg-root">
+        <div className={`wtsg-root ${props.isMobile ? "wtsg-mobile" : ""}`}>
+            {!detailOpen && (
             <div className="wtsg-toolbar">
                 <input
                     type="search"
@@ -211,6 +216,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 </div>
                 <span className="wtsg-count">{t.entries(visibleRows.length)}</span>
             </div>
+            )}
 
             {toast && (
                 <div className="wtsg-toast" role="status">
@@ -219,26 +225,32 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             )}
 
             <div className={`wtsg-body ${dataset.loading ? "wtsg-loading" : ""}`}>
-                <EntryList
-                    rows={visibleRows}
-                    selectedId={selectedId}
-                    onSelect={setSelectedId}
-                    strings={t}
-                />
-                <SplitPanel
-                    entry={selected}
-                    subtypes={subtypes}
-                    loading={loadingSubtypes}
-                    error={subtypeError}
-                    fields={fields}
-                    webApi={props.webApi}
-                    utils={props.utils}
-                    disabled={props.disabled}
-                    lang={props.lang}
-                    onSubtypesChange={setSubtypes}
-                    onSaved={handleSaved}
-                    onError={(msg) => flashToast(msg)}
-                />
+                {(!props.isMobile || !selected) && (
+                    <EntryList
+                        rows={visibleRows}
+                        selectedId={selectedId}
+                        onSelect={setSelectedId}
+                        strings={t}
+                    />
+                )}
+                {(!props.isMobile || !!selected) && (
+                    <SplitPanel
+                        entry={selected}
+                        subtypes={subtypes}
+                        loading={loadingSubtypes}
+                        error={subtypeError}
+                        fields={fields}
+                        webApi={props.webApi}
+                        utils={props.utils}
+                        disabled={props.disabled}
+                        isMobile={props.isMobile}
+                        lang={props.lang}
+                        onBack={() => setSelectedId(null)}
+                        onSubtypesChange={setSubtypes}
+                        onSaved={handleSaved}
+                        onError={(msg) => flashToast(msg)}
+                    />
+                )}
             </div>
         </div>
     );

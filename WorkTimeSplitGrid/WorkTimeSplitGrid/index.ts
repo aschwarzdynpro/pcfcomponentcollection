@@ -46,12 +46,31 @@ export class WorkTimeSplitGrid
         ReactDOM.unmountComponentAtNode(this._container);
     }
 
+    /**
+     * Phone form factor (3) → mobile-optimized single-pane layout. Desktop (1)
+     * and Tablet (2) keep the two-pane layout unchanged. When the host can't
+     * report a form factor (0), fall back to the allocated width.
+     */
+    private isMobile(): boolean {
+        let formFactor = 0;
+        try {
+            formFactor = this._context.client.getFormFactor() ?? 0;
+        } catch {
+            formFactor = 0;
+        }
+        if (formFactor === 3) return true;
+        if (formFactor === 1 || formFactor === 2) return false;
+        const width = this._context.mode.allocatedWidth ?? 0;
+        return width > 0 && width < 560;
+    }
+
     private render(): void {
         const params = this._context.parameters;
         const props: WorkTimeSplitGridProps = {
             dataset: params.entries,
             webApi: this._context.webAPI,
             utils: this._context.utils,
+            isMobile: this.isMobile(),
             fields: resolveFieldConfig({
                 totalField: params.totalField?.raw,
                 dateField: params.dateField?.raw,

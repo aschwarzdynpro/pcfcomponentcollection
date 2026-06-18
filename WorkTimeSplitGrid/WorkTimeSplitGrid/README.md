@@ -33,6 +33,17 @@ deletes the original.
      the cascade-delete relationship.
 - **Confirmation dialog** before the destructive save/delete.
 
+### 📱 Adaptive (desktop + mobile)
+- **One control, two layouts**, chosen at runtime from
+  `context.client.getFormFactor()` (with an allocated-width fallback):
+  - **Desktop / Tablet** → the two-pane master/detail layout (unchanged).
+  - **Phone** → a single-pane, touch-first flow: full-width list → tap an entry
+    → full-screen split editor with a **‹ Back** header → save returns to the
+    list. Larger tap targets, big numeric inputs, and a bottom-pinned save
+    button.
+- Assign the same control to **Web + Tablet + Phone** when adding it to the
+  view; no separate mobile build to maintain.
+
 ### 🌐 Internationalization
 - **Trilingual UI** (German / English / French), chosen automatically from the
   user's Dataverse language (`context.userSettings.languageId`).

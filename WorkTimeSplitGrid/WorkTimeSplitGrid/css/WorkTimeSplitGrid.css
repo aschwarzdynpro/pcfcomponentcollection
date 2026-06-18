@@ -419,14 +419,156 @@
     }
 }
 
-/* Responsive: stack on narrow hosts */
+/* Responsive: stack the desktop two-pane on a narrow (non-phone) host */
 @media (max-width: 720px) {
-    .wtsg-body {
+    .wtsg-root:not(.wtsg-mobile) .wtsg-body {
         flex-direction: column;
     }
-    .wtsg-list {
+    .wtsg-root:not(.wtsg-mobile) .wtsg-list {
         flex: 0 0 auto;
         max-width: none;
         max-height: 40%;
     }
+}
+
+/* ============================================================
+   Mobile (phone form factor): single-pane, touch-first layout.
+   List and detail swap full-screen; bigger tap targets + inputs.
+   ============================================================ */
+.wtsg-mobile .wtsg-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.wtsg-mobile .wtsg-search {
+    flex: 1 1 100%;
+    max-width: none;
+    height: 40px;
+    font-size: 16px;
+}
+
+.wtsg-mobile .wtsg-toggle {
+    flex: 1 1 auto;
+}
+
+.wtsg-mobile .wtsg-toggle button {
+    flex: 1 1 0;
+    padding: 10px 12px;
+    font-size: 14px;
+}
+
+.wtsg-mobile .wtsg-count {
+    margin-left: 0;
+}
+
+.wtsg-mobile .wtsg-body {
+    flex-direction: column;
+    padding: 0;
+    gap: 0;
+}
+
+.wtsg-mobile .wtsg-list {
+    flex: 1 1 auto;
+    max-width: none;
+    max-height: none;
+    padding: 10px;
+    gap: 10px;
+    padding-right: 10px;
+}
+
+/* Bigger, finger-friendly cards */
+.wtsg-mobile .wtsg-card {
+    padding: 14px 16px;
+}
+
+.wtsg-mobile .wtsg-card-title {
+    font-size: 16px;
+}
+
+.wtsg-mobile .wtsg-card-meta {
+    font-size: 13px;
+}
+
+.wtsg-mobile .wtsg-card-total {
+    font-size: 14px;
+}
+
+/* Full-screen detail */
+.wtsg-mobile .wtsg-panel {
+    border: none;
+    border-radius: 0;
+    padding: 0;
+}
+
+.wtsg-mobile-head {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    background: #fff;
+    border-bottom: 1px solid #e1dfdd;
+}
+
+.wtsg-back {
+    border: none;
+    background: none;
+    color: #0f6cbd;
+    font-size: 16px;
+    padding: 8px 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    min-height: 40px;
+}
+
+.wtsg-back span {
+    font-size: 24px;
+    line-height: 1;
+}
+
+.wtsg-mobile .wtsg-panel-head {
+    padding: 12px 16px 0;
+}
+
+.wtsg-mobile .wtsg-rows {
+    padding: 14px 16px;
+    gap: 12px;
+}
+
+.wtsg-mobile .wtsg-rowname {
+    font-size: 17px;
+}
+
+.wtsg-mobile .wtsg-rowinput {
+    flex-basis: 110px;
+    height: 46px;
+    font-size: 18px;
+}
+
+.wtsg-mobile .wtsg-summary {
+    margin-top: 8px;
+    padding: 12px 16px;
+}
+
+/* Pin the save action to the bottom of the screen */
+.wtsg-mobile .wtsg-actions {
+    position: sticky;
+    bottom: 0;
+    margin-top: auto;
+    padding: 12px 16px;
+    background: #fff;
+    border-top: 1px solid #edebe9;
+}
+
+.wtsg-mobile .wtsg-save {
+    width: 100%;
+    height: 48px;
+    font-size: 16px;
+}
+
+.wtsg-mobile .wtsg-modal-card {
+    margin: 0 16px;
 }

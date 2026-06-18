@@ -36,6 +36,7 @@ export interface Strings {
     confirmCancel: string;
     colType: string;
     colDate: string;
+    back: string;
 }
 
 export const STRINGS: Record<Lang, Strings> = {
@@ -66,6 +67,7 @@ export const STRINGS: Record<Lang, Strings> = {
         confirmCancel: "Cancel",
         colType: "Type",
         colDate: "Date",
+        back: "Back",
     },
     de: {
         searchPlaceholder: "Einträge suchen…",
@@ -94,6 +96,7 @@ export const STRINGS: Record<Lang, Strings> = {
         confirmCancel: "Abbrechen",
         colType: "Typ",
         colDate: "Datum",
+        back: "Zurück",
     },
     fr: {
         searchPlaceholder: "Rechercher des entrées…",
@@ -122,5 +125,6 @@ export const STRINGS: Record<Lang, Strings> = {
         confirmCancel: "Annuler",
         colType: "Type",
         colDate: "Date",
+        back: "Retour",
     },
 };

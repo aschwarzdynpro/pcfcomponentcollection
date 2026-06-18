@@ -55,6 +55,17 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   die Verknüpfungen zu Arbeitsauftrag/Buchung/Projekt überleben die Aufteilung
   unabhängig von der Ziel-Tabelle.
 
+### Adaptiv (Desktop + Mobil)
+- **Ein Control, zwei Layouts** — zur Laufzeit über
+  `context.client.getFormFactor()` (mit Breiten-Fallback) gewählt:
+  - **Desktop / Tablet** → zweispaltiges Master/Detail-Layout (unverändert).
+  - **Handy** → einspaltiger, touch-first Flow: Liste in voller Breite → Eintrag
+    antippen → Vollbild-Split-Editor mit **‹ Zurück**-Header → nach dem Speichern
+    zurück zur Liste. Größere Tap-Targets, große Zahlenfelder, am unteren Rand
+    fixierter Speichern-Button.
+- Beim Hinzufügen zur View dasselbe Control **Web + Tablet + Phone** zuweisen —
+  kein separater Mobil-Build zu pflegen.
+
 ### Mehrsprachigkeit
 - **Dreisprachige Oberfläche** (Deutsch / Englisch / Französisch), automatisch
   nach `context.userSettings.languageId`.

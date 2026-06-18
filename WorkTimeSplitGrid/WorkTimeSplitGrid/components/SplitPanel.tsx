@@ -13,7 +13,9 @@ export interface SplitPanelProps {
     webApi: ComponentFramework.WebApi;
     utils: ComponentFramework.Utility;
     disabled: boolean;
+    isMobile: boolean;
     lang: Lang;
+    onBack: () => void;
     onSubtypesChange: (rows: SubtypeRow[]) => void;
     onSaved: () => void;
     onError: (msg: string) => void;
@@ -91,6 +93,18 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
 
     return (
         <div className="wtsg-panel">
+            {props.isMobile && (
+                <div className="wtsg-mobile-head">
+                    <button
+                        type="button"
+                        className="wtsg-back"
+                        onClick={props.onBack}
+                        aria-label={t.back}
+                    >
+                        <span aria-hidden="true">‹</span> {t.back}
+                    </button>
+                </div>
+            )}
             <div className="wtsg-panel-head">
                 <h3 title={entry.name}>{entry.name}</h3>
                 <div className="wtsg-panel-sub">
