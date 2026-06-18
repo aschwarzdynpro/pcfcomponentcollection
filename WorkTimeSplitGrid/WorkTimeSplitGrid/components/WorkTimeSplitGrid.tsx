@@ -110,6 +110,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         loadEntries(props.webApi, {
             mode,
             resourceUserId: myHoursActive ? currentUserId || null : null,
+            pauseValue: fields.pauseValue,
         }).then(
             (loaded) => {
                 if (cancelled) return;

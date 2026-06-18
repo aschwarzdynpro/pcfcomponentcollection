@@ -140,6 +140,8 @@ export interface LoadEntriesOptions {
     mode: "split" | "assign";
     /** When set, restrict to entries whose resource belongs to this user. */
     resourceUserId: string | null;
+    /** Type value that marks a break — excluded from both modes when set. */
+    pauseValue?: string | null;
 }
 
 const ENTRY_FMT = "@OData.Community.Display.V1.FormattedValue";
@@ -209,7 +211,16 @@ export async function loadEntries(
         opts.mode === "split"
             ? " and sst_worksubtypecompleted eq false"
             : " and sst_worksubtypecompleted eq true and _sst_timereport_value eq null";
-    const filter = "_sst_project_id_value ne null" + modeClause + resourceClause;
+    // Exclude breaks (sst_type = pauseValue). `ne` still keeps null-type rows.
+    const pause = (opts.pauseValue ?? "").trim();
+    const pauseClause = pause
+        ? ` and sst_type ne '${pause.replace(/'/g, "''")}'`
+        : "";
+    const filter =
+        "_sst_project_id_value ne null" +
+        modeClause +
+        pauseClause +
+        resourceClause;
 
     const query =
         `?$select=sst_roundedtimeentriesid,sst_name,sst_type,sst_date,sst_duration,` +

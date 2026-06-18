@@ -25,9 +25,11 @@ deletes the original.
   - **Zuordnen / Assign** — `sst_worksubtypecompleted = Yes` **and**
     `sst_timereport` empty; a multi-select list with a **Create delivery notes**
     action.
-  The list is loaded **directly from the server with the mode filter already
-  applied** (`webApi.retrieveMultipleRecords` on `sst_roundedtimeentries`),
-  rather than pulling every page of the bound view and filtering client-side.
+  Breaks (`sst_type` = `pauseValue`, default `Pause`) are excluded from both
+  modes. The list is loaded **directly from the server with the mode filter
+  already applied** (`webApi.retrieveMultipleRecords` on
+  `sst_roundedtimeentries`), rather than pulling every page of the bound view and
+  filtering client-side.
   This keeps the filters correct and the control fast even when the table holds
   far more than Dataverse's 5000-record page cap (the previous approach showed an
   empty list once the table exceeded that cap).
