@@ -89,25 +89,25 @@ export const EntryList: React.FC<EntryListProps> = ({
                             )}
                         </div>
                         <div className="wtsg-card-meta">
-                            <span>
-                                {strings.colType}: {r.type || "—"}
-                            </span>
-                            <span>
-                                {strings.colDate}: {r.date || "—"}
-                            </span>
+                            {r.resourceName && (
+                                <span className="wtsg-chip" title={r.resourceName}>
+                                    {r.resourceName}
+                                </span>
+                            )}
+                            {r.type && (
+                                <span className="wtsg-chip" title={r.type}>
+                                    {r.type}
+                                </span>
+                            )}
+                            {r.date && (
+                                <span className="wtsg-chip" title={r.date}>
+                                    {r.date}
+                                </span>
+                            )}
                         </div>
                         <div className="wtsg-card-total">
                             {strings.total}: <strong>{r.totalFormatted || "—"}</strong>
                         </div>
-                        {r.extras.length > 0 && (
-                            <div className="wtsg-card-extras">
-                                {r.extras.map((x) => (
-                                    <span key={x.key} className="wtsg-chip" title={x.label}>
-                                        {x.value}
-                                    </span>
-                                ))}
-                            </div>
-                        )}
                     </div>
                 );
             })}

@@ -11,8 +11,10 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 ## Funktionen
 
 ### Master-Liste (links)
-- Zeigt die Rounded Time Entries aus der gebundenen View (Projekt/Name, Typ,
-  Datum, Gesamtdauer) als Karten.
+- Zeigt die Rounded Time Entries als Karten. Jede Karte zeigt den
+  zusammengesetzten Titel, eine **Chip-Reihe ohne Label** (**Ressource → Typ →
+  Datum**) und die Gesamtdauer. Die Ressource ist `sst_resource_ref.name`
+  (Fallback auf das Textfeld `sst_resource`).
 - **Zusammengesetzter Titel** (Liste + Detail): `<sst_type> am <sst_date> auf
   Projekt <sst_projectnumber>` (z. B. „Arbeit am 07.08.2024 auf Projekt
   P10002233"). `sst_date` und die Projektnummer des verknüpften Projekts

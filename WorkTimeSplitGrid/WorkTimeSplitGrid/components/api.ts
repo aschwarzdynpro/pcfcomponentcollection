@@ -163,9 +163,10 @@ function mapLoadedEntry(e: Record<string, any>): LoadedEntry {
             ? String(e.sst_Project_id.sst_projectnumber ?? "")
             : "",
         projectId: String(e._sst_project_id_value ?? ""),
-        resourceName: e.sst_resource_ref
-            ? String(e.sst_resource_ref.name ?? "")
-            : String(e[`_sst_resource_ref_value${ENTRY_FMT}`] ?? ""),
+        resourceName:
+            (e.sst_resource_ref ? String(e.sst_resource_ref.name ?? "") : "") ||
+            String(e[`_sst_resource_ref_value${ENTRY_FMT}`] ?? "") ||
+            String(e.sst_resource ?? ""),
         timereport: String(e._sst_timereport_value ?? ""),
     };
 }
@@ -223,7 +224,7 @@ export async function loadEntries(
         resourceClause;
 
     const query =
-        `?$select=sst_roundedtimeentriesid,sst_name,sst_type,sst_date,sst_duration,` +
+        `?$select=sst_roundedtimeentriesid,sst_name,sst_type,sst_date,sst_duration,sst_resource,` +
         `sst_worksubtypecompleted,_sst_project_id_value,_sst_timereport_value,_sst_resource_ref_value` +
         `&$expand=sst_Project_id($select=sst_projectnumber),sst_resource_ref($select=name)` +
         `&$filter=${filter}&$orderby=sst_date desc`;

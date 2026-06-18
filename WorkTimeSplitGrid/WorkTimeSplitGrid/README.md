@@ -11,8 +11,10 @@ deletes the original.
 ## ✨ Features
 
 ### 🎯 Core functionality
-- **Master list** of Rounded Time Entries straight from the bound view
-  (project, type, date, total duration), with a live search box.
+- **Master list** of Rounded Time Entries with a live search box. Each card
+  shows the composed title, a label-less chip row (**resource → type → date**),
+  and the total duration. The resource is `sst_resource_ref.name` (falling back
+  to the `sst_resource` text field).
 - **Composed entry title** (list + detail): `<type> am <date> auf Projekt
   <project number>` (e.g. *Arbeit am 07.08.2024 auf Projekt P10002233*). The
   date and the related project number (`sst_project_id.sst_projectnumber`) are
