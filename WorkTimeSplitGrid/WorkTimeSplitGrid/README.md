@@ -32,7 +32,9 @@ deletes the original.
   results it opens automatically. (Ported from the Schulz `createTimeReport`
   ribbon command.)
 - **Live search** across the title, type, date, **project number**, and
-  **resource name** (`sst_resource_ref.name`).
+  **resource name** (`sst_resource_ref.name`). The control auto-loads **all
+  pages** of the bound view (not just the first page), so the list and the search
+  cover every record. Enrichment runs in batched WebAPI calls once all pages are in.
 - **"My hours" chip** (preselected) — filters to entries whose resource's user is
   the current user (`sst_resource_ref.userid = current user`). It is **locked on**
   for everyone except holders of **System Administrator** or **SST | Dispo

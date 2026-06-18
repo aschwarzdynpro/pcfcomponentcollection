@@ -170,85 +170,101 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         });
     }, [rows, enrich, t]);
 
-    // Enrich the visible page with title fields that may live outside the bound
-    // view: sst_date and the related project number
-    // (sst_project_id.sst_projectnumber). One WebAPI call per page, keyed by
-    // record id; best-effort — falls back to dataset values on failure.
+    // The bound view may be paged; index.ts pulls every page. While more pages
+    // are still loading, defer enrichment so we batch over the complete set.
+    const loadingMore =
+        dataset.loading || !!(dataset.paging && dataset.paging.hasNextPage);
+
+    // Enrich every loaded record with title fields that may live outside the
+    // view (sst_date, project number), the resource (name + user) and the
+    // delivery-note value. Runs once all pages are loaded, in chunked WebAPI
+    // calls (the $filter is an id list, so it must be batched). Best-effort.
     const idsKey = React.useMemo(
         () => (dataset.sortedRecordIds ?? []).join(","),
         [dataset],
     );
     React.useEffect(() => {
+        if (loadingMore) return; // wait until every page is loaded
         const ids = (dataset.sortedRecordIds ?? []).map((i) =>
             i.replace(/[{}]/g, ""),
         );
-        if (ids.length === 0) return;
+        if (ids.length === 0) {
+            setEnrich(new Map());
+            return;
+        }
         let cancelled = false;
-        const filter = ids
-            .map((id) => `sst_roundedtimeentriesid eq ${id}`)
-            .join(" or ");
-        const query =
+        const CHUNK = 100;
+        const chunks: string[][] = [];
+        for (let i = 0; i < ids.length; i += CHUNK) {
+            chunks.push(ids.slice(i, i + CHUNK));
+        }
+        const select =
             `?$select=sst_roundedtimeentriesid,sst_type,sst_date,${TIMEREPORT.value}` +
             `&$expand=sst_Project_id($select=sst_projectnumber),` +
-            `${RESOURCE_REF.navProp}($select=${RESOURCE_REF.nameField},${RESOURCE_REF.userIdValue})` +
-            `&$filter=${filter}`;
-        props.webApi
-            .retrieveMultipleRecords("sst_roundedtimeentries", query)
-            .then(
-                (res) => {
-                    if (cancelled) return;
-                    const m = new Map<
-                        string,
-                        {
-                            type: string;
-                            date: string;
-                            project: string;
-                            resourceName: string;
-                            resourceUserId: string;
-                            timereport: string;
-                        }
-                    >();
-                    for (const e of (res.entities ?? []) as Record<
-                        string,
-                        any
-                    >[]) {
-                        const rid = String(
-                            e["sst_roundedtimeentriesid"] ?? "",
-                        ).replace(/[{}]/g, "");
-                        const fmt =
-                            e["sst_date@OData.Community.Display.V1.FormattedValue"];
-                        const date = fmt ? String(fmt).split(" ")[0] : "";
-                        const proj = e["sst_Project_id"]
-                            ? e["sst_Project_id"]["sst_projectnumber"]
-                            : "";
-                        const resObj = e[RESOURCE_REF.navProp];
-                        const resourceName = resObj
-                            ? String(resObj[RESOURCE_REF.nameField] ?? "")
-                            : "";
-                        const resourceUserId = resObj
-                            ? String(resObj[RESOURCE_REF.userIdValue] ?? "")
-                                  .replace(/[{}]/g, "")
-                                  .toLowerCase()
-                            : "";
-                        m.set(rid, {
-                            type: String(e["sst_type"] ?? ""),
-                            date,
-                            project: String(proj ?? ""),
-                            resourceName,
-                            resourceUserId,
-                            timereport: String(e[TIMEREPORT.value] ?? ""),
-                        });
-                    }
-                    setEnrich(m);
-                },
-                () => {
-                    /* best-effort */
-                },
-            );
+            `${RESOURCE_REF.navProp}($select=${RESOURCE_REF.nameField},${RESOURCE_REF.userIdValue})`;
+        Promise.all(
+            chunks.map((chunk): Promise<any[]> => {
+                const filter = chunk
+                    .map((id) => `sst_roundedtimeentriesid eq ${id}`)
+                    .join(" or ");
+                return props.webApi
+                    .retrieveMultipleRecords(
+                        "sst_roundedtimeentries",
+                        `${select}&$filter=${filter}`,
+                    )
+                    .then(
+                        (res) => res.entities ?? [],
+                        () => [],
+                    );
+            }),
+        ).then((parts) => {
+            if (cancelled) return;
+            const m = new Map<
+                string,
+                {
+                    type: string;
+                    date: string;
+                    project: string;
+                    resourceName: string;
+                    resourceUserId: string;
+                    timereport: string;
+                }
+            >();
+            for (const e of parts.flat() as Record<string, any>[]) {
+                const rid = String(e["sst_roundedtimeentriesid"] ?? "").replace(
+                    /[{}]/g,
+                    "",
+                );
+                const fmt =
+                    e["sst_date@OData.Community.Display.V1.FormattedValue"];
+                const date = fmt ? String(fmt).split(" ")[0] : "";
+                const proj = e["sst_Project_id"]
+                    ? e["sst_Project_id"]["sst_projectnumber"]
+                    : "";
+                const resObj = e[RESOURCE_REF.navProp];
+                const resourceName = resObj
+                    ? String(resObj[RESOURCE_REF.nameField] ?? "")
+                    : "";
+                const resourceUserId = resObj
+                    ? String(resObj[RESOURCE_REF.userIdValue] ?? "")
+                          .replace(/[{}]/g, "")
+                          .toLowerCase()
+                    : "";
+                m.set(rid, {
+                    type: String(e["sst_type"] ?? ""),
+                    date,
+                    project: String(proj ?? ""),
+                    resourceName,
+                    resourceUserId,
+                    timereport: String(e[TIMEREPORT.value] ?? ""),
+                });
+            }
+            setEnrich(m);
+        });
         return () => {
             cancelled = true;
         };
-    }, [idsKey, props.webApi]);
+    }, [idsKey, props.webApi, loadingMore]);
 
     // Non-admins are locked to their own hours; admins may toggle it off.
     const myHoursActive = !isAdmin || myHoursOnly;
@@ -472,7 +488,10 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                     {!isAdmin && <span aria-hidden="true">🔒 </span>}
                     {t.myHours}
                 </button>
-                <span className="wtsg-count">{t.entries(displayRows.length)}</span>
+                <span className="wtsg-count">
+                    {t.entries(displayRows.length)}
+                    {loadingMore ? ` · ${t.loadingMore}` : ""}
+                </span>
             </div>
             )}
 

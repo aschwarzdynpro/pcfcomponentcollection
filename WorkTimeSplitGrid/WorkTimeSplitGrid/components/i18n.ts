@@ -13,6 +13,7 @@ export function lcidToLang(lcid: number | null | undefined): Lang {
 export interface Strings {
     searchPlaceholder: string;
     entries: (n: number) => string;
+    loadingMore: string;
     modeSplit: string;
     modeAssign: string;
     myHours: string;
@@ -56,6 +57,7 @@ export const STRINGS: Record<Lang, Strings> = {
     en: {
         searchPlaceholder: "Search entries…",
         entries: (n) => (n === 1 ? "1 entry" : `${n} entries`),
+        loadingMore: "loading more…",
         modeSplit: "Split",
         modeAssign: "Assign",
         myHours: "My hours",
@@ -104,6 +106,7 @@ export const STRINGS: Record<Lang, Strings> = {
     de: {
         searchPlaceholder: "Einträge suchen…",
         entries: (n) => (n === 1 ? "1 Eintrag" : `${n} Einträge`),
+        loadingMore: "lädt weitere…",
         modeSplit: "Aufteilen",
         modeAssign: "Zuordnen",
         myHours: "Meine Stunden",
@@ -152,6 +155,7 @@ export const STRINGS: Record<Lang, Strings> = {
     fr: {
         searchPlaceholder: "Rechercher des entrées…",
         entries: (n) => (n === 1 ? "1 entrée" : `${n} entrées`),
+        loadingMore: "chargement…",
         modeSplit: "Répartir",
         modeAssign: "Affecter",
         myHours: "Mes heures",

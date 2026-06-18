@@ -35,7 +35,10 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   abgewiesen; entsteht genau ein Lieferschein, wird er geöffnet. (Portiert aus
   dem Schulz-Ribbon-Command `createTimeReport`.)
 - **Freitext-Suche** über Titel, Typ, Datum, **Projektnummer** und
-  **Ressourcenname** (`sst_resource_ref.name`).
+  **Ressourcenname** (`sst_resource_ref.name`). Das Control lädt **alle Seiten**
+  des gebundenen Views automatisch nach (nicht nur die erste) — Liste und Suche
+  erfassen damit **alle** Datensätze. Das Enrichment läuft in gebündelten
+  WebAPI-Calls, sobald alle Seiten geladen sind.
 - **Chip „Meine Stunden"** (vorausgewählt) — filtert auf Einträge, deren Ressource
   dem aktuellen Benutzer gehört (`sst_resource_ref.userid = aktueller User`). Der
   Chip ist **gesperrt + aktiv** für alle Benutzer; nur Inhaber der Rolle
