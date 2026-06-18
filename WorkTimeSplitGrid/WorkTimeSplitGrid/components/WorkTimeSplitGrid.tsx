@@ -3,13 +3,16 @@ import { EntryList } from "./EntryList";
 import { SplitPanel } from "./SplitPanel";
 import { EntryRow, Lang, SubtypeRow } from "./types";
 import { STRINGS } from "./i18n";
-import { FieldConfig, RESOURCE_REF, ADMIN_ROLES } from "./schema";
-import { loadSubtypes, userHasAnyRole } from "./api";
+import { FieldConfig, RESOURCE_REF, ADMIN_ROLES, TIMEREPORT } from "./schema";
+import { loadSubtypes, userHasAnyRole, createTimeReports } from "./api";
+
+type Mode = "split" | "assign";
 
 export interface WorkTimeSplitGridProps {
     dataset: ComponentFramework.PropertyTypes.DataSet;
     webApi: ComponentFramework.WebApi;
     utils: ComponentFramework.Utility;
+    navigation: ComponentFramework.Navigation;
     fields: FieldConfig;
     /** Current user's systemuserid (for the "My hours" filter + role check). */
     userId: string;
@@ -87,8 +90,13 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const { dataset, fields } = props;
 
     const [search, setSearch] = React.useState("");
-    const [showCompleted, setShowCompleted] = React.useState(false);
+    const [mode, setMode] = React.useState<Mode>("split");
     const [selectedId, setSelectedId] = React.useState<string | null>(null);
+    // Assign mode multi-selection + in-flight "create delivery notes" state.
+    const [checkedIds, setCheckedIds] = React.useState<Set<string>>(
+        () => new Set(),
+    );
+    const [creating, setCreating] = React.useState(false);
     const [subtypes, setSubtypes] = React.useState<SubtypeRow[] | null>(null);
     const [loadingSubtypes, setLoadingSubtypes] = React.useState(false);
     const [subtypeError, setSubtypeError] = React.useState<string | null>(null);
@@ -107,6 +115,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 project: string;
                 resourceName: string;
                 resourceUserId: string;
+                timereport: string;
             }
         >
     >(() => new Map());
@@ -147,6 +156,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             const project = ex?.project ?? "";
             const resourceName = ex?.resourceName ?? "";
             const resourceUserId = ex?.resourceUserId ?? "";
+            const timereport = ex?.timereport ?? "";
             return {
                 ...r,
                 type,
@@ -154,6 +164,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 project,
                 resourceName,
                 resourceUserId,
+                timereport,
                 name: t.title(type, date, project),
             };
         });
@@ -177,7 +188,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             .map((id) => `sst_roundedtimeentriesid eq ${id}`)
             .join(" or ");
         const query =
-            `?$select=sst_roundedtimeentriesid,sst_type,sst_date` +
+            `?$select=sst_roundedtimeentriesid,sst_type,sst_date,${TIMEREPORT.value}` +
             `&$expand=sst_Project_id($select=sst_projectnumber),` +
             `${RESOURCE_REF.navProp}($select=${RESOURCE_REF.nameField},${RESOURCE_REF.userIdValue})` +
             `&$filter=${filter}`;
@@ -194,6 +205,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                             project: string;
                             resourceName: string;
                             resourceUserId: string;
+                            timereport: string;
                         }
                     >();
                     for (const e of (res.entities ?? []) as Record<
@@ -224,6 +236,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                             project: String(proj ?? ""),
                             resourceName,
                             resourceUserId,
+                            timereport: String(e[TIMEREPORT.value] ?? ""),
                         });
                     }
                     setEnrich(m);
@@ -245,9 +258,19 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const displayRows = React.useMemo(() => {
         const q = search.trim().toLowerCase();
         return enrichedRows.filter((r) => {
-            if (r.type && r.type.toLowerCase() === fields.pauseValue.toLowerCase())
-                return false;
-            if (r.completed !== showCompleted) return false;
+            if (mode === "split") {
+                // not yet split; pauses are hidden
+                if (
+                    r.type &&
+                    r.type.toLowerCase() === fields.pauseValue.toLowerCase()
+                )
+                    return false;
+                if (r.completed) return false;
+            } else {
+                // assign: completed AND not yet on a delivery note
+                if (!r.completed) return false;
+                if (r.timereport) return false;
+            }
             if (myHoursActive) {
                 if (!currentUserId) return false;
                 if ((r.resourceUserId ?? "") !== currentUserId) return false;
@@ -265,7 +288,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     }, [
         enrichedRows,
         search,
-        showCompleted,
+        mode,
         myHoursActive,
         currentUserId,
         fields.pauseValue,
@@ -324,6 +347,65 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         dataset.refresh();
     }, [dataset, flashToast, t.saveSucceeded]);
 
+    const switchMode = React.useCallback((m: Mode) => {
+        setMode(m);
+        setSelectedId(null);
+        setCheckedIds(new Set());
+    }, []);
+
+    const toggleCheck = React.useCallback((id: string) => {
+        setCheckedIds((prev) => {
+            const n = new Set(prev);
+            if (n.has(id)) n.delete(id);
+            else n.add(id);
+            return n;
+        });
+    }, []);
+
+    const handleCreateReports = React.useCallback(async () => {
+        const ids = [...checkedIds];
+        if (ids.length === 0 || creating) return;
+        setCreating(true);
+        try {
+            const res = await createTimeReports(props.webApi, ids);
+            if (res.blocked) {
+                flashToast(t.reportsBlocked);
+                return;
+            }
+            flashToast(
+                res.failed > 0
+                    ? t.reportsPartial(res.assigned, ids.length)
+                    : t.reportsDone(res.reportsCreated, res.assigned),
+            );
+            setCheckedIds(new Set());
+            dataset.refresh();
+            if (res.singleReportId) {
+                try {
+                    props.navigation.openForm({
+                        entityName: TIMEREPORT.logicalName,
+                        entityId: res.singleReportId,
+                    });
+                } catch {
+                    /* ignore navigation errors */
+                }
+            }
+        } catch (e) {
+            const msg =
+                (e as { message?: string })?.message ?? String(e ?? "");
+            flashToast(`${t.createReports}: ${msg}`);
+        } finally {
+            setCreating(false);
+        }
+    }, [
+        checkedIds,
+        creating,
+        props.webApi,
+        props.navigation,
+        dataset,
+        flashToast,
+        t,
+    ]);
+
     if (!entityName && rows.length === 0 && !dataset.loading) {
         return (
             <div className="wtsg-empty">
@@ -333,10 +415,14 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         );
     }
 
-    const detailOpen = props.isMobile && !!selected;
+    const detailOpen = props.isMobile && mode === "split" && !!selected;
 
     return (
-        <div className={`wtsg-root ${props.isMobile ? "wtsg-mobile" : ""}`}>
+        <div
+            className={`wtsg-root ${props.isMobile ? "wtsg-mobile" : ""} ${
+                mode === "assign" ? "wtsg-assign" : ""
+            }`}
+        >
             {!detailOpen && (
             <div className="wtsg-toolbar">
                 <input
@@ -350,31 +436,25 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 <div
                     className="wtsg-toggle"
                     role="tablist"
-                    aria-label={`${t.toggleOpen} / ${t.toggleSplit}`}
+                    aria-label={`${t.modeSplit} / ${t.modeAssign}`}
                 >
                     <button
                         type="button"
                         role="tab"
-                        aria-selected={!showCompleted}
-                        className={!showCompleted ? "active" : ""}
-                        onClick={() => {
-                            setShowCompleted(false);
-                            setSelectedId(null);
-                        }}
+                        aria-selected={mode === "split"}
+                        className={mode === "split" ? "active" : ""}
+                        onClick={() => switchMode("split")}
                     >
-                        {t.toggleOpen}
+                        {t.modeSplit}
                     </button>
                     <button
                         type="button"
                         role="tab"
-                        aria-selected={showCompleted}
-                        className={showCompleted ? "active" : ""}
-                        onClick={() => {
-                            setShowCompleted(true);
-                            setSelectedId(null);
-                        }}
+                        aria-selected={mode === "assign"}
+                        className={mode === "assign" ? "active" : ""}
+                        onClick={() => switchMode("assign")}
                     >
-                        {t.toggleSplit}
+                        {t.modeAssign}
                     </button>
                 </div>
                 <button
@@ -403,35 +483,66 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             )}
 
             <div className={`wtsg-body ${dataset.loading ? "wtsg-loading" : ""}`}>
-                {(!props.isMobile || !selected) && (
+                {mode === "split" ? (
+                    <>
+                        {(!props.isMobile || !selected) && (
+                            <EntryList
+                                rows={displayRows}
+                                selectedId={selectedId}
+                                onSelect={setSelectedId}
+                                strings={t}
+                            />
+                        )}
+                        {(!props.isMobile || !!selected) && (
+                            <SplitPanel
+                                entry={selected}
+                                subtypes={subtypesMatched ? subtypes : null}
+                                loading={
+                                    !!selected &&
+                                    (loadingSubtypes || !subtypesMatched)
+                                }
+                                error={subtypesMatched ? subtypeError : null}
+                                fields={fields}
+                                webApi={props.webApi}
+                                utils={props.utils}
+                                disabled={props.disabled}
+                                isMobile={props.isMobile}
+                                lang={props.lang}
+                                onBack={() => setSelectedId(null)}
+                                onSubtypesChange={setSubtypes}
+                                onSaved={handleSaved}
+                                onError={(msg) => flashToast(msg)}
+                            />
+                        )}
+                    </>
+                ) : (
                     <EntryList
                         rows={displayRows}
-                        selectedId={selectedId}
-                        onSelect={setSelectedId}
+                        selectedId={null}
+                        onSelect={() => undefined}
+                        selectable
+                        checkedIds={checkedIds}
+                        onToggleCheck={toggleCheck}
                         strings={t}
                     />
                 )}
-                {(!props.isMobile || !!selected) && (
-                    <SplitPanel
-                        entry={selected}
-                        subtypes={subtypesMatched ? subtypes : null}
-                        loading={
-                            !!selected && (loadingSubtypes || !subtypesMatched)
-                        }
-                        error={subtypesMatched ? subtypeError : null}
-                        fields={fields}
-                        webApi={props.webApi}
-                        utils={props.utils}
-                        disabled={props.disabled}
-                        isMobile={props.isMobile}
-                        lang={props.lang}
-                        onBack={() => setSelectedId(null)}
-                        onSubtypesChange={setSubtypes}
-                        onSaved={handleSaved}
-                        onError={(msg) => flashToast(msg)}
-                    />
-                )}
             </div>
+
+            {mode === "assign" && checkedIds.size > 0 && (
+                <div className="wtsg-actionbar">
+                    <span className="wtsg-actionbar-count">
+                        {t.selectedCount(checkedIds.size)}
+                    </span>
+                    <button
+                        type="button"
+                        className="wtsg-actionbar-btn"
+                        disabled={creating}
+                        onClick={handleCreateReports}
+                    >
+                        {creating ? t.creatingReports : t.createReports}
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

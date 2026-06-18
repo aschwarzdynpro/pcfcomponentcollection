@@ -20,8 +20,20 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   EINEN WebAPI-`$expand`-Aufruf nachgeladen — der Titel funktioniert also auch,
   wenn diese Spalten nicht in der View liegen. Fehlende Teile werden weggelassen.
 - **Freitext-Suche** über Name, Typ, Datum und sichtbare View-Spalten.
-- **Umschalter „Nicht aufgeteilt / Aufgeteilt"** filtert über das Feld
-  `sst_worksubtypecompleted`. Einträge vom Typ `Pause` werden ausgeblendet.
+- **Zwei Modi** (Toolbar-Umschalter):
+  - **Aufteilen** — Einträge, die noch nicht aufgeteilt sind
+    (`sst_worksubtypecompleted = Nein`; Pausen ausgeblendet) → Split-Editor rechts.
+  - **Zuordnen** — bereits aufgeteilte Einträge, die noch keinem Lieferschein
+    zugeordnet sind (`sst_worksubtypecompleted = Ja` **und** `sst_timereport`
+    leer) → Mehrfachauswahl-Liste mit Aktion **„Lieferscheine erstellen"**.
+- **Lieferscheine erstellen** (Zuordnen-Modus) — ein oder mehrere Einträge per
+  Checkbox markieren; unten erscheint eine Aktionsleiste mit Anzahl + Button.
+  Erstellt **je Arbeitsauftrag** einen Lieferschein (`sst_timereports`,
+  `sst_name` = „Report <WO> On <Datum>", `sst_Arbeitsauftrag` → msdyn_workorder)
+  und verknüpft jeden ausgewählten Eintrag via `sst_TimeReport` mit dem
+  Lieferschein seines Arbeitsauftrags. Bereits zugeordnete Einträge werden
+  abgewiesen; entsteht genau ein Lieferschein, wird er geöffnet. (Portiert aus
+  dem Schulz-Ribbon-Command `createTimeReport`.)
 - **Freitext-Suche** über Titel, Typ, Datum, **Projektnummer** und
   **Ressourcenname** (`sst_resource_ref.name`).
 - **Chip „Meine Stunden"** (vorausgewählt) — filtert auf Einträge, deren Ressource

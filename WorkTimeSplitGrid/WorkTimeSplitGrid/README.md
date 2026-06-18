@@ -18,8 +18,19 @@ deletes the original.
   date and the related project number (`sst_project_id.sst_projectnumber`) are
   fetched per page via one WebAPI `$expand` call, so the title works even when
   those columns aren't in the bound view. Missing parts are omitted gracefully.
-- **Split / not-split toggle** — filters the list on the
-  `sst_worksubtypecompleted` flag; pause entries (`sst_type = Pause`) are hidden.
+- **Two modes** (toolbar toggle):
+  - **Aufteilen / Split** — entries not yet split (`sst_worksubtypecompleted =
+    No`; pauses hidden); opens the split editor on the right.
+  - **Zuordnen / Assign** — completed entries not yet on a delivery note
+    (`sst_worksubtypecompleted = Yes` **and** `sst_timereport` empty); a
+    multi-select list with a **Create delivery notes** action.
+- **Create delivery notes** (assign mode) — tick one or more entries; a bottom
+  action bar shows the count and a **Create delivery notes** button. It creates
+  one delivery note (`sst_timereports`) per work order across the selection and
+  links each selected entry to its work order's note via `sst_TimeReport`.
+  Entries already assigned to a delivery note are rejected; if exactly one note
+  results it opens automatically. (Ported from the Schulz `createTimeReport`
+  ribbon command.)
 - **Live search** across the title, type, date, **project number**, and
   **resource name** (`sst_resource_ref.name`).
 - **"My hours" chip** (preselected) — filters to entries whose resource's user is

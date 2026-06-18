@@ -70,6 +70,7 @@ export class WorkTimeSplitGrid
             dataset: params.entries,
             webApi: this._context.webAPI,
             utils: this._context.utils,
+            navigation: this._context.navigation,
             isMobile: this.isMobile(),
             fields: resolveFieldConfig({
                 totalField: params.totalField?.raw,

@@ -13,11 +13,19 @@ export function lcidToLang(lcid: number | null | undefined): Lang {
 export interface Strings {
     searchPlaceholder: string;
     entries: (n: number) => string;
-    toggleOpen: string;
-    toggleSplit: string;
+    modeSplit: string;
+    modeAssign: string;
     myHours: string;
     myHoursLocked: string;
     selectHint: string;
+    /** Assign mode: hint shown when nothing is selected yet. */
+    assignHint: string;
+    selectedCount: (n: number) => string;
+    createReports: string;
+    creatingReports: string;
+    reportsDone: (reports: number, assigned: number) => string;
+    reportsPartial: (assigned: number, total: number) => string;
+    reportsBlocked: string;
     loading: string;
     loadingSubtypes: string;
     errorPrefix: string;
@@ -48,11 +56,21 @@ export const STRINGS: Record<Lang, Strings> = {
     en: {
         searchPlaceholder: "Search entries…",
         entries: (n) => (n === 1 ? "1 entry" : `${n} entries`),
-        toggleOpen: "Not split",
-        toggleSplit: "Split",
+        modeSplit: "Split",
+        modeAssign: "Assign",
         myHours: "My hours",
         myHoursLocked: "Locked — you only see your own hours.",
         selectHint: "Select an entry to distribute its hours.",
+        assignHint: "Select entries to create delivery notes.",
+        selectedCount: (n) => (n === 1 ? "1 selected" : `${n} selected`),
+        createReports: "Create delivery notes",
+        creatingReports: "Creating delivery notes…",
+        reportsDone: (reports, assigned) =>
+            `${reports} delivery note(s) created, ${assigned} entr${assigned === 1 ? "y" : "ies"} assigned.`,
+        reportsPartial: (assigned, total) =>
+            `${assigned} of ${total} entries assigned; some could not be assigned.`,
+        reportsBlocked:
+            "Only entries that are not yet assigned to a delivery note can be processed.",
         loading: "Loading entries…",
         loadingSubtypes: "Loading subtypes…",
         errorPrefix: "Could not load the grid",
@@ -86,11 +104,21 @@ export const STRINGS: Record<Lang, Strings> = {
     de: {
         searchPlaceholder: "Einträge suchen…",
         entries: (n) => (n === 1 ? "1 Eintrag" : `${n} Einträge`),
-        toggleOpen: "Nicht aufgeteilt",
-        toggleSplit: "Aufgeteilt",
+        modeSplit: "Aufteilen",
+        modeAssign: "Zuordnen",
         myHours: "Meine Stunden",
         myHoursLocked: "Gesperrt — du siehst nur deine eigenen Stunden.",
         selectHint: "Eintrag wählen, um die Stunden aufzuteilen.",
+        assignHint: "Einträge auswählen, um Lieferscheine zu erstellen.",
+        selectedCount: (n) => (n === 1 ? "1 ausgewählt" : `${n} ausgewählt`),
+        createReports: "Lieferscheine erstellen",
+        creatingReports: "Lieferscheine werden erstellt…",
+        reportsDone: (reports, assigned) =>
+            `${reports} Lieferschein(e) erstellt, ${assigned} Eintrag/Einträge zugeordnet.`,
+        reportsPartial: (assigned, total) =>
+            `${assigned} von ${total} Einträgen zugeordnet; einige konnten nicht zugeordnet werden.`,
+        reportsBlocked:
+            "Es können nur Zeiteinträge verarbeitet werden, die noch keinem Lieferschein zugeordnet wurden.",
         loading: "Einträge werden geladen…",
         loadingSubtypes: "Subtypes werden geladen…",
         errorPrefix: "Grid konnte nicht geladen werden",
@@ -124,11 +152,21 @@ export const STRINGS: Record<Lang, Strings> = {
     fr: {
         searchPlaceholder: "Rechercher des entrées…",
         entries: (n) => (n === 1 ? "1 entrée" : `${n} entrées`),
-        toggleOpen: "Non réparti",
-        toggleSplit: "Réparti",
+        modeSplit: "Répartir",
+        modeAssign: "Affecter",
         myHours: "Mes heures",
         myHoursLocked: "Verrouillé — vous ne voyez que vos propres heures.",
         selectHint: "Sélectionnez une entrée pour répartir ses heures.",
+        assignHint: "Sélectionnez des entrées pour créer des bons de livraison.",
+        selectedCount: (n) => (n === 1 ? "1 sélectionné" : `${n} sélectionnés`),
+        createReports: "Créer les bons de livraison",
+        creatingReports: "Création des bons de livraison…",
+        reportsDone: (reports, assigned) =>
+            `${reports} bon(s) de livraison créé(s), ${assigned} entrée(s) affectée(s).`,
+        reportsPartial: (assigned, total) =>
+            `${assigned} sur ${total} entrées affectées ; certaines n'ont pas pu l'être.`,
+        reportsBlocked:
+            "Seules les entrées non encore affectées à un bon de livraison peuvent être traitées.",
         loading: "Chargement des entrées…",
         loadingSubtypes: "Chargement des sous-types…",
         errorPrefix: "Impossible de charger la grille",

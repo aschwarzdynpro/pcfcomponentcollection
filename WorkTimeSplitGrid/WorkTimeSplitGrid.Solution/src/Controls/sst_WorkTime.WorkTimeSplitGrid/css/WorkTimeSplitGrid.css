@@ -127,6 +127,55 @@
     padding-right: 4px;
 }
 
+/* Assign mode: the list takes the full width (no detail panel). */
+.wtsg-assign .wtsg-list {
+    flex: 1 1 auto;
+    max-width: none;
+}
+
+/* Assign mode: bottom action bar with the "create delivery notes" button. */
+.wtsg-actionbar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-top: 1px solid #e1dfdd;
+    background: #fff;
+}
+
+.wtsg-actionbar-count {
+    font-size: 13px;
+    color: #424242;
+}
+
+.wtsg-actionbar-btn {
+    height: 38px;
+    padding: 0 20px;
+    border: none;
+    border-radius: 4px;
+    background: #0f6cbd;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.wtsg-actionbar-btn:disabled {
+    background: #c8c6c4;
+    cursor: not-allowed;
+}
+
+.wtsg-mobile .wtsg-actionbar {
+    padding: 12px 14px;
+}
+
+.wtsg-mobile .wtsg-actionbar-btn {
+    height: 46px;
+    flex: 1 1 auto;
+}
+
 .wtsg-card {
     border: 1px solid #e1dfdd;
     border-left: 3px solid #c8c6c4;
@@ -150,6 +199,25 @@
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+/* Multi-select checkbox (assign mode) */
+.wtsg-check {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid #c8c6c4;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: #fff;
+}
+
+.wtsg-check.checked {
+    background: #0f6cbd;
+    border-color: #0f6cbd;
 }
 
 .wtsg-card-title {

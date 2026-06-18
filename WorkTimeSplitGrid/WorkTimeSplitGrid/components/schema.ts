@@ -56,6 +56,29 @@ export const WORKTYPE = {
 /** Timetype optionset on the entry (part of the worktype key). */
 export const ENTRY_TIMETYPE = "sst_timetype_opt";
 
+/**
+ * Delivery note ("Lieferschein" / sst_timereports). In "assign" mode the grid
+ * lists completed entries whose `sst_timereport` is empty and can create one
+ * delivery note per work order, linking the selected entries to it.
+ */
+export const TIMEREPORT = {
+    /** Lieferschein logical name (webApi create/update). */
+    logicalName: "sst_timereports",
+    /** Lieferschein entity set (for @odata.bind). */
+    entitySet: "sst_timereportses",
+    /** Primary name on the Lieferschein. */
+    name: "sst_name",
+    /** Work-order lookup nav on the Lieferschein (→ msdyn_workorders). */
+    workorderNav: "sst_Arbeitsauftrag",
+    /** Lookup value of the Lieferschein on the entry (the "assign" filter). */
+    value: "_sst_timereport_value",
+    /** @odata.bind nav of the Lieferschein lookup on the entry. */
+    entryNav: "sst_TimeReport",
+} as const;
+
+/** Work-order entity set (target of the Lieferschein's work-order lookup). */
+export const WORKORDER_SET = "msdyn_workorders";
+
 /** Normalize a label/name for option matching (case/space/slash-insensitive). */
 export function normalizeLabel(s: string | null | undefined): string {
     return (s ?? "")

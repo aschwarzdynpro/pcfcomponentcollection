@@ -21,6 +21,8 @@ export interface EntryRow {
     resourceName?: string;
     /** Related resource's user id (sst_resource_ref.userid), normalized lowercase. */
     resourceUserId?: string;
+    /** Delivery-note lookup value (_sst_timereport_value); empty = unassigned. */
+    timereport?: string;
     /** Extra view columns surfaced as small chips. */
     extras: { key: string; label: string; value: string }[];
 }

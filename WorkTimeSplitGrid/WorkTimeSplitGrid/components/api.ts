@@ -5,6 +5,8 @@ import {
     WORKORDER_VALUE,
     WORKTYPE,
     ENTRY_TIMETYPE,
+    TIMEREPORT,
+    WORKORDER_SET,
     normalizeLabel,
     FieldConfig,
     SUBTYPE_ORDER,
@@ -326,4 +328,114 @@ export async function saveSplit(
     await webApi.deleteRecord(PARENT.logicalName, id);
 
     return { created: active.length };
+}
+
+export interface CreateReportsResult {
+    /** At least one selected entry already had a delivery note → nothing done. */
+    blocked: boolean;
+    reportsCreated: number;
+    assigned: number;
+    failed: number;
+    /** The single created report id (when exactly one) — for opening the form. */
+    singleReportId: string | null;
+}
+
+/**
+ * "Assign" mode action: create one delivery note (sst_timereports) per work order
+ * across the selected entries and link each entry to its work order's note
+ * (sst_TimeReport). Mirrors the Schulz ribbon `createTimeReport` logic.
+ *
+ * Guard: if any selected entry already has a delivery note, nothing is created
+ * (returns blocked=true). Entries without a work order can't be assigned and are
+ * counted as failures. The unused booking/resource retrieval from the original
+ * script (its resource binding was commented out) is intentionally omitted.
+ */
+export async function createTimeReports(
+    webApi: ComponentFramework.WebApi,
+    selectedIds: string[],
+): Promise<CreateReportsResult> {
+    const ids = selectedIds.map((s) => s.replace(/[{}]/g, ""));
+    const fmt = "@OData.Community.Display.V1.FormattedValue";
+
+    // Retrieve work order + current delivery note for each selected entry.
+    const entries = await Promise.all(
+        ids.map((id) =>
+            webApi
+                .retrieveRecord(
+                    PARENT.logicalName,
+                    id,
+                    `?$select=${WORKORDER_VALUE},${TIMEREPORT.value}`,
+                )
+                .then(
+                    (rec: any) => ({ id, rec }),
+                    () => ({ id, rec: null as any }),
+                ),
+        ),
+    );
+
+    // Guard: only entries without a delivery note may be processed.
+    if (entries.some((e) => e.rec && e.rec[TIMEREPORT.value])) {
+        return {
+            blocked: true,
+            reportsCreated: 0,
+            assigned: 0,
+            failed: 0,
+            singleReportId: null,
+        };
+    }
+
+    // Group selected entries by work order.
+    const byWo = new Map<
+        string,
+        { woId: string; woName: string; entryIds: string[] }
+    >();
+    let failed = 0;
+    for (const e of entries) {
+        const woRaw = e.rec ? e.rec[WORKORDER_VALUE] : null;
+        if (!woRaw) {
+            failed += 1; // no work order → cannot create a delivery note
+            continue;
+        }
+        const key = String(woRaw).replace(/[{}]/g, "");
+        const woName = (e.rec[WORKORDER_VALUE + fmt] as string) ?? "";
+        if (!byWo.has(key)) byWo.set(key, { woId: key, woName, entryIds: [] });
+        byWo.get(key)!.entryIds.push(e.id);
+    }
+
+    let assigned = 0;
+    const reportIds: string[] = [];
+    const dateStr = new Date().toDateString();
+
+    for (const wo of byWo.values()) {
+        let reportId: string;
+        try {
+            const created = await webApi.createRecord(TIMEREPORT.logicalName, {
+                [TIMEREPORT.name]: `Report ${wo.woName} On ${dateStr}`,
+                [`${TIMEREPORT.workorderNav}@odata.bind`]: `/${WORKORDER_SET}(${wo.woId})`,
+            });
+            reportId = created.id;
+            reportIds.push(created.id);
+        } catch {
+            failed += wo.entryIds.length; // report creation failed → its entries fail
+            continue;
+        }
+        for (const eid of wo.entryIds) {
+            try {
+                await webApi.updateRecord(PARENT.logicalName, eid, {
+                    [`${TIMEREPORT.entryNav}@odata.bind`]: `/${TIMEREPORT.entitySet}(${reportId})`,
+                });
+                assigned += 1;
+            } catch {
+                failed += 1;
+            }
+        }
+    }
+
+    return {
+        blocked: false,
+        reportsCreated: reportIds.length,
+        assigned,
+        failed,
+        singleReportId: reportIds.length === 1 ? reportIds[0] : null,
+    };
 }
