@@ -20,12 +20,14 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   EINEN WebAPI-`$expand`-Aufruf nachgeladen — der Titel funktioniert also auch,
   wenn diese Spalten nicht in der View liegen. Fehlende Teile werden weggelassen.
 - **Freitext-Suche** über Name, Typ, Datum und sichtbare View-Spalten.
-- **Zwei Modi** (Toolbar-Umschalter):
-  - **Aufteilen** — Einträge, die noch nicht aufgeteilt sind
-    (`sst_worksubtypecompleted = Nein`; Pausen ausgeblendet) → Split-Editor rechts.
-  - **Zuordnen** — bereits aufgeteilte Einträge, die noch keinem Lieferschein
-    zugeordnet sind (`sst_worksubtypecompleted = Ja` **und** `sst_timereport`
-    leer) → Mehrfachauswahl-Liste mit Aktion **„Lieferscheine erstellen"**.
+- **Zwei Modi** (Toolbar-Umschalter). Beide setzen voraus, dass der Eintrag ein
+  **Projekt** hat (`sst_project_id` gesetzt):
+  - **Aufteilen** — `sst_worksubtypecompleted = Nein` → Split-Editor rechts.
+  - **Zuordnen** — `sst_worksubtypecompleted = Ja` **und** `sst_timereport` leer
+    → Mehrfachauswahl-Liste mit Aktion **„Lieferscheine erstellen"**.
+  `completed`, `Projekt` und `Lieferschein` werden über das WebAPI-Enrichment
+  gelesen (nicht aus dem View) — die Filter stimmen also unabhängig davon, welche
+  Spalten der gebundene View enthält.
 - **Lieferscheine erstellen** (Zuordnen-Modus) — ein oder mehrere Einträge per
   Checkbox markieren; unten erscheint eine Aktionsleiste mit Anzahl + Button.
   Erstellt **je Arbeitsauftrag** einen Lieferschein (`sst_timereports`,

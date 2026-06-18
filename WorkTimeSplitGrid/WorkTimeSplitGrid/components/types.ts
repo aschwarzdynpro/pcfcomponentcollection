@@ -23,6 +23,8 @@ export interface EntryRow {
     resourceUserId?: string;
     /** Delivery-note lookup value (_sst_timereport_value); empty = unassigned. */
     timereport?: string;
+    /** Whether the project lookup (sst_project_id) is set. */
+    projectPresent?: boolean;
     /** Extra view columns surfaced as small chips. */
     extras: { key: string; label: string; value: string }[];
 }

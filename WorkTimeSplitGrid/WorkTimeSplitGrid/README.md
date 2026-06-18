@@ -18,12 +18,16 @@ deletes the original.
   date and the related project number (`sst_project_id.sst_projectnumber`) are
   fetched per page via one WebAPI `$expand` call, so the title works even when
   those columns aren't in the bound view. Missing parts are omitted gracefully.
-- **Two modes** (toolbar toggle):
-  - **Aufteilen / Split** — entries not yet split (`sst_worksubtypecompleted =
-    No`; pauses hidden); opens the split editor on the right.
-  - **Zuordnen / Assign** — completed entries not yet on a delivery note
-    (`sst_worksubtypecompleted = Yes` **and** `sst_timereport` empty); a
-    multi-select list with a **Create delivery notes** action.
+- **Two modes** (toolbar toggle). Both require the entry to have a **project**
+  (`sst_project_id` set):
+  - **Aufteilen / Split** — `sst_worksubtypecompleted = No`; opens the split
+    editor on the right.
+  - **Zuordnen / Assign** — `sst_worksubtypecompleted = Yes` **and**
+    `sst_timereport` empty; a multi-select list with a **Create delivery notes**
+    action.
+  The `completed`, `project` and `delivery-note` values are read via the WebAPI
+  enrichment (not the bound view), so the filters are correct regardless of which
+  columns the view exposes.
 - **Create delivery notes** (assign mode) — tick one or more entries; a bottom
   action bar shows the count and a **Create delivery notes** button. It creates
   one delivery note (`sst_timereports`) per work order across the selection and

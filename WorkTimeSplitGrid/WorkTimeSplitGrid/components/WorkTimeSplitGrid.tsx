@@ -8,6 +8,20 @@ import { loadSubtypes, userHasAnyRole, createTimeReports } from "./api";
 
 type Mode = "split" | "assign";
 
+/** Per-record data pulled from the WebAPI (not reliably in the bound view). */
+interface EnrichEntry {
+    type: string;
+    date: string;
+    project: string;
+    resourceName: string;
+    resourceUserId: string;
+    timereport: string;
+    /** sst_worksubtypecompleted. */
+    completed: boolean;
+    /** _sst_project_id_value — empty when no project is set. */
+    projectId: string;
+}
+
 export interface WorkTimeSplitGridProps {
     dataset: ComponentFramework.PropertyTypes.DataSet;
     webApi: ComponentFramework.WebApi;
@@ -106,19 +120,10 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         null,
     );
     const [toast, setToast] = React.useState<string | null>(null);
-    const [enrich, setEnrich] = React.useState<
-        Map<
-            string,
-            {
-                type: string;
-                date: string;
-                project: string;
-                resourceName: string;
-                resourceUserId: string;
-                timereport: string;
-            }
-        >
-    >(() => new Map());
+    const [enrich, setEnrich] = React.useState<Map<string, EnrichEntry>>(
+        () => new Map(),
+    );
+    const [enriching, setEnriching] = React.useState(false);
     const [myHoursOnly, setMyHoursOnly] = React.useState(true);
     const [isAdmin, setIsAdmin] = React.useState(false);
 
@@ -157,6 +162,10 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             const resourceName = ex?.resourceName ?? "";
             const resourceUserId = ex?.resourceUserId ?? "";
             const timereport = ex?.timereport ?? "";
+            // completed + project come from the WebAPI enrichment (the bound view
+            // may not expose them); fall back to dataset only before enrichment.
+            const completed = ex ? ex.completed : r.completed;
+            const projectPresent = ex ? !!ex.projectId : false;
             return {
                 ...r,
                 type,
@@ -165,6 +174,8 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 resourceName,
                 resourceUserId,
                 timereport,
+                completed,
+                projectPresent,
                 name: t.title(type, date, project),
             };
         });
@@ -190,16 +201,19 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         );
         if (ids.length === 0) {
             setEnrich(new Map());
+            setEnriching(false);
             return;
         }
         let cancelled = false;
+        setEnriching(true);
         const CHUNK = 100;
         const chunks: string[][] = [];
         for (let i = 0; i < ids.length; i += CHUNK) {
             chunks.push(ids.slice(i, i + CHUNK));
         }
         const select =
-            `?$select=sst_roundedtimeentriesid,sst_type,sst_date,${TIMEREPORT.value}` +
+            `?$select=sst_roundedtimeentriesid,sst_type,sst_date,${TIMEREPORT.value},` +
+            `${fields.completed},_sst_project_id_value` +
             `&$expand=sst_Project_id($select=sst_projectnumber),` +
             `${RESOURCE_REF.navProp}($select=${RESOURCE_REF.nameField},${RESOURCE_REF.userIdValue})`;
         Promise.all(
@@ -219,17 +233,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             }),
         ).then((parts) => {
             if (cancelled) return;
-            const m = new Map<
-                string,
-                {
-                    type: string;
-                    date: string;
-                    project: string;
-                    resourceName: string;
-                    resourceUserId: string;
-                    timereport: string;
-                }
-            >();
+            const m = new Map<string, EnrichEntry>();
             for (const e of parts.flat() as Record<string, any>[]) {
                 const rid = String(e["sst_roundedtimeentriesid"] ?? "").replace(
                     /[{}]/g,
@@ -257,9 +261,12 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                     resourceName,
                     resourceUserId,
                     timereport: String(e[TIMEREPORT.value] ?? ""),
+                    completed: truthy(e[fields.completed]),
+                    projectId: String(e["_sst_project_id_value"] ?? ""),
                 });
             }
             setEnrich(m);
+            setEnriching(false);
         });
         return () => {
             cancelled = true;
@@ -274,16 +281,13 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const displayRows = React.useMemo(() => {
         const q = search.trim().toLowerCase();
         return enrichedRows.filter((r) => {
+            // Both modes require a project (sst_project_id set).
+            if (!r.projectPresent) return false;
             if (mode === "split") {
-                // not yet split; pauses are hidden
-                if (
-                    r.type &&
-                    r.type.toLowerCase() === fields.pauseValue.toLowerCase()
-                )
-                    return false;
+                // Work Subtype Completed = No
                 if (r.completed) return false;
             } else {
-                // assign: completed AND not yet on a delivery note
+                // Work Subtype Completed = Yes AND delivery note empty
                 if (!r.completed) return false;
                 if (r.timereport) return false;
             }
@@ -301,14 +305,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 r.extras.some((x) => x.value.toLowerCase().includes(q))
             );
         });
-    }, [
-        enrichedRows,
-        search,
-        mode,
-        myHoursActive,
-        currentUserId,
-        fields.pauseValue,
-    ]);
+    }, [enrichedRows, search, mode, myHoursActive, currentUserId]);
 
     const selected = React.useMemo(
         () => displayRows.find((r) => r.id === selectedId) ?? null,
@@ -490,7 +487,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 </button>
                 <span className="wtsg-count">
                     {t.entries(displayRows.length)}
-                    {loadingMore ? ` · ${t.loadingMore}` : ""}
+                    {loadingMore || enriching ? ` · ${t.loadingMore}` : ""}
                 </span>
             </div>
             )}
