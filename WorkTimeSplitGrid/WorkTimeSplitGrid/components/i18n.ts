@@ -18,6 +18,19 @@ export interface Strings {
     modeAssign: string;
     myHours: string;
     myHoursLocked: string;
+    /** Period filter (segmented). */
+    periodLabel: string;
+    periodAll: string;
+    periodToday: string;
+    periodWeek: string;
+    periodMonth: string;
+    /** Sort dropdown. */
+    sortLabel: string;
+    sortDateDesc: string;
+    sortDateAsc: string;
+    sortProject: string;
+    sortResource: string;
+    sortDuration: string;
     selectHint: string;
     /** Empty-state line when the (unfiltered) list has no entries. */
     noResults: string;
@@ -72,6 +85,17 @@ export const STRINGS: Record<Lang, Strings> = {
         modeAssign: "Assign",
         myHours: "My hours",
         myHoursLocked: "Locked — you only see your own hours.",
+        periodLabel: "Period",
+        periodAll: "All",
+        periodToday: "Today",
+        periodWeek: "This week",
+        periodMonth: "This month",
+        sortLabel: "Sort",
+        sortDateDesc: "Date (newest)",
+        sortDateAsc: "Date (oldest)",
+        sortProject: "Project",
+        sortResource: "Resource",
+        sortDuration: "Duration",
         selectHint: "Select an entry to distribute its hours.",
         noResults: "No entries here — nothing to show.",
         noResultsSearch: "No entries match your search.",
@@ -127,6 +151,17 @@ export const STRINGS: Record<Lang, Strings> = {
         modeAssign: "Zuordnen",
         myHours: "Meine Stunden",
         myHoursLocked: "Gesperrt — du siehst nur deine eigenen Stunden.",
+        periodLabel: "Zeitraum",
+        periodAll: "Alle",
+        periodToday: "Heute",
+        periodWeek: "Diese Woche",
+        periodMonth: "Dieser Monat",
+        sortLabel: "Sortieren",
+        sortDateDesc: "Datum (neueste)",
+        sortDateAsc: "Datum (älteste)",
+        sortProject: "Projekt",
+        sortResource: "Ressource",
+        sortDuration: "Dauer",
         selectHint: "Eintrag wählen, um die Stunden aufzuteilen.",
         noResults: "Keine Einträge vorhanden — hier gibt es nichts zu sehen.",
         noResultsSearch: "Keine Einträge passen zu deiner Suche.",
@@ -182,6 +217,17 @@ export const STRINGS: Record<Lang, Strings> = {
         modeAssign: "Affecter",
         myHours: "Mes heures",
         myHoursLocked: "Verrouillé — vous ne voyez que vos propres heures.",
+        periodLabel: "Période",
+        periodAll: "Toutes",
+        periodToday: "Aujourd'hui",
+        periodWeek: "Cette semaine",
+        periodMonth: "Ce mois",
+        sortLabel: "Trier",
+        sortDateDesc: "Date (récentes)",
+        sortDateAsc: "Date (anciennes)",
+        sortProject: "Projet",
+        sortResource: "Ressource",
+        sortDuration: "Durée",
         selectHint: "Sélectionnez une entrée pour répartir ses heures.",
         noResults: "Aucune entrée ici — rien à afficher.",
         noResultsSearch: "Aucune entrée ne correspond à votre recherche.",

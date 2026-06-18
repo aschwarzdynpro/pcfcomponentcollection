@@ -92,6 +92,42 @@
     color: #616161;
 }
 
+/* ---- Sub-toolbar: period filter + sort ---- */
+.wtsg-subbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 10px;
+    border-bottom: 1px solid #e1dfdd;
+    flex: 0 0 auto;
+}
+
+.wtsg-period button {
+    font-size: 12px;
+    padding: 5px 10px;
+}
+
+.wtsg-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    font-size: 12px;
+    color: #616161;
+}
+
+.wtsg-sort select {
+    height: 30px;
+    padding: 0 8px;
+    border: 1px solid #c8c6c4;
+    border-radius: 4px;
+    font-size: 13px;
+    background: #fff;
+    color: #242424;
+    cursor: pointer;
+}
+
 /* ---- Toast ---- */
 .wtsg-toast {
     margin: 8px 10px 0;
@@ -730,6 +766,31 @@
 
 .wtsg-mobile .wtsg-count {
     margin-left: 0;
+}
+
+.wtsg-mobile .wtsg-subbar {
+    gap: 8px;
+}
+
+.wtsg-mobile .wtsg-period {
+    flex: 1 1 100%;
+}
+
+.wtsg-mobile .wtsg-period button {
+    flex: 1 1 0;
+    padding: 8px 6px;
+    font-size: 13px;
+}
+
+.wtsg-mobile .wtsg-sort {
+    flex: 1 1 100%;
+    margin-left: 0;
+    justify-content: space-between;
+}
+
+.wtsg-mobile .wtsg-sort select {
+    height: 38px;
+    flex: 1 1 auto;
 }
 
 .wtsg-mobile .wtsg-body {

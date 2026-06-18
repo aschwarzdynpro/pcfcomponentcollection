@@ -14,6 +14,62 @@ import {
 } from "./api";
 
 type Mode = "split" | "assign";
+type Period = "all" | "today" | "week" | "month";
+type SortKey =
+    | "dateDesc"
+    | "dateAsc"
+    | "project"
+    | "resource"
+    | "durationDesc";
+
+/** Local start-of-period boundary for the period filter (null = no limit). */
+function periodStart(period: Period): Date | null {
+    if (period === "all") return null;
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (period === "today") return today;
+    if (period === "week") {
+        // Week starts Monday (Mon=0 … Sun=6).
+        const dow = (today.getDay() + 6) % 7;
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - dow);
+        return monday;
+    }
+    return new Date(now.getFullYear(), now.getMonth(), 1); // month
+}
+
+/** Sort rows by the chosen key (ISO date strings sort chronologically). */
+function sortRows(rows: EntryRow[], key: SortKey): EntryRow[] {
+    const dv = (r: EntryRow) => r.dateValue ?? r.date ?? "";
+    const byDateDesc = (a: EntryRow, b: EntryRow) =>
+        dv(b).localeCompare(dv(a));
+    const arr = [...rows];
+    switch (key) {
+        case "dateAsc":
+            arr.sort((a, b) => dv(a).localeCompare(dv(b)));
+            break;
+        case "project":
+            arr.sort(
+                (a, b) =>
+                    (a.project ?? "").localeCompare(b.project ?? "") ||
+                    byDateDesc(a, b),
+            );
+            break;
+        case "resource":
+            arr.sort(
+                (a, b) =>
+                    (a.resourceName ?? "").localeCompare(b.resourceName ?? "") ||
+                    byDateDesc(a, b),
+            );
+            break;
+        case "durationDesc":
+            arr.sort((a, b) => b.total - a.total || byDateDesc(a, b));
+            break;
+        default: // dateDesc
+            arr.sort(byDateDesc);
+    }
+    return arr;
+}
 
 export interface WorkTimeSplitGridProps {
     dataset: ComponentFramework.PropertyTypes.DataSet;
@@ -38,6 +94,7 @@ function toEntryRow(
         id: e.id,
         name: title(e.type, e.date, e.project),
         date: e.date,
+        dateValue: e.dateValue,
         type: e.type,
         total: e.total,
         totalFormatted: e.totalFormatted,
@@ -56,6 +113,8 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
 
     const [search, setSearch] = React.useState("");
     const [mode, setMode] = React.useState<Mode>("split");
+    const [period, setPeriod] = React.useState<Period>("all");
+    const [sortBy, setSortBy] = React.useState<SortKey>("dateDesc");
     const [selectedId, setSelectedId] = React.useState<string | null>(null);
     // Assign mode multi-selection + in-flight "create delivery notes" state.
     const [checkedIds, setCheckedIds] = React.useState<Set<string>>(
@@ -139,21 +198,28 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         setReloadKey((k) => k + 1);
     }, []);
 
-    // Free-text search over the already-filtered entries (title, type, date,
-    // project number, resource name).
+    // Period filter + free-text search (title, type, date, project number,
+    // resource name) + sorting — all client-side over the loaded entries.
     const displayRows = React.useMemo(() => {
         const all = entries ?? [];
         const q = search.trim().toLowerCase();
-        if (!q) return all;
-        return all.filter(
-            (r) =>
+        const start = periodStart(period);
+        const filtered = all.filter((r) => {
+            if (start) {
+                const d = r.dateValue ? new Date(r.dateValue) : null;
+                if (!d || isNaN(d.getTime()) || d < start) return false;
+            }
+            if (!q) return true;
+            return (
                 r.name.toLowerCase().includes(q) ||
                 r.type.toLowerCase().includes(q) ||
                 r.date.toLowerCase().includes(q) ||
                 (r.project ?? "").toLowerCase().includes(q) ||
-                (r.resourceName ?? "").toLowerCase().includes(q),
-        );
-    }, [entries, search]);
+                (r.resourceName ?? "").toLowerCase().includes(q)
+            );
+        });
+        return sortRows(filtered, sortBy);
+    }, [entries, search, period, sortBy]);
 
     const selected = React.useMemo(
         () => displayRows.find((r) => r.id === selectedId) ?? null,
@@ -356,6 +422,57 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                     {loadingEntries ? ` · ${t.loadingMore}` : ""}
                 </span>
             </div>
+            )}
+
+            {!detailOpen && (
+                <div className="wtsg-subbar">
+                    <div
+                        className="wtsg-toggle wtsg-period"
+                        role="tablist"
+                        aria-label={t.periodLabel}
+                    >
+                        {(
+                            [
+                                ["all", t.periodAll],
+                                ["today", t.periodToday],
+                                ["week", t.periodWeek],
+                                ["month", t.periodMonth],
+                            ] as [Period, string][]
+                        ).map(([p, label]) => (
+                            <button
+                                key={p}
+                                type="button"
+                                role="tab"
+                                aria-selected={period === p}
+                                className={period === p ? "active" : ""}
+                                onClick={() => {
+                                    setPeriod(p);
+                                    setSelectedId(null);
+                                }}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+                    <label className="wtsg-sort">
+                        <span>{t.sortLabel}</span>
+                        <select
+                            value={sortBy}
+                            onChange={(e) =>
+                                setSortBy(e.target.value as SortKey)
+                            }
+                            aria-label={t.sortLabel}
+                        >
+                            <option value="dateDesc">{t.sortDateDesc}</option>
+                            <option value="dateAsc">{t.sortDateAsc}</option>
+                            <option value="project">{t.sortProject}</option>
+                            <option value="resource">{t.sortResource}</option>
+                            <option value="durationDesc">
+                                {t.sortDuration}
+                            </option>
+                        </select>
+                    </label>
+                </div>
             )}
 
             {toast && (

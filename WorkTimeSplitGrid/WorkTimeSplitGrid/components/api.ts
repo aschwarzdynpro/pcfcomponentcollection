@@ -125,7 +125,10 @@ export interface LoadedEntry {
     id: string;
     name: string;
     type: string;
+    /** Formatted date (day only) for display. */
     date: string;
+    /** Raw sst_date (ISO) for client-side period filtering + date sorting. */
+    dateValue: string;
     total: number;
     totalFormatted: string;
     completed: boolean;
@@ -154,6 +157,7 @@ function mapLoadedEntry(e: Record<string, any>): LoadedEntry {
         name: String(e.sst_name ?? ""),
         type: String(e.sst_type ?? ""),
         date: dateFmt ? String(dateFmt).split(" ")[0] : "",
+        dateValue: String(e.sst_date ?? ""),
         total: Number.isFinite(total) ? total : 0,
         totalFormatted:
             e[`sst_duration${ENTRY_FMT}`] ??

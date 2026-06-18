@@ -7,6 +7,8 @@ export interface EntryRow {
     name: string;
     /** Formatted date for display. */
     date: string;
+    /** Raw sst_date (ISO) for period filtering + date sorting. */
+    dateValue?: string;
     /** Type text (Arbeit / Fahrzeit / …). */
     type: string;
     /** Total duration as a number (for the split guard). */
