@@ -15,6 +15,8 @@ export interface Strings {
     entries: (n: number) => string;
     toggleOpen: string;
     toggleSplit: string;
+    myHours: string;
+    myHoursLocked: string;
     selectHint: string;
     loading: string;
     loadingSubtypes: string;
@@ -47,6 +49,8 @@ export const STRINGS: Record<Lang, Strings> = {
         entries: (n) => (n === 1 ? "1 entry" : `${n} entries`),
         toggleOpen: "Not split",
         toggleSplit: "Split",
+        myHours: "My hours",
+        myHoursLocked: "Locked — you only see your own hours.",
         selectHint: "Select an entry to distribute its hours.",
         loading: "Loading entries…",
         loadingSubtypes: "Loading subtypes…",
@@ -82,6 +86,8 @@ export const STRINGS: Record<Lang, Strings> = {
         entries: (n) => (n === 1 ? "1 Eintrag" : `${n} Einträge`),
         toggleOpen: "Nicht aufgeteilt",
         toggleSplit: "Aufgeteilt",
+        myHours: "Meine Stunden",
+        myHoursLocked: "Gesperrt — du siehst nur deine eigenen Stunden.",
         selectHint: "Eintrag wählen, um die Stunden aufzuteilen.",
         loading: "Einträge werden geladen…",
         loadingSubtypes: "Subtypes werden geladen…",
@@ -117,6 +123,8 @@ export const STRINGS: Record<Lang, Strings> = {
         entries: (n) => (n === 1 ? "1 entrée" : `${n} entrées`),
         toggleOpen: "Non réparti",
         toggleSplit: "Réparti",
+        myHours: "Mes heures",
+        myHoursLocked: "Verrouillé — vous ne voyez que vos propres heures.",
         selectHint: "Sélectionnez une entrée pour répartir ses heures.",
         loading: "Chargement des entrées…",
         loadingSubtypes: "Chargement des sous-types…",

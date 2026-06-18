@@ -45,6 +45,31 @@ export const PARENT_LOOKUPS = [
 /** Work-order lookup value column — used to find the related Pause entries. */
 export const WORKORDER_VALUE = "_sst_workorder_value";
 
+/**
+ * Resource lookup on the entry → BookableResource. Used for the resource name
+ * (search) and the "My hours" filter (resource → userid = current user).
+ * Verified: relationship sst_roundedtimeentry_resource, target BookableResource.
+ */
+export const RESOURCE_REF = {
+    /** @odata.bind / $expand navigation property. */
+    navProp: "sst_resource_ref",
+    /** Primary name on bookableresource. */
+    nameField: "name",
+    /** Lookup value (bookableresource → systemuser) read from the expand. */
+    userIdValue: "_userid_value",
+} as const;
+
+/**
+ * Roles whose holders may toggle the "My hours" filter off (see all hours).
+ * Everyone else is locked to their own hours. Includes the German label of the
+ * built-in System Administrator role as a safety net for localized orgs.
+ */
+export const ADMIN_ROLES = [
+    "System Administrator",
+    "Systemadministrator",
+    "SST | Dispo Teamleitung Addon",
+];
+
 /** Configurable per-control field bindings (with verified defaults). */
 export interface FieldConfig {
     /** Decimal total-duration column on the parent. */

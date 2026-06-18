@@ -60,6 +60,31 @@
     color: #fff;
 }
 
+/* "My hours" filter chip */
+.wtsg-chip-filter {
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 16px;
+    border: 1px solid #c8c6c4;
+    background: #fff;
+    color: #424242;
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.wtsg-chip-filter.active {
+    background: #0f6cbd;
+    border-color: #0f6cbd;
+    color: #fff;
+}
+
+.wtsg-chip-filter:disabled {
+    cursor: not-allowed;
+}
+
 .wtsg-count {
     margin-left: auto;
     font-size: 12px;
@@ -454,6 +479,11 @@
 .wtsg-mobile .wtsg-toggle button {
     flex: 1 1 0;
     padding: 10px 12px;
+    font-size: 14px;
+}
+
+.wtsg-mobile .wtsg-chip-filter {
+    height: 40px;
     font-size: 14px;
 }
 

@@ -85,6 +85,34 @@ export function formatNumber(n: number): string {
     return String(Math.round(n * 1000) / 1000);
 }
 
+/**
+ * True if the current user holds any of the given (directly-assigned) security
+ * roles. Best-effort — returns false on error, which keeps the "My hours"
+ * filter locked (the safe default). Team-assigned roles are not evaluated.
+ */
+export async function userHasAnyRole(
+    webApi: ComponentFramework.WebApi,
+    userId: string,
+    roleNames: readonly string[],
+): Promise<boolean> {
+    const id = userId.replace(/[{}]/g, "");
+    if (!id) return false;
+    try {
+        const u: any = await webApi.retrieveRecord(
+            "systemuser",
+            id,
+            "?$select=systemuserid&$expand=systemuserroles_association($select=name)",
+        );
+        const roles: string[] = (u?.systemuserroles_association ?? []).map(
+            (r: any) => String(r?.name ?? ""),
+        );
+        const wanted = new Set(roleNames.map((n) => n.toLowerCase()));
+        return roles.some((rn) => wanted.has(rn.toLowerCase()));
+    } catch {
+        return false;
+    }
+}
+
 export interface SplitInput {
     id: string;
     name: string;

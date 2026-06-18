@@ -79,6 +79,7 @@ export class WorkTimeSplitGrid
                 completedField: params.completedField?.raw,
                 subtypeField: params.subtypeField?.raw,
             }),
+            userId: this._context.userSettings?.userId ?? "",
             disabled: this._context.mode.isControlDisabled,
             lang: lcidToLang(this._context.userSettings?.languageId),
         };

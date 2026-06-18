@@ -20,6 +20,12 @@ deletes the original.
   those columns aren't in the bound view. Missing parts are omitted gracefully.
 - **Split / not-split toggle** — filters the list on the
   `sst_worksubtypecompleted` flag; pause entries (`sst_type = Pause`) are hidden.
+- **Live search** across the title, type, date, **project number**, and
+  **resource name** (`sst_resource_ref.name`).
+- **"My hours" chip** (preselected) — filters to entries whose resource's user is
+  the current user (`sst_resource_ref.userid = current user`). It is **locked on**
+  for everyone except holders of **System Administrator** or **SST | Dispo
+  Teamleitung Addon**, who may toggle it off to see all hours.
 - **Detail split panel** — selecting an entry loads its work-subtype rows
   (`sst_roundedtimeentryworksubtypes`) and lets the user edit the hours per
   subtype, with a live **Total / Distributed / Remaining** summary.

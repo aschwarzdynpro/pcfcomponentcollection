@@ -22,6 +22,14 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 - **Freitext-Suche** über Name, Typ, Datum und sichtbare View-Spalten.
 - **Umschalter „Nicht aufgeteilt / Aufgeteilt"** filtert über das Feld
   `sst_worksubtypecompleted`. Einträge vom Typ `Pause` werden ausgeblendet.
+- **Freitext-Suche** über Titel, Typ, Datum, **Projektnummer** und
+  **Ressourcenname** (`sst_resource_ref.name`).
+- **Chip „Meine Stunden"** (vorausgewählt) — filtert auf Einträge, deren Ressource
+  dem aktuellen Benutzer gehört (`sst_resource_ref.userid = aktueller User`). Der
+  Chip ist **gesperrt + aktiv** für alle Benutzer; nur Inhaber der Rolle
+  **System Administrator** oder **SST | Dispo Teamleitung Addon** können ihn
+  abschalten (alle Stunden sehen). Rollenprüfung über
+  `systemuserroles_association` (direkt zugewiesene Rollen).
 - Statuspunkt je Karte (offen = rot, aufgeteilt = grün).
 
 ### Detail-Aufteilung (rechts)

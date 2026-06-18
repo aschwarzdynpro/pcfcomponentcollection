@@ -15,6 +15,12 @@ export interface EntryRow {
     totalFormatted: string;
     /** Whether the entry is already split. */
     completed: boolean;
+    /** Related project number (sst_project_id.sst_projectnumber), if enriched. */
+    project?: string;
+    /** Related resource name (sst_resource_ref.name), if enriched. */
+    resourceName?: string;
+    /** Related resource's user id (sst_resource_ref.userid), normalized lowercase. */
+    resourceUserId?: string;
     /** Extra view columns surfaced as small chips. */
     extras: { key: string; label: string; value: string }[];
 }

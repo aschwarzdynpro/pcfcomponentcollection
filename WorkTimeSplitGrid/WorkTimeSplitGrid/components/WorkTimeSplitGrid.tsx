@@ -3,14 +3,16 @@ import { EntryList } from "./EntryList";
 import { SplitPanel } from "./SplitPanel";
 import { EntryRow, Lang, SubtypeRow } from "./types";
 import { STRINGS } from "./i18n";
-import { FieldConfig } from "./schema";
-import { loadSubtypes } from "./api";
+import { FieldConfig, RESOURCE_REF, ADMIN_ROLES } from "./schema";
+import { loadSubtypes, userHasAnyRole } from "./api";
 
 export interface WorkTimeSplitGridProps {
     dataset: ComponentFramework.PropertyTypes.DataSet;
     webApi: ComponentFramework.WebApi;
     utils: ComponentFramework.Utility;
     fields: FieldConfig;
+    /** Current user's systemuserid (for the "My hours" filter + role check). */
+    userId: string;
     /** Phone form factor → single-pane, touch-first layout. */
     isMobile: boolean;
     disabled: boolean;
@@ -92,32 +94,65 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const [subtypeError, setSubtypeError] = React.useState<string | null>(null);
     const [toast, setToast] = React.useState<string | null>(null);
     const [enrich, setEnrich] = React.useState<
-        Map<string, { type: string; date: string; project: string }>
+        Map<
+            string,
+            {
+                type: string;
+                date: string;
+                project: string;
+                resourceName: string;
+                resourceUserId: string;
+            }
+        >
     >(() => new Map());
+    const [myHoursOnly, setMyHoursOnly] = React.useState(true);
+    const [isAdmin, setIsAdmin] = React.useState(false);
 
     const entityName = React.useMemo(() => getEntityName(dataset), [dataset]);
+
+    const currentUserId = React.useMemo(
+        () => (props.userId || "").replace(/[{}]/g, "").toLowerCase(),
+        [props.userId],
+    );
+
+    // Admins (System Administrator / SST Dispo Teamleitung Addon) may toggle the
+    // "My hours" filter off; everyone else stays locked to their own hours.
+    React.useEffect(() => {
+        if (!currentUserId) return;
+        let cancelled = false;
+        userHasAnyRole(props.webApi, currentUserId, ADMIN_ROLES).then((admin) => {
+            if (!cancelled) setIsAdmin(admin);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [currentUserId, props.webApi]);
 
     const rows = React.useMemo(
         () => buildRows(dataset, fields),
         [dataset, fields],
     );
 
-    // Exclude pauses; apply split/not-split toggle + free-text search.
-    const visibleRows = React.useMemo(() => {
-        const q = search.trim().toLowerCase();
-        return rows.filter((r) => {
-            if (r.type && r.type.toLowerCase() === fields.pauseValue.toLowerCase())
-                return false;
-            if (r.completed !== showCompleted) return false;
-            if (!q) return true;
-            return (
-                r.name.toLowerCase().includes(q) ||
-                r.type.toLowerCase().includes(q) ||
-                r.date.toLowerCase().includes(q) ||
-                r.extras.some((x) => x.value.toLowerCase().includes(q))
-            );
+    // Apply enrichment (title fields + resource) to every row.
+    const enrichedRows = React.useMemo(() => {
+        return rows.map((r) => {
+            const ex = enrich.get(r.id);
+            const type = ex?.type || r.type;
+            const date = ex?.date || r.date;
+            const project = ex?.project ?? "";
+            const resourceName = ex?.resourceName ?? "";
+            const resourceUserId = ex?.resourceUserId ?? "";
+            return {
+                ...r,
+                type,
+                date,
+                project,
+                resourceName,
+                resourceUserId,
+                name: t.title(type, date, project),
+            };
         });
-    }, [rows, search, showCompleted, fields.pauseValue]);
+    }, [rows, enrich, t]);
 
     // Enrich the visible page with title fields that may live outside the bound
     // view: sst_date and the related project number
@@ -138,7 +173,8 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             .join(" or ");
         const query =
             `?$select=sst_roundedtimeentriesid,sst_type,sst_date` +
-            `&$expand=sst_Project_id($select=sst_projectnumber)` +
+            `&$expand=sst_Project_id($select=sst_projectnumber),` +
+            `${RESOURCE_REF.navProp}($select=${RESOURCE_REF.nameField},${RESOURCE_REF.userIdValue})` +
             `&$filter=${filter}`;
         props.webApi
             .retrieveMultipleRecords("sst_roundedtimeentries", query)
@@ -147,7 +183,13 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                     if (cancelled) return;
                     const m = new Map<
                         string,
-                        { type: string; date: string; project: string }
+                        {
+                            type: string;
+                            date: string;
+                            project: string;
+                            resourceName: string;
+                            resourceUserId: string;
+                        }
                     >();
                     for (const e of (res.entities ?? []) as Record<
                         string,
@@ -162,10 +204,21 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                         const proj = e["sst_Project_id"]
                             ? e["sst_Project_id"]["sst_projectnumber"]
                             : "";
+                        const resObj = e[RESOURCE_REF.navProp];
+                        const resourceName = resObj
+                            ? String(resObj[RESOURCE_REF.nameField] ?? "")
+                            : "";
+                        const resourceUserId = resObj
+                            ? String(resObj[RESOURCE_REF.userIdValue] ?? "")
+                                  .replace(/[{}]/g, "")
+                                  .toLowerCase()
+                            : "";
                         m.set(rid, {
                             type: String(e["sst_type"] ?? ""),
                             date,
                             project: String(proj ?? ""),
+                            resourceName,
+                            resourceUserId,
                         });
                     }
                     setEnrich(m);
@@ -179,16 +232,39 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         };
     }, [idsKey, props.webApi]);
 
-    // Compose the display title: "<type> am <date> auf Projekt <project>".
+    // Non-admins are locked to their own hours; admins may toggle it off.
+    const myHoursActive = !isAdmin || myHoursOnly;
+
+    // Hide pauses; apply split/not-split toggle, "My hours", and free-text search
+    // (incl. project number and resource name from the enrichment).
     const displayRows = React.useMemo(() => {
-        return visibleRows.map((r) => {
-            const ex = enrich.get(r.id);
-            const type = ex?.type || r.type;
-            const date = ex?.date || r.date;
-            const project = ex?.project || "";
-            return { ...r, type, date, name: t.title(type, date, project) };
+        const q = search.trim().toLowerCase();
+        return enrichedRows.filter((r) => {
+            if (r.type && r.type.toLowerCase() === fields.pauseValue.toLowerCase())
+                return false;
+            if (r.completed !== showCompleted) return false;
+            if (myHoursActive) {
+                if (!currentUserId) return false;
+                if ((r.resourceUserId ?? "") !== currentUserId) return false;
+            }
+            if (!q) return true;
+            return (
+                r.name.toLowerCase().includes(q) ||
+                r.type.toLowerCase().includes(q) ||
+                r.date.toLowerCase().includes(q) ||
+                (r.project ?? "").toLowerCase().includes(q) ||
+                (r.resourceName ?? "").toLowerCase().includes(q) ||
+                r.extras.some((x) => x.value.toLowerCase().includes(q))
+            );
         });
-    }, [visibleRows, enrich, t]);
+    }, [
+        enrichedRows,
+        search,
+        showCompleted,
+        myHoursActive,
+        currentUserId,
+        fields.pauseValue,
+    ]);
 
     const selected = React.useMemo(
         () => displayRows.find((r) => r.id === selectedId) ?? null,
@@ -288,7 +364,22 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                         {t.toggleSplit}
                     </button>
                 </div>
-                <span className="wtsg-count">{t.entries(visibleRows.length)}</span>
+                <button
+                    type="button"
+                    className={`wtsg-chip-filter ${myHoursActive ? "active" : ""}`}
+                    disabled={!isAdmin}
+                    aria-pressed={myHoursActive}
+                    title={!isAdmin ? t.myHoursLocked : t.myHours}
+                    onClick={() => {
+                        if (!isAdmin) return;
+                        setMyHoursOnly((v) => !v);
+                        setSelectedId(null);
+                    }}
+                >
+                    {!isAdmin && <span aria-hidden="true">🔒 </span>}
+                    {t.myHours}
+                </button>
+                <span className="wtsg-count">{t.entries(displayRows.length)}</span>
             </div>
             )}
 
