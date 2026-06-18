@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<manifest>
+  <control namespace="ChoicePicker" constructor="ChoicePickerControl" version="1.0.2" display-name-key="ChoicePickerControl_Display" description-key="ChoicePickerControl_Desc" control-type="standard" api-version="1.3.18">
+    <property name="selectedValue" display-name-key="selectedValue_Display" description-key="selectedValue_Desc" of-type-group="choices" usage="bound" required="true"/>
+    <property name="selectionMode" display-name-key="selectionMode_Display" description-key="selectionMode_Desc" of-type="Enum" usage="input" required="false" default-value="auto">
+      <value name="auto" display-name-key="selectionMode_Auto_Display" description-key="selectionMode_Auto_Desc">auto</value>
+      <value name="single" display-name-key="selectionMode_Single_Display" description-key="selectionMode_Single_Desc">single</value>
+      <value name="multiple" display-name-key="selectionMode_Multiple_Display" description-key="selectionMode_Multiple_Desc">multiple</value>
+    </property>
+    <property name="placeholder" display-name-key="placeholder_Display" description-key="placeholder_Desc" of-type="SingleLine.Text" usage="input" required="false"/>
+    <property name="searchBox" display-name-key="searchBox_Display" description-key="searchBox_Desc" of-type="Enum" usage="input" required="false" default-value="auto">
+      <value name="auto" display-name-key="searchBox_Auto_Display" description-key="searchBox_Auto_Desc">auto</value>
+      <value name="always" display-name-key="searchBox_Always_Display" description-key="searchBox_Always_Desc">always</value>
+      <value name="never" display-name-key="searchBox_Never_Display" description-key="searchBox_Never_Desc">never</value>
+    </property>
+    <property name="colorMode" display-name-key="colorMode_Display" description-key="colorMode_Desc" of-type="Enum" usage="input" required="false" default-value="on">
+      <value name="on" display-name-key="colorMode_On_Display" description-key="colorMode_On_Desc">on</value>
+      <value name="off" display-name-key="colorMode_Off_Display" description-key="colorMode_Off_Desc">off</value>
+    </property>
+    <property name="clearButton" display-name-key="clearButton_Display" description-key="clearButton_Desc" of-type="Enum" usage="input" required="false" default-value="on">
+      <value name="on" display-name-key="clearButton_On_Display" description-key="clearButton_On_Desc">on</value>
+      <value name="off" display-name-key="clearButton_Off_Display" description-key="clearButton_Off_Desc">off</value>
+    </property>
+    <type-group name="choices">
+      <type>OptionSet</type>
+      <type>MultiSelectOptionSet</type>
+    </type-group>
+    <resources>
+      <code path="bundle.js" order="1"/>
+      <css path="css/ChoicePickerControl.css" order="1"/>
+      <resx path="strings/ChoicePickerControl.1033.resx" version="1.0.2"/>
+    </resources>
+    <feature-usage/>
+    <built-by name="pac" version="1.51.1"/>
+  </control>
+</manifest>

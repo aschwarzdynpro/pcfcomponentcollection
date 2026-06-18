@@ -7,6 +7,7 @@ and model-driven apps.
 
 | Component | Type | Purpose |
 |-----------|------|---------|
+| [ChoicePickerControl](./ChoicePickerControl/ChoicePickerControl/) | field | Modern React replacement for the standard Dataverse Choice dropdown. One control binds to both single `Choice` (OptionSet) and multi-select `Choices` (MultiSelectOptionSet): colored options, searchable list, removable chips, full keyboard navigation. Trilingual UI (DE / EN / FR). |
 | [DataverseCrudComponent](./DataverseCrudComponent/) | dataset | React-based CRUD UI for Dataverse datasets — list, search, create, edit, and delete records inside a model-driven form, view, or dashboard. |
 | [FlagPhoneControl](./FlagPhoneControl/FlagPhoneControl/) | field | International phone-number input for `SingleLine.Phone` columns with country flag selector, dial-code parsing, libphonenumber-validation, and trilingual UI (DE / EN / FR). |
 | [FuzzyLookupControl](./FuzzyLookupControl/FuzzyLookupControl/) | field | Drop-in replacement for the standard `Lookup.Simple` control. Dataverse Search (Lucene-fuzzy) typeahead, up to four configurable result columns with highlight, in-place Quick-Create, plus architecture hooks for favorites and recently used. Trilingual UI (DE / EN / FR). |
@@ -22,6 +23,7 @@ Importable Dataverse solutions live alongside their source components:
 
 | Solution | Source | Notes |
 |----------|--------|-------|
+| [ChoicePickerControl.Solution](./ChoicePickerControl/ChoicePickerControl.Solution/) | `ChoicePickerControl/ChoicePickerControl/` | Publisher `HerbertWaldmann`, prefix `wal`. Run [`build.ps1`](./ChoicePickerControl/ChoicePickerControl.Solution/build.ps1) to produce unmanaged + managed zips. |
 | [FlagPhoneControl.Solution](./FlagPhoneControl/FlagPhoneControl.Solution/) | `FlagPhoneControl/FlagPhoneControl/` | Publisher `HerbertWaldmann`, prefix `wal`. Run [`build.ps1`](./FlagPhoneControl/FlagPhoneControl.Solution/build.ps1) to produce unmanaged + managed zips. |
 | [FuzzyLookupControl.Solution](./FuzzyLookupControl/FuzzyLookupControl.Solution/) | `FuzzyLookupControl/FuzzyLookupControl/` | Publisher `HerbertWaldmann`, prefix `wal`. Run [`build.ps1`](./FuzzyLookupControl/FuzzyLookupControl.Solution/build.ps1) to produce unmanaged + managed zips. |
 | [HoursDaysControl.Solution](./HoursDaysControl/HoursDaysControl.Solution/) | `HoursDaysControl/HoursDaysControl/` | Publisher `HerbertWaldmann`, prefix `wal`. Run [`build.ps1`](./HoursDaysControl/HoursDaysControl.Solution/build.ps1) to produce unmanaged + managed zips. |
@@ -36,6 +38,9 @@ walkthrough (build → solution package → import → form configuration).
 
 ```
 pcfcomponentcollection/
+├── ChoicePickerControl/            # feature folder grouping source + solution
+│   ├── ChoicePickerControl/        # PCF source
+│   └── ChoicePickerControl.Solution/ # Importable Dataverse solution
 ├── DataverseCrudComponent/         # PCF source — see folder README
 ├── FlagPhoneControl/               # feature folder grouping source + solution
 │   ├── FlagPhoneControl/           # PCF source

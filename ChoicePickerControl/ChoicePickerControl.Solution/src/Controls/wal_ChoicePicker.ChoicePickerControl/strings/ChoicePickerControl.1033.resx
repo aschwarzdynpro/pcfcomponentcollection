@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ChoicePickerControl_Display" xml:space="preserve">
+    <value>Choice Picker</value>
+    <comment>Display name for the control</comment>
+  </data>
+  <data name="ChoicePickerControl_Desc" xml:space="preserve">
+    <value>Modern React picker that replaces the standard Dataverse Choice dropdown. Works with single Choice and multi-select Choices: colored options, searchable list, removable chips, and full keyboard navigation.</value>
+    <comment>Description for the control</comment>
+  </data>
+  <data name="selectedValue_Display" xml:space="preserve">
+    <value>Choice column</value>
+    <comment>Display name for the bound choice property</comment>
+  </data>
+  <data name="selectedValue_Desc" xml:space="preserve">
+    <value>The Choice (OptionSet) or multi-select Choices (MultiSelectOptionSet) column bound to this control.</value>
+    <comment>Description for the bound choice property</comment>
+  </data>
+  <data name="selectionMode_Display" xml:space="preserve">
+    <value>Selection mode</value>
+    <comment>Display name for the selection-mode property</comment>
+  </data>
+  <data name="selectionMode_Desc" xml:space="preserve">
+    <value>Whether the picker allows a single or multiple selection. "Auto" detects this from the bound column type; set it explicitly only if auto-detection guesses wrong.</value>
+    <comment>Description for the selection-mode property</comment>
+  </data>
+  <data name="selectionMode_Auto_Display" xml:space="preserve">
+    <value>Auto (detect from column)</value>
+    <comment>selectionMode value: auto</comment>
+  </data>
+  <data name="selectionMode_Auto_Desc" xml:space="preserve">
+    <value>Detect single vs. multiple from the bound column.</value>
+    <comment>selectionMode value: auto description</comment>
+  </data>
+  <data name="selectionMode_Single_Display" xml:space="preserve">
+    <value>Single</value>
+    <comment>selectionMode value: single</comment>
+  </data>
+  <data name="selectionMode_Single_Desc" xml:space="preserve">
+    <value>Force single selection.</value>
+    <comment>selectionMode value: single description</comment>
+  </data>
+  <data name="selectionMode_Multiple_Display" xml:space="preserve">
+    <value>Multiple</value>
+    <comment>selectionMode value: multiple</comment>
+  </data>
+  <data name="selectionMode_Multiple_Desc" xml:space="preserve">
+    <value>Force multiple selection (chips).</value>
+    <comment>selectionMode value: multiple description</comment>
+  </data>
+  <data name="placeholder_Display" xml:space="preserve">
+    <value>Placeholder</value>
+    <comment>Display name for the placeholder property</comment>
+  </data>
+  <data name="placeholder_Desc" xml:space="preserve">
+    <value>Optional placeholder text shown when nothing is selected. Overrides the localized default ("Select…").</value>
+    <comment>Description for the placeholder property</comment>
+  </data>
+  <data name="searchBox_Display" xml:space="preserve">
+    <value>Search box</value>
+    <comment>Display name for the search-box property</comment>
+  </data>
+  <data name="searchBox_Desc" xml:space="preserve">
+    <value>When to show the filter box inside the dropdown.</value>
+    <comment>Description for the search-box property</comment>
+  </data>
+  <data name="searchBox_Auto_Display" xml:space="preserve">
+    <value>Auto (8+ options)</value>
+    <comment>searchBox value: auto</comment>
+  </data>
+  <data name="searchBox_Auto_Desc" xml:space="preserve">
+    <value>Show the search box once there are 8 or more options.</value>
+    <comment>searchBox value: auto description</comment>
+  </data>
+  <data name="searchBox_Always_Display" xml:space="preserve">
+    <value>Always</value>
+    <comment>searchBox value: always</comment>
+  </data>
+  <data name="searchBox_Always_Desc" xml:space="preserve">
+    <value>Always show the search box.</value>
+    <comment>searchBox value: always description</comment>
+  </data>
+  <data name="searchBox_Never_Display" xml:space="preserve">
+    <value>Never</value>
+    <comment>searchBox value: never</comment>
+  </data>
+  <data name="searchBox_Never_Desc" xml:space="preserve">
+    <value>Never show the search box.</value>
+    <comment>searchBox value: never description</comment>
+  </data>
+  <data name="colorMode_Display" xml:space="preserve">
+    <value>Show colors</value>
+    <comment>Display name for the color-mode property</comment>
+  </data>
+  <data name="colorMode_Desc" xml:space="preserve">
+    <value>Render the Dataverse choice colors as dots and chip tints. When a choice has no color configured, a stable palette color is used.</value>
+    <comment>Description for the color-mode property</comment>
+  </data>
+  <data name="colorMode_On_Display" xml:space="preserve">
+    <value>On</value>
+    <comment>colorMode value: on</comment>
+  </data>
+  <data name="colorMode_On_Desc" xml:space="preserve">
+    <value>Show choice colors.</value>
+    <comment>colorMode value: on description</comment>
+  </data>
+  <data name="colorMode_Off_Display" xml:space="preserve">
+    <value>Off</value>
+    <comment>colorMode value: off</comment>
+  </data>
+  <data name="colorMode_Off_Desc" xml:space="preserve">
+    <value>Hide choice colors.</value>
+    <comment>colorMode value: off description</comment>
+  </data>
+  <data name="clearButton_Display" xml:space="preserve">
+    <value>Clear button</value>
+    <comment>Display name for the clear-button property</comment>
+  </data>
+  <data name="clearButton_Desc" xml:space="preserve">
+    <value>Show the inline clear (×) button to reset the selection.</value>
+    <comment>Description for the clear-button property</comment>
+  </data>
+  <data name="clearButton_On_Display" xml:space="preserve">
+    <value>On</value>
+    <comment>clearButton value: on</comment>
+  </data>
+  <data name="clearButton_On_Desc" xml:space="preserve">
+    <value>Show the clear button.</value>
+    <comment>clearButton value: on description</comment>
+  </data>
+  <data name="clearButton_Off_Display" xml:space="preserve">
+    <value>Off</value>
+    <comment>clearButton value: off</comment>
+  </data>
+  <data name="clearButton_Off_Desc" xml:space="preserve">
+    <value>Hide the clear button.</value>
+    <comment>clearButton value: off description</comment>
+  </data>
+</root>
