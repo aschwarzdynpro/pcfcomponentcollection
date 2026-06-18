@@ -54,8 +54,9 @@ deletes the original.
   result set (not just one page).
 - **Period filter & sorting** — a sub-toolbar offers a period filter
   (**All / Today / This week / This month**, by `sst_date`) and a sort dropdown
-  (**date newest/oldest, project, resource, duration**). Both apply client-side
-  over the loaded set, so they're instant.
+  (**date newest/oldest, project, resource, duration**) as a custom, dependency-
+  free React dropdown (click-outside / Escape close, keyboard navigation). Both
+  apply client-side over the loaded set, so they're instant.
 - **Empty state** — when no entries qualify (or a search has no matches) the list
   shows a binoculars icon and a short one-liner instead of a blank pane.
 - **"My hours" chip** (preselected) — filters to entries whose resource's user is

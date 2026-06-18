@@ -1,6 +1,7 @@
 import * as React from "react";
 import { EntryList } from "./EntryList";
 import { SplitPanel } from "./SplitPanel";
+import { Dropdown } from "./Dropdown";
 import { EntryRow, Lang, SubtypeRow } from "./types";
 import { STRINGS } from "./i18n";
 import { FieldConfig, ADMIN_ROLES, TIMEREPORT } from "./schema";
@@ -454,24 +455,24 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                             </button>
                         ))}
                     </div>
-                    <label className="wtsg-sort">
+                    <div className="wtsg-sort">
                         <span>{t.sortLabel}</span>
-                        <select
+                        <Dropdown
                             value={sortBy}
-                            onChange={(e) =>
-                                setSortBy(e.target.value as SortKey)
-                            }
-                            aria-label={t.sortLabel}
-                        >
-                            <option value="dateDesc">{t.sortDateDesc}</option>
-                            <option value="dateAsc">{t.sortDateAsc}</option>
-                            <option value="project">{t.sortProject}</option>
-                            <option value="resource">{t.sortResource}</option>
-                            <option value="durationDesc">
-                                {t.sortDuration}
-                            </option>
-                        </select>
-                    </label>
+                            ariaLabel={t.sortLabel}
+                            onChange={(v) => setSortBy(v as SortKey)}
+                            options={[
+                                { value: "dateDesc", label: t.sortDateDesc },
+                                { value: "dateAsc", label: t.sortDateAsc },
+                                { value: "project", label: t.sortProject },
+                                { value: "resource", label: t.sortResource },
+                                {
+                                    value: "durationDesc",
+                                    label: t.sortDuration,
+                                },
+                            ]}
+                        />
+                    </div>
                 </div>
             )}
 

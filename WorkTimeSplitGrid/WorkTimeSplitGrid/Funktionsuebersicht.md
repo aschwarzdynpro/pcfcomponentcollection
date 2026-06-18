@@ -58,8 +58,10 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   serverseitig gefilterte Ergebnismenge (nicht nur eine Seite).
 - **Zeitraum-Filter & Sortierung** — eine Unter-Toolbar bietet einen
   Zeitraum-Filter (**Alle / Heute / Diese Woche / Dieser Monat**, nach `sst_date`)
-  und ein Sortier-Dropdown (**Datum neueste/älteste, Projekt, Ressource, Dauer**).
-  Beide wirken clientseitig auf die geladene Menge — also sofort.
+  und ein Sortier-Dropdown (**Datum neueste/älteste, Projekt, Ressource, Dauer**)
+  als eigenes, bibliotheksfreies React-Dropdown (schließt per Klick-außerhalb /
+  Esc, Tastatur-Navigation). Beide wirken clientseitig auf die geladene Menge —
+  also sofort.
 - **Leerzustand** — wenn keine Einträge passen (oder eine Suche keine Treffer
   liefert), zeigt die Liste ein Fernglas-Symbol und einen kurzen 1-Zeiler statt
   einer leeren Fläche.
