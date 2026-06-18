@@ -382,6 +382,11 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 rows={displayRows}
                                 selectedId={selectedId}
                                 onSelect={setSelectedId}
+                                emptyMessage={
+                                    search.trim()
+                                        ? t.noResultsSearch
+                                        : t.noResults
+                                }
                                 strings={t}
                             />
                         )}
@@ -415,6 +420,9 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                         selectable
                         checkedIds={checkedIds}
                         onToggleCheck={toggleCheck}
+                        emptyMessage={
+                            search.trim() ? t.noResultsSearch : t.noResults
+                        }
                         strings={t}
                     />
                 )}

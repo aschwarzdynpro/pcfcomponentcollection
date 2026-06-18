@@ -51,6 +51,8 @@ deletes the original.
 - **Live search** across the title, type, date, **project number**, and
   **resource name** (`sst_resource_ref.name`) — over the full server-filtered
   result set (not just one page).
+- **Empty state** — when no entries qualify (or a search has no matches) the list
+  shows a binoculars icon and a short one-liner instead of a blank pane.
 - **"My hours" chip** (preselected) — filters to entries whose resource's user is
   the current user. The user's `bookableresource`(s) are resolved via
   `_userid_value`, and the list query is restricted to those via

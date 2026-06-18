@@ -19,6 +19,10 @@ export interface Strings {
     myHours: string;
     myHoursLocked: string;
     selectHint: string;
+    /** Empty-state line when the (unfiltered) list has no entries. */
+    noResults: string;
+    /** Empty-state line when a search yields no matches. */
+    noResultsSearch: string;
     /** Assign mode: hint shown when nothing is selected yet. */
     assignHint: string;
     selectedCount: (n: number) => string;
@@ -70,6 +74,8 @@ export const STRINGS: Record<Lang, Strings> = {
         myHours: "My hours",
         myHoursLocked: "Locked — you only see your own hours.",
         selectHint: "Select an entry to distribute its hours.",
+        noResults: "No entries here — nothing to show.",
+        noResultsSearch: "No entries match your search.",
         assignHint: "Select entries to create delivery notes.",
         selectedCount: (n) => (n === 1 ? "1 selected" : `${n} selected`),
         createReports: "Create delivery notes",
@@ -124,6 +130,8 @@ export const STRINGS: Record<Lang, Strings> = {
         myHours: "Meine Stunden",
         myHoursLocked: "Gesperrt — du siehst nur deine eigenen Stunden.",
         selectHint: "Eintrag wählen, um die Stunden aufzuteilen.",
+        noResults: "Keine Einträge vorhanden — hier gibt es nichts zu sehen.",
+        noResultsSearch: "Keine Einträge passen zu deiner Suche.",
         assignHint: "Einträge auswählen, um Lieferscheine zu erstellen.",
         selectedCount: (n) => (n === 1 ? "1 ausgewählt" : `${n} ausgewählt`),
         createReports: "Lieferscheine erstellen",
@@ -178,6 +186,8 @@ export const STRINGS: Record<Lang, Strings> = {
         myHours: "Mes heures",
         myHoursLocked: "Verrouillé — vous ne voyez que vos propres heures.",
         selectHint: "Sélectionnez une entrée pour répartir ses heures.",
+        noResults: "Aucune entrée ici — rien à afficher.",
+        noResultsSearch: "Aucune entrée ne correspond à votre recherche.",
         assignHint: "Sélectionnez des entrées pour créer des bons de livraison.",
         selectedCount: (n) => (n === 1 ? "1 sélectionné" : `${n} sélectionnés`),
         createReports: "Créer les bons de livraison",

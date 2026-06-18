@@ -55,6 +55,9 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 - **Freitext-Suche** über Titel, Typ, Datum, **Projektnummer** und
   **Ressourcenname** (`sst_resource_ref.name`) — über die **gesamte**
   serverseitig gefilterte Ergebnismenge (nicht nur eine Seite).
+- **Leerzustand** — wenn keine Einträge passen (oder eine Suche keine Treffer
+  liefert), zeigt die Liste ein Fernglas-Symbol und einen kurzen 1-Zeiler statt
+  einer leeren Fläche.
 - **Chip „Meine Stunden"** (vorausgewählt) — filtert auf Einträge, deren Ressource
   dem aktuellen Benutzer gehört. Die `bookableresource`(s) des Benutzers werden
   über `_userid_value` ermittelt, und die Listen-Abfrage wird serverseitig über
