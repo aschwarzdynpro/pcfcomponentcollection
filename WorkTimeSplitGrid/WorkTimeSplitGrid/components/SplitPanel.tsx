@@ -128,11 +128,8 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
                         const invalid = Number.isNaN(parseNumber(s.value));
                         const editable =
                             !entry.completed && !props.disabled && !saving;
-                        // Offer "use remaining" on empty/zero rows while time is left.
-                        const showFill =
-                            editable &&
-                            remaining > EPSILON &&
-                            parseNumber(s.value) === 0;
+                        // Offer "use remaining" on every row while time is left.
+                        const showFill = editable && remaining > EPSILON;
                         return (
                             <label key={s.id} className="wtsg-rowitem">
                                 <span className="wtsg-rowname">{s.name}</span>
@@ -146,9 +143,13 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 e.stopPropagation();
+                                                const cur = parseNumber(s.value);
+                                                const base = Number.isNaN(cur)
+                                                    ? 0
+                                                    : cur;
                                                 handleValueChange(
                                                     s.id,
-                                                    formatNumber(remaining),
+                                                    formatNumber(base + remaining),
                                                 );
                                             }}
                                         >

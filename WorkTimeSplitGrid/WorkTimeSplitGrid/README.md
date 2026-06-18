@@ -29,9 +29,9 @@ deletes the original.
 - **Detail split panel** — selecting an entry loads its work-subtype rows
   (`sst_roundedtimeentryworksubtypes`) and lets the user edit the hours per
   subtype, with a live **Total / Distributed / Remaining** summary.
-- **"Use remaining" icon** — while time is still unallocated, a small arrow icon
-  appears next to each empty/zero subtype field; clicking it drops the remaining
-  amount into that field (one tap to finish the split).
+- **"Use remaining" icon** — while time is still unallocated (remaining > 0), a
+  small arrow icon appears next to **every** subtype field; clicking it adds the
+  remaining amount to that field's current value (one tap to finish the split).
 - **Guarded save** — the *Save split* button only enables when the distributed
   hours equal the entry's total duration.
 - **Atomic split workflow** (faithful to the original Custom Page), executed via
