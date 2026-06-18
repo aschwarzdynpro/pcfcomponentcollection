@@ -49,7 +49,8 @@ anrichten kann.
   Worktype-Key, Summen-Guard) — sichert gegen Regressionen ab.
 - 🔜 **Mehr Manifest-Properties** (Ressourcen-/Projektfeld) → Wiederverwendung in
   anderen Orgs.
-- 🔜 **Telemetrie/Logging** für die destruktiven Operationen.
+- ✅ **Telemetrie/Logging** für die destruktiven Operationen. — *v1.10.0;
+  `telemetry.ts` → `context.tracing` + Konsole; Stage-Marker bei `splitSave`.*
 
 ---
 

@@ -7,12 +7,14 @@ import {
 } from "./components/WorkTimeSplitGrid";
 import { lcidToLang } from "./components/i18n";
 import { resolveFieldConfig } from "./components/schema";
+import { createLogger, Logger, TracingService } from "./components/telemetry";
 
 export class WorkTimeSplitGrid
     implements ComponentFramework.StandardControl<IInputs, IOutputs>
 {
     private _container: HTMLDivElement;
     private _context: ComponentFramework.Context<IInputs>;
+    private _logger: Logger;
 
     public init(
         context: ComponentFramework.Context<IInputs>,
@@ -22,6 +24,11 @@ export class WorkTimeSplitGrid
     ): void {
         this._context = context;
         this._container = container;
+        // PCF diagnostic trace + console; instruments the destructive ops.
+        this._logger = createLogger(
+            (context as unknown as { tracing?: TracingService }).tracing,
+        );
+        this._logger.event("init");
         container.classList.add("wtsg-host");
         // Master/detail needs vertical room — dataset PCFs default to a small
         // height. Ask the host to track the real container size.
@@ -83,6 +90,7 @@ export class WorkTimeSplitGrid
             userId: this._context.userSettings?.userId ?? "",
             disabled: this._context.mode.isControlDisabled,
             lang: lcidToLang(this._context.userSettings?.languageId),
+            logger: this._logger,
         };
 
         ReactDOM.render(

@@ -12,6 +12,7 @@ import {
     SUBTYPE_ORDER,
 } from "./schema";
 import { SubtypeRow } from "./types";
+import { Logger, NOOP_LOGGER } from "./telemetry";
 
 const ANNOT_LOGICALNAME = "@Microsoft.Dynamics.CRM.lookuplogicalname";
 
@@ -329,138 +330,164 @@ export async function saveSplit(
     fields: FieldConfig,
     parentId: string,
     subtypes: SplitInput[],
+    logger: Logger = NOOP_LOGGER,
 ): Promise<SaveResult> {
     const id = parentId.replace(/[{}]/g, "");
-
-    // 1) Read the original record (fields + lookup values/annotations).
-    const lookupSelects = PARENT_LOOKUPS.map((l) => l.value).join(",");
-    const selects = [
-        PARENT.primaryName,
-        fields.date,
-        fields.type,
-        fields.notes,
-        ENTRY_TIMETYPE,
-        WORKORDER_VALUE,
-        lookupSelects,
-    ]
-        .filter(Boolean)
-        .join(",");
-    const original: any = await webApi.retrieveRecord(
-        PARENT.logicalName,
-        id,
-        `?$select=${selects}`,
-    );
-
-    const originalType = (original[fields.type] as string) ?? "";
-    const originalName = (original[PARENT.primaryName] as string) ?? "";
-    const originalDate = original[fields.date] ?? null;
-    const originalNotes = original[fields.notes] ?? null;
-
-    // Resolve the work type ("Zeiterfassungsart") per split via the composite
-    // (paytype, timetype) key. timetype comes from the original entry's
-    // sst_timetype_opt, else its sst_type text matched to the option label.
-    const worktypes = await resolveWorktypes(webApi);
-    const originalTimetypeRaw = original[ENTRY_TIMETYPE];
-    const timetypeValue: number | null =
-        originalTimetypeRaw != null
-            ? Number(originalTimetypeRaw)
-            : worktypes.timeLabel.get(normalizeLabel(originalType)) ?? null;
-
-    // Resolve @odata.bind targets for the lookups present on the original.
-    const lookupBinds: Record<string, string> = {};
-    for (const lk of PARENT_LOOKUPS) {
-        const targetId = original[lk.value];
-        if (!targetId) continue;
-        const targetLogical = original[lk.value + ANNOT_LOGICALNAME] as
-            | string
-            | undefined;
-        if (!targetLogical) continue;
-        const set = await entitySetFor(utils, targetLogical);
-        if (!set) continue;
-        lookupBinds[`${lk.bind}@odata.bind`] = `/${set}(${targetId})`;
-    }
-
-    const active = subtypes.filter((s) => s.value > 0);
-
-    // 2) Persist the edited subtype values (faithful to the Custom Page;
-    //    the rows are removed by cascade-delete afterwards).
-    for (const s of subtypes) {
-        try {
-            await webApi.updateRecord(CHILD.logicalName, s.id, {
-                [CHILD.timeValue]: s.value,
-            });
-        } catch {
-            // non-fatal — the row will be cascade-deleted with the parent
-        }
-    }
-
-    // 3) Create one split Rounded Time Entry per subtype with value > 0.
-    for (const s of active) {
-        const payload: Record<string, unknown> = {
-            [fields.subtype]: s.name,
-            [fields.total]: s.value,
-            [fields.type]: originalType
-                ? `${originalType} (${s.name})`
-                : s.name,
-            [fields.completed]: true,
-            ...lookupBinds,
-        };
-        if (originalName) payload[PARENT.primaryName] = originalName;
-        if (originalDate != null) payload[fields.date] = originalDate;
-        if (originalNotes != null) payload[fields.notes] = originalNotes;
-
-        // Work type = sst_worktype keyed by (paytype, timetype). paytype comes
-        // from the subtype's sst_paytype_opt, else its name matched to the label.
-        const paytypeValue: number | null =
-            s.paytype != null
-                ? s.paytype
-                : worktypes.payLabel.get(normalizeLabel(s.name)) ?? null;
-        if (paytypeValue != null && timetypeValue != null) {
-            const wt = worktypes.byKey.get(`${paytypeValue}|${timetypeValue}`);
-            if (wt) {
-                payload[`${WORKTYPE.navProp}@odata.bind`] =
-                    `/${WORKTYPE.entitySet}(${wt.id})`;
-                payload[WORKTYPE.titleStr] = wt.title;
-            }
-        }
-
-        await webApi.createRecord(PARENT.logicalName, payload);
-    }
-
-    // 4) Mark the original as completed.
-    await webApi.updateRecord(PARENT.logicalName, id, {
-        [fields.completed]: true,
+    const op = logger.op("splitSave", {
+        entryId: id,
+        subtypes: subtypes.length,
     });
+    // Stage marker so a failure log pinpoints how far the destructive sequence
+    // got (e.g. failing at "deleteOriginal" after "createSplits" = duplicates).
+    let stage = "readOriginal";
+    try {
+        // 1) Read the original record (fields + lookup values/annotations).
+        const lookupSelects = PARENT_LOOKUPS.map((l) => l.value).join(",");
+        const selects = [
+            PARENT.primaryName,
+            fields.date,
+            fields.type,
+            fields.notes,
+            ENTRY_TIMETYPE,
+            WORKORDER_VALUE,
+            lookupSelects,
+        ]
+            .filter(Boolean)
+            .join(",");
+        const original: any = await webApi.retrieveRecord(
+            PARENT.logicalName,
+            id,
+            `?$select=${selects}`,
+        );
 
-    // 5) Mark related pause entries (same work order) as completed.
-    const woId = original[WORKORDER_VALUE];
-    if (woId) {
-        try {
-            const pauseFilter =
-                `?$select=${PARENT.primaryId}` +
-                `&$filter=${WORKORDER_VALUE} eq ${woId}` +
-                ` and ${fields.type} eq '${fields.pauseValue}'` +
-                ` and ${PARENT.primaryId} ne ${id}`;
-            const pauses = await webApi.retrieveMultipleRecords(
-                PARENT.logicalName,
-                pauseFilter,
-            );
-            for (const p of pauses.entities ?? []) {
-                await webApi.updateRecord(
-                    PARENT.logicalName,
-                    p[PARENT.primaryId] as string,
-                    { [fields.completed]: true },
-                );
-            }
-        } catch {
-            // non-fatal — pauses simply stay open if this lookup fails
+        const originalType = (original[fields.type] as string) ?? "";
+        const originalName = (original[PARENT.primaryName] as string) ?? "";
+        const originalDate = original[fields.date] ?? null;
+        const originalNotes = original[fields.notes] ?? null;
+
+        // Resolve the work type ("Zeiterfassungsart") per split via the composite
+        // (paytype, timetype) key. timetype comes from the original entry's
+        // sst_timetype_opt, else its sst_type text matched to the option label.
+        stage = "resolveWorktypes";
+        const worktypes = await resolveWorktypes(webApi);
+        const originalTimetypeRaw = original[ENTRY_TIMETYPE];
+        const timetypeValue: number | null =
+            originalTimetypeRaw != null
+                ? Number(originalTimetypeRaw)
+                : worktypes.timeLabel.get(normalizeLabel(originalType)) ?? null;
+
+        // Resolve @odata.bind targets for the lookups present on the original.
+        stage = "resolveLookups";
+        const lookupBinds: Record<string, string> = {};
+        for (const lk of PARENT_LOOKUPS) {
+            const targetId = original[lk.value];
+            if (!targetId) continue;
+            const targetLogical = original[lk.value + ANNOT_LOGICALNAME] as
+                | string
+                | undefined;
+            if (!targetLogical) continue;
+            const set = await entitySetFor(utils, targetLogical);
+            if (!set) continue;
+            lookupBinds[`${lk.bind}@odata.bind`] = `/${set}(${targetId})`;
         }
+
+        const active = subtypes.filter((s) => s.value > 0);
+
+        // 2) Persist the edited subtype values (faithful to the Custom Page;
+        //    the rows are removed by cascade-delete afterwards).
+        stage = "updateSubtypes";
+        for (const s of subtypes) {
+            try {
+                await webApi.updateRecord(CHILD.logicalName, s.id, {
+                    [CHILD.timeValue]: s.value,
+                });
+            } catch {
+                // non-fatal — the row will be cascade-deleted with the parent
+            }
+        }
+
+        // 3) Create one split Rounded Time Entry per subtype with value > 0.
+        stage = "createSplits";
+        for (const s of active) {
+            const payload: Record<string, unknown> = {
+                [fields.subtype]: s.name,
+                [fields.total]: s.value,
+                [fields.type]: originalType
+                    ? `${originalType} (${s.name})`
+                    : s.name,
+                [fields.completed]: true,
+                ...lookupBinds,
+            };
+            if (originalName) payload[PARENT.primaryName] = originalName;
+            if (originalDate != null) payload[fields.date] = originalDate;
+            if (originalNotes != null) payload[fields.notes] = originalNotes;
+
+            // Work type = sst_worktype keyed by (paytype, timetype). paytype comes
+            // from the subtype's sst_paytype_opt, else its name matched to the label.
+            const paytypeValue: number | null =
+                s.paytype != null
+                    ? s.paytype
+                    : worktypes.payLabel.get(normalizeLabel(s.name)) ?? null;
+            if (paytypeValue != null && timetypeValue != null) {
+                const wt = worktypes.byKey.get(
+                    `${paytypeValue}|${timetypeValue}`,
+                );
+                if (wt) {
+                    payload[`${WORKTYPE.navProp}@odata.bind`] =
+                        `/${WORKTYPE.entitySet}(${wt.id})`;
+                    payload[WORKTYPE.titleStr] = wt.title;
+                }
+            }
+
+            await webApi.createRecord(PARENT.logicalName, payload);
+        }
+        op.step("splitsCreated", { count: active.length });
+
+        // 4) Mark the original as completed.
+        stage = "markOriginal";
+        await webApi.updateRecord(PARENT.logicalName, id, {
+            [fields.completed]: true,
+        });
+
+        // 5) Mark related pause entries (same work order) as completed.
+        stage = "markPauses";
+        const woId = original[WORKORDER_VALUE];
+        let pausesCompleted = 0;
+        if (woId) {
+            try {
+                const pauseFilter =
+                    `?$select=${PARENT.primaryId}` +
+                    `&$filter=${WORKORDER_VALUE} eq ${woId}` +
+                    ` and ${fields.type} eq '${fields.pauseValue}'` +
+                    ` and ${PARENT.primaryId} ne ${id}`;
+                const pauses = await webApi.retrieveMultipleRecords(
+                    PARENT.logicalName,
+                    pauseFilter,
+                );
+                for (const p of pauses.entities ?? []) {
+                    await webApi.updateRecord(
+                        PARENT.logicalName,
+                        p[PARENT.primaryId] as string,
+                        { [fields.completed]: true },
+                    );
+                    pausesCompleted += 1;
+                }
+            } catch {
+                // non-fatal — pauses simply stay open if this lookup fails
+            }
+        }
+        op.step("pausesCompleted", { count: pausesCompleted });
+
+        // 6) Delete the original — child subtypes go with it (cascade-delete).
+        stage = "deleteOriginal";
+        await webApi.deleteRecord(PARENT.logicalName, id);
+
+        op.ok({ created: active.length });
+        return { created: active.length };
+    } catch (e) {
+        op.fail(e, { stage });
+        throw e;
     }
-
-    // 6) Delete the original — child subtypes go with it (cascade-delete).
-    await webApi.deleteRecord(PARENT.logicalName, id);
-
-    return { created: active.length };
 }
 
 /** A delivery note created by createTimeReports (for the "open" picker). */
@@ -499,9 +526,11 @@ export interface CreateReportsResult {
 export async function createTimeReports(
     webApi: ComponentFramework.WebApi,
     selectedIds: string[],
+    logger: Logger = NOOP_LOGGER,
 ): Promise<CreateReportsResult> {
     const ids = selectedIds.map((s) => s.replace(/[{}]/g, ""));
     const fmt = "@OData.Community.Display.V1.FormattedValue";
+    const op = logger.op("createReports", { selected: ids.length });
 
     // Retrieve work order + current delivery note for each selected entry.
     const entries = await Promise.all(
@@ -521,6 +550,7 @@ export async function createTimeReports(
 
     // Guard: only entries without a delivery note may be processed.
     if (entries.some((e) => e.rec && e.rec[TIMEREPORT.value])) {
+        op.step("blocked");
         return {
             blocked: true,
             reportsCreated: 0,
@@ -583,8 +613,17 @@ export async function createTimeReports(
                 woName: wo.woName,
                 number,
             });
-        } catch {
+            op.step("reportCreated", {
+                woId: wo.woId,
+                number,
+                entries: wo.entryIds.length,
+            });
+        } catch (e) {
             failed += wo.entryIds.length; // report creation failed → its entries fail
+            logger.error("createReports.reportFailed", e, {
+                woId: wo.woId,
+                entries: wo.entryIds.length,
+            });
             continue;
         }
         for (const eid of wo.entryIds) {
@@ -594,12 +633,14 @@ export async function createTimeReports(
                 });
                 assigned += 1;
                 assignedIds.push(eid);
-            } catch {
+            } catch (e) {
                 failed += 1;
+                logger.error("createReports.linkFailed", e, { entryId: eid });
             }
         }
     }
 
+    op.ok({ reportsCreated: reports.length, assigned, failed });
     return {
         blocked: false,
         reportsCreated: reports.length,

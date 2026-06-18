@@ -112,6 +112,15 @@ deletes the original.
 
 ### 🔧 Technical
 - **React 17** + TypeScript, no extra runtime libraries.
+- **Telemetry / logging**: a small structured logger (`telemetry.ts`) writes to
+  the PCF diagnostic trace (`context.tracing`) and the console, both guarded so
+  logging can never break the control. The destructive operations are
+  instrumented as timed operations with progress steps and a **stage marker** —
+  e.g. the split save logs `splitSave.start` → `splitSave.splitsCreated` →
+  `splitSave.pausesCompleted` → `splitSave.ok` (or `splitSave.fail` with the
+  stage it reached, so a failure between *splitsCreated* and *deleteOriginal* is
+  diagnosable). Delivery-note creation logs `createReports.*` (per-note + result)
+  and load failures log `loadEntries`.
 - **Schema-aware, configurable**: all field bindings have verified SST defaults
   in `schema.ts` and can be overridden per placement via manifest properties.
 - **Lookup-safe split create**: `@odata.bind` targets are resolved at runtime
@@ -131,10 +140,12 @@ deletes the original.
 WorkTimeSplitGrid/
 ├── components/
 │   ├── WorkTimeSplitGrid.tsx      # Master/detail shell, toolbar, toggle, state
-│   ├── EntryList.tsx              # Left master list of entries
+│   ├── EntryList.tsx              # Left master list (highlight + pull-to-refresh)
 │   ├── SplitPanel.tsx            # Right split editor + save + confirm dialog
-│   ├── api.ts                    # WebAPI: load subtypes + split-save sequence
+│   ├── Dropdown.tsx              # Custom, dependency-free sort dropdown
+│   ├── api.ts                    # WebAPI: load entries/subtypes + split-save + reports
 │   ├── schema.ts                 # Single source of truth for logical names
+│   ├── telemetry.ts             # Structured logger (tracing + console)
 │   ├── i18n.ts                   # DE/EN/FR strings + LCID mapping
 │   └── types.ts                  # Type definitions
 ├── css/WorkTimeSplitGrid.css

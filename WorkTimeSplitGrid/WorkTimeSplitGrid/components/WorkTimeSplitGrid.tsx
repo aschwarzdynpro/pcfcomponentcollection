@@ -13,6 +13,7 @@ import {
     LoadedEntry,
     CreatedReport,
 } from "./api";
+import { Logger } from "./telemetry";
 
 type Mode = "split" | "assign";
 type Period = "all" | "today" | "week" | "month";
@@ -84,6 +85,7 @@ export interface WorkTimeSplitGridProps {
     isMobile: boolean;
     disabled: boolean;
     lang: Lang;
+    logger: Logger;
 }
 
 /** Map a server-loaded entry to a master-list row with the composed title. */
@@ -184,8 +186,9 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 setLoadingEntries(false);
                 setRefreshing(false);
             },
-            () => {
+            (err) => {
                 if (cancelled) return;
+                props.logger.error("loadEntries", err, { mode });
                 setEntries([]);
                 setEntriesError(t.errorPrefix);
                 setLoadingEntries(false);
@@ -327,7 +330,11 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             if (ids.length === 0 || creating) return;
             setCreating(true);
             try {
-                const res = await createTimeReports(props.webApi, ids);
+                const res = await createTimeReports(
+                    props.webApi,
+                    ids,
+                    props.logger,
+                );
                 if (res.blocked) {
                     flashToast(t.reportsBlocked);
                     return;
@@ -352,6 +359,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                     if (id) openReport(id);
                 }
             } catch (e) {
+                props.logger.error("createReports", e);
                 const msg =
                     (e as { message?: string })?.message ?? String(e ?? "");
                 flashToast(`${t.createReports}: ${msg}`);
@@ -363,6 +371,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             checkedIds,
             creating,
             props.webApi,
+            props.logger,
             openReport,
             removeEntries,
             flashToast,
@@ -546,6 +555,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 disabled={props.disabled}
                                 isMobile={props.isMobile}
                                 lang={props.lang}
+                                logger={props.logger}
                                 onBack={() => setSelectedId(null)}
                                 onSubtypesChange={setSubtypes}
                                 onSaved={handleSaved}

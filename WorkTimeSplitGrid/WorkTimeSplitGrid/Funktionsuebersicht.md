@@ -141,6 +141,18 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 - Beim Hinzufügen zur View dasselbe Control **Web + Tablet + Phone** zuweisen —
   kein separater Mobil-Build zu pflegen.
 
+### Telemetrie / Logging
+- Ein kleiner strukturierter Logger (`telemetry.ts`) schreibt in den
+  PCF-Diagnose-Trace (`context.tracing`) **und** die Konsole — beides
+  abgesichert, sodass Logging das Control nie bricht. Die **destruktiven
+  Operationen** sind als getimte Vorgänge mit Fortschritts-Schritten und einem
+  **Stage-Marker** instrumentiert: Die Aufteilung loggt `splitSave.start` →
+  `splitSave.splitsCreated` → `splitSave.pausesCompleted` → `splitSave.ok` (bzw.
+  `splitSave.fail` mit der erreichten Stage — ein Fehler zwischen *splitsCreated*
+  und *deleteOriginal* ist damit eindeutig diagnostizierbar). Die
+  Lieferschein-Erstellung loggt `createReports.*` (je Lieferschein + Ergebnis),
+  Ladefehler `loadEntries`.
+
 ### Mehrsprachigkeit
 - **Dreisprachige Oberfläche** (Deutsch / Englisch / Französisch), automatisch
   nach `context.userSettings.languageId`.

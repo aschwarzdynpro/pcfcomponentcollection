@@ -3,6 +3,7 @@ import { EntryRow, Lang, SubtypeRow } from "./types";
 import { STRINGS } from "./i18n";
 import { FieldConfig, EPSILON } from "./schema";
 import { parseNumber, formatNumber, saveSplit, SplitInput } from "./api";
+import { Logger } from "./telemetry";
 
 export interface SplitPanelProps {
     entry: EntryRow | null;
@@ -15,6 +16,7 @@ export interface SplitPanelProps {
     disabled: boolean;
     isMobile: boolean;
     lang: Lang;
+    logger: Logger;
     onBack: () => void;
     onSubtypesChange: (rows: SubtypeRow[]) => void;
     onSaved: () => void;
@@ -72,7 +74,14 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
             paytype: s.paytype ?? null,
         }));
         try {
-            await saveSplit(props.webApi, props.utils, fields, entry.id, input);
+            await saveSplit(
+                props.webApi,
+                props.utils,
+                fields,
+                entry.id,
+                input,
+                props.logger,
+            );
             props.onSaved();
         } catch (e) {
             const msg =
