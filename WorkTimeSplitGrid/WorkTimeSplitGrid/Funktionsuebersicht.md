@@ -25,9 +25,12 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   - **Aufteilen** — `sst_worksubtypecompleted = Nein` → Split-Editor rechts.
   - **Zuordnen** — `sst_worksubtypecompleted = Ja` **und** `sst_timereport` leer
     → Mehrfachauswahl-Liste mit Aktion **„Lieferscheine erstellen"**.
-  `completed`, `Projekt` und `Lieferschein` werden über das WebAPI-Enrichment
-  gelesen (nicht aus dem View) — die Filter stimmen also unabhängig davon, welche
-  Spalten der gebundene View enthält.
+  Die Liste wird **direkt vom Server geladen, mit bereits angewandtem
+  Modus-Filter** (`webApi.retrieveMultipleRecords` auf `sst_roundedtimeentries`) —
+  statt alle Seiten des gebundenen Views zu laden und clientseitig zu filtern.
+  Dadurch stimmen die Filter und das Control bleibt schnell, auch wenn die Tabelle
+  deutlich mehr als Dataverses 5000-Datensatz-Seitenlimit enthält (der frühere
+  Ansatz zeigte ab dieser Grenze eine leere Liste).
 - **Lieferscheine erstellen** (Zuordnen-Modus) — ein oder mehrere Einträge per
   Checkbox markieren; unten erscheint eine Aktionsleiste mit Anzahl und **zwei**
   Buttons:
@@ -44,16 +47,15 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   Hintergrund etwas passiert. (Portiert aus dem Schulz-Ribbon-Command
   `createTimeReport`.)
 - **Freitext-Suche** über Titel, Typ, Datum, **Projektnummer** und
-  **Ressourcenname** (`sst_resource_ref.name`). Das Control lädt **alle Seiten**
-  des gebundenen Views automatisch nach (nicht nur die erste) — Liste und Suche
-  erfassen damit **alle** Datensätze. Das Enrichment läuft in gebündelten
-  WebAPI-Calls, sobald alle Seiten geladen sind.
+  **Ressourcenname** (`sst_resource_ref.name`) — über die **gesamte**
+  serverseitig gefilterte Ergebnismenge (nicht nur eine Seite).
 - **Chip „Meine Stunden"** (vorausgewählt) — filtert auf Einträge, deren Ressource
-  dem aktuellen Benutzer gehört (`sst_resource_ref.userid = aktueller User`). Der
-  Chip ist **gesperrt + aktiv** für alle Benutzer; nur Inhaber der Rolle
-  **System Administrator** oder **SST | Dispo Teamleitung Addon** können ihn
-  abschalten (alle Stunden sehen). Rollenprüfung über
-  `systemuserroles_association` (direkt zugewiesene Rollen).
+  dem aktuellen Benutzer gehört. Die `bookableresource`(s) des Benutzers werden
+  über `_userid_value` ermittelt, und die Listen-Abfrage wird serverseitig über
+  `_sst_resource_ref_value` darauf eingeschränkt. Der Chip ist **gesperrt + aktiv**
+  für alle Benutzer; nur Inhaber der Rolle **System Administrator** oder
+  **SST | Dispo Teamleitung Addon** können ihn abschalten (alle Stunden sehen).
+  Rollenprüfung über `systemuserroles_association` (direkt zugewiesene Rollen).
 - Statuspunkt je Karte (offen = rot, aufgeteilt = grün).
 
 ### Detail-Aufteilung (rechts)

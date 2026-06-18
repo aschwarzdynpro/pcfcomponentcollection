@@ -30,12 +30,6 @@ export class WorkTimeSplitGrid
         } catch {
             // older runtimes don't support trackContainerResize; ignore
         }
-        // Larger page size → fewer round-trips when loading all records.
-        try {
-            context.parameters.entries.paging.setPageSize(500);
-        } catch {
-            // not ready / unsupported — loadNextPage accumulation still applies
-        }
         this.render();
     }
 
@@ -70,27 +64,8 @@ export class WorkTimeSplitGrid
         return width > 0 && width < 560;
     }
 
-    /**
-     * Progressively pull every page of the bound view so the grid (and its
-     * client-side search/filters) operate over all records, not just the first
-     * page. loadNextPage() returns the whole accumulated range; we drive it each
-     * render until there are no more pages (guarded against re-entrancy + a cap).
-     */
-    private loadAllPages(dataset: ComponentFramework.PropertyTypes.DataSet): void {
-        try {
-            const paging = dataset.paging;
-            if (!paging || dataset.loading || !paging.hasNextPage) return;
-            const loaded = dataset.sortedRecordIds?.length ?? 0;
-            if (loaded >= 5000) return; // safety cap against runaway loads
-            paging.loadNextPage();
-        } catch {
-            // ignore — partial data still renders
-        }
-    }
-
     private render(): void {
         const params = this._context.parameters;
-        this.loadAllPages(params.entries);
         const props: WorkTimeSplitGridProps = {
             dataset: params.entries,
             webApi: this._context.webAPI,

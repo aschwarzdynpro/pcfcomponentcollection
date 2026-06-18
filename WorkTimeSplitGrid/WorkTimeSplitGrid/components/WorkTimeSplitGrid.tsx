@@ -3,24 +3,16 @@ import { EntryList } from "./EntryList";
 import { SplitPanel } from "./SplitPanel";
 import { EntryRow, Lang, SubtypeRow } from "./types";
 import { STRINGS } from "./i18n";
-import { FieldConfig, RESOURCE_REF, ADMIN_ROLES, TIMEREPORT } from "./schema";
-import { loadSubtypes, userHasAnyRole, createTimeReports } from "./api";
+import { FieldConfig, ADMIN_ROLES, TIMEREPORT } from "./schema";
+import {
+    loadSubtypes,
+    userHasAnyRole,
+    createTimeReports,
+    loadEntries,
+    LoadedEntry,
+} from "./api";
 
 type Mode = "split" | "assign";
-
-/** Per-record data pulled from the WebAPI (not reliably in the bound view). */
-interface EnrichEntry {
-    type: string;
-    date: string;
-    project: string;
-    resourceName: string;
-    resourceUserId: string;
-    timereport: string;
-    /** sst_worksubtypecompleted. */
-    completed: boolean;
-    /** _sst_project_id_value — empty when no project is set. */
-    projectId: string;
-}
 
 export interface WorkTimeSplitGridProps {
     dataset: ComponentFramework.PropertyTypes.DataSet;
@@ -36,72 +28,30 @@ export interface WorkTimeSplitGridProps {
     lang: Lang;
 }
 
-/** Best-effort entity name extraction from the dataset. */
-function getEntityName(
-    dataset: ComponentFramework.PropertyTypes.DataSet,
-): string | null {
-    const fn = (dataset as unknown as { getTargetEntityType?: () => string })
-        .getTargetEntityType;
-    const fromMethod = typeof fn === "function" ? fn.call(dataset) : null;
-    if (fromMethod) return fromMethod;
-    const firstId = dataset.sortedRecordIds[0];
-    if (firstId) {
-        const ref = dataset.records[firstId]?.getNamedReference?.();
-        const anyRef = ref as unknown as { etn?: string; entityType?: string };
-        if (anyRef?.etn) return anyRef.etn;
-        if (anyRef?.entityType) return anyRef.entityType;
-    }
-    return null;
-}
-
-const truthy = (v: unknown): boolean =>
-    v === true || v === 1 || v === "1" || v === "true";
-
-function buildRows(
-    dataset: ComponentFramework.PropertyTypes.DataSet,
-    fields: FieldConfig,
-): EntryRow[] {
-    const reserved = new Set(
-        [fields.total, fields.date, fields.type, fields.completed].filter(
-            Boolean,
-        ),
-    );
-    return dataset.sortedRecordIds.map((id) => {
-        const rec = dataset.records[id];
-        const ref = rec.getNamedReference?.() as unknown as { name?: string };
-        const totalRaw = rec.getValue(fields.total);
-        const total = totalRaw == null ? NaN : Number(totalRaw);
-        const type =
-            rec.getFormattedValue(fields.type) ||
-            String(rec.getValue(fields.type) ?? "");
-
-        const extras: EntryRow["extras"] = [];
-        for (const col of dataset.columns ?? []) {
-            if (reserved.has(col.name) || col.isHidden) continue;
-            const formatted = rec.getFormattedValue(col.name);
-            if (!formatted) continue;
-            extras.push({ key: col.name, label: col.displayName, value: formatted });
-            if (extras.length >= 3) break;
-        }
-
-        return {
-            id,
-            name: ref?.name || rec.getFormattedValue(fields.type) || "—",
-            date: rec.getFormattedValue(fields.date) || "",
-            type,
-            total: Number.isFinite(total) ? total : 0,
-            totalFormatted:
-                rec.getFormattedValue(fields.total) ||
-                (Number.isFinite(total) ? String(total) : ""),
-            completed: truthy(rec.getValue(fields.completed)),
-            extras,
-        };
-    });
+/** Map a server-loaded entry to a master-list row with the composed title. */
+function toEntryRow(
+    e: LoadedEntry,
+    title: (type: string, date: string, project: string) => string,
+): EntryRow {
+    return {
+        id: e.id,
+        name: title(e.type, e.date, e.project),
+        date: e.date,
+        type: e.type,
+        total: e.total,
+        totalFormatted: e.totalFormatted,
+        completed: e.completed,
+        project: e.project,
+        resourceName: e.resourceName,
+        timereport: e.timereport,
+        projectPresent: !!e.projectId,
+        extras: [],
+    };
 }
 
 export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const t = STRINGS[props.lang];
-    const { dataset, fields } = props;
+    const { fields } = props;
 
     const [search, setSearch] = React.useState("");
     const [mode, setMode] = React.useState<Mode>("split");
@@ -120,14 +70,13 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         null,
     );
     const [toast, setToast] = React.useState<string | null>(null);
-    const [enrich, setEnrich] = React.useState<Map<string, EnrichEntry>>(
-        () => new Map(),
-    );
-    const [enriching, setEnriching] = React.useState(false);
+    const [entries, setEntries] = React.useState<EntryRow[] | null>(null);
+    const [loadingEntries, setLoadingEntries] = React.useState(true);
+    const [entriesError, setEntriesError] = React.useState<string | null>(null);
+    // Bumped to force a reload of the entry list (after save / assign).
+    const [reloadKey, setReloadKey] = React.useState(0);
     const [myHoursOnly, setMyHoursOnly] = React.useState(true);
     const [isAdmin, setIsAdmin] = React.useState(false);
-
-    const entityName = React.useMemo(() => getEntityName(dataset), [dataset]);
 
     const currentUserId = React.useMemo(
         () => (props.userId || "").replace(/[{}]/g, "").toLowerCase(),
@@ -147,165 +96,58 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         };
     }, [currentUserId, props.webApi]);
 
-    const rows = React.useMemo(
-        () => buildRows(dataset, fields),
-        [dataset, fields],
-    );
-
-    // Apply enrichment (title fields + resource) to every row.
-    const enrichedRows = React.useMemo(() => {
-        return rows.map((r) => {
-            const ex = enrich.get(r.id);
-            const type = ex?.type || r.type;
-            const date = ex?.date || r.date;
-            const project = ex?.project ?? "";
-            const resourceName = ex?.resourceName ?? "";
-            const resourceUserId = ex?.resourceUserId ?? "";
-            const timereport = ex?.timereport ?? "";
-            // completed + project come from the WebAPI enrichment (the bound view
-            // may not expose them); fall back to dataset only before enrichment.
-            const completed = ex ? ex.completed : r.completed;
-            const projectPresent = ex ? !!ex.projectId : false;
-            return {
-                ...r,
-                type,
-                date,
-                project,
-                resourceName,
-                resourceUserId,
-                timereport,
-                completed,
-                projectPresent,
-                name: t.title(type, date, project),
-            };
-        });
-    }, [rows, enrich, t]);
-
-    // The bound view may be paged; index.ts pulls every page. While more pages
-    // are still loading, defer enrichment so we batch over the complete set.
-    const loadingMore =
-        dataset.loading || !!(dataset.paging && dataset.paging.hasNextPage);
-
-    // Enrich every loaded record with title fields that may live outside the
-    // view (sst_date, project number), the resource (name + user) and the
-    // delivery-note value. Runs once all pages are loaded, in chunked WebAPI
-    // calls (the $filter is an id list, so it must be batched). Best-effort.
-    const idsKey = React.useMemo(
-        () => (dataset.sortedRecordIds ?? []).join(","),
-        [dataset],
-    );
-    React.useEffect(() => {
-        if (loadingMore) return; // wait until every page is loaded
-        const ids = (dataset.sortedRecordIds ?? []).map((i) =>
-            i.replace(/[{}]/g, ""),
-        );
-        if (ids.length === 0) {
-            setEnrich(new Map());
-            setEnriching(false);
-            return;
-        }
-        let cancelled = false;
-        setEnriching(true);
-        const CHUNK = 100;
-        const chunks: string[][] = [];
-        for (let i = 0; i < ids.length; i += CHUNK) {
-            chunks.push(ids.slice(i, i + CHUNK));
-        }
-        const select =
-            `?$select=sst_roundedtimeentriesid,sst_type,sst_date,${TIMEREPORT.value},` +
-            `${fields.completed},_sst_project_id_value` +
-            `&$expand=sst_Project_id($select=sst_projectnumber),` +
-            `${RESOURCE_REF.navProp}($select=${RESOURCE_REF.nameField},${RESOURCE_REF.userIdValue})`;
-        Promise.all(
-            chunks.map((chunk): Promise<any[]> => {
-                const filter = chunk
-                    .map((id) => `sst_roundedtimeentriesid eq ${id}`)
-                    .join(" or ");
-                return props.webApi
-                    .retrieveMultipleRecords(
-                        "sst_roundedtimeentries",
-                        `${select}&$filter=${filter}`,
-                    )
-                    .then(
-                        (res) => res.entities ?? [],
-                        () => [],
-                    );
-            }),
-        ).then((parts) => {
-            if (cancelled) return;
-            const m = new Map<string, EnrichEntry>();
-            for (const e of parts.flat() as Record<string, any>[]) {
-                const rid = String(e["sst_roundedtimeentriesid"] ?? "").replace(
-                    /[{}]/g,
-                    "",
-                );
-                const fmt =
-                    e["sst_date@OData.Community.Display.V1.FormattedValue"];
-                const date = fmt ? String(fmt).split(" ")[0] : "";
-                const proj = e["sst_Project_id"]
-                    ? e["sst_Project_id"]["sst_projectnumber"]
-                    : "";
-                const resObj = e[RESOURCE_REF.navProp];
-                const resourceName = resObj
-                    ? String(resObj[RESOURCE_REF.nameField] ?? "")
-                    : "";
-                const resourceUserId = resObj
-                    ? String(resObj[RESOURCE_REF.userIdValue] ?? "")
-                          .replace(/[{}]/g, "")
-                          .toLowerCase()
-                    : "";
-                m.set(rid, {
-                    type: String(e["sst_type"] ?? ""),
-                    date,
-                    project: String(proj ?? ""),
-                    resourceName,
-                    resourceUserId,
-                    timereport: String(e[TIMEREPORT.value] ?? ""),
-                    completed: truthy(e[fields.completed]),
-                    projectId: String(e["_sst_project_id_value"] ?? ""),
-                });
-            }
-            setEnrich(m);
-            setEnriching(false);
-        });
-        return () => {
-            cancelled = true;
-        };
-    }, [idsKey, props.webApi, loadingMore]);
-
     // Non-admins are locked to their own hours; admins may toggle it off.
     const myHoursActive = !isAdmin || myHoursOnly;
 
-    // Hide pauses; apply split/not-split toggle, "My hours", and free-text search
-    // (incl. project number and resource name from the enrichment).
+    // Load the entries for the current mode straight from the server with the
+    // filter already applied (project set; split→not completed; assign→completed
+    // & no delivery note; "My hours"→the user's resource). This replaces pulling
+    // every dataset page + enriching, which breaks past the 5000-record cap.
+    React.useEffect(() => {
+        let cancelled = false;
+        setLoadingEntries(true);
+        setEntriesError(null);
+        loadEntries(props.webApi, {
+            mode,
+            resourceUserId: myHoursActive ? currentUserId || null : null,
+        }).then(
+            (loaded) => {
+                if (cancelled) return;
+                setEntries(loaded.map((e) => toEntryRow(e, t.title)));
+                setLoadingEntries(false);
+            },
+            () => {
+                if (cancelled) return;
+                setEntries([]);
+                setEntriesError(t.errorPrefix);
+                setLoadingEntries(false);
+            },
+        );
+        return () => {
+            cancelled = true;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [mode, myHoursActive, currentUserId, props.webApi, reloadKey, t]);
+
+    const reloadEntries = React.useCallback(() => {
+        setReloadKey((k) => k + 1);
+    }, []);
+
+    // Free-text search over the already-filtered entries (title, type, date,
+    // project number, resource name).
     const displayRows = React.useMemo(() => {
+        const all = entries ?? [];
         const q = search.trim().toLowerCase();
-        return enrichedRows.filter((r) => {
-            // Both modes require a project (sst_project_id set).
-            if (!r.projectPresent) return false;
-            if (mode === "split") {
-                // Work Subtype Completed = No
-                if (r.completed) return false;
-            } else {
-                // Work Subtype Completed = Yes AND delivery note empty
-                if (!r.completed) return false;
-                if (r.timereport) return false;
-            }
-            if (myHoursActive) {
-                if (!currentUserId) return false;
-                if ((r.resourceUserId ?? "") !== currentUserId) return false;
-            }
-            if (!q) return true;
-            return (
+        if (!q) return all;
+        return all.filter(
+            (r) =>
                 r.name.toLowerCase().includes(q) ||
                 r.type.toLowerCase().includes(q) ||
                 r.date.toLowerCase().includes(q) ||
                 (r.project ?? "").toLowerCase().includes(q) ||
-                (r.resourceName ?? "").toLowerCase().includes(q) ||
-                r.extras.some((x) => x.value.toLowerCase().includes(q))
-            );
-        });
-    }, [enrichedRows, search, mode, myHoursActive, currentUserId]);
+                (r.resourceName ?? "").toLowerCase().includes(q),
+        );
+    }, [entries, search]);
 
     const selected = React.useMemo(
         () => displayRows.find((r) => r.id === selectedId) ?? null,
@@ -357,8 +199,8 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         flashToast(t.saveSucceeded);
         setSelectedId(null);
         setSubtypes(null);
-        dataset.refresh();
-    }, [dataset, flashToast, t.saveSucceeded]);
+        reloadEntries();
+    }, [reloadEntries, flashToast, t.saveSucceeded]);
 
     const switchMode = React.useCallback((m: Mode) => {
         setMode(m);
@@ -392,7 +234,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                         : t.reportsDone(res.reportsCreated, res.assigned),
                 );
                 setCheckedIds(new Set());
-                dataset.refresh();
+                reloadEntries();
                 // "Create & open" opens every created delivery note; plain
                 // "create" only opens when exactly one note resulted.
                 const toOpen = openAfter
@@ -423,13 +265,14 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             creating,
             props.webApi,
             props.navigation,
-            dataset,
+            reloadEntries,
             flashToast,
             t,
         ],
     );
 
-    if (!entityName && rows.length === 0 && !dataset.loading) {
+    // First load (entries still null) → full-panel spinner.
+    if (entries === null && loadingEntries) {
         return (
             <div className="wtsg-empty">
                 <span className="wtsg-spinner" aria-hidden="true" />
@@ -497,7 +340,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 </button>
                 <span className="wtsg-count">
                     {t.entries(displayRows.length)}
-                    {loadingMore || enriching ? ` · ${t.loadingMore}` : ""}
+                    {loadingEntries ? ` · ${t.loadingMore}` : ""}
                 </span>
             </div>
             )}
@@ -508,7 +351,17 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 </div>
             )}
 
-            <div className={`wtsg-body ${dataset.loading ? "wtsg-loading" : ""}`}>
+            {entriesError && (
+                <div className="wtsg-toast wtsg-toast-error" role="alert">
+                    {entriesError}
+                </div>
+            )}
+
+            <div
+                className={`wtsg-body ${
+                    loadingEntries && entries !== null ? "wtsg-loading" : ""
+                }`}
+            >
                 {mode === "split" ? (
                     <>
                         {(!props.isMobile || !selected) && (

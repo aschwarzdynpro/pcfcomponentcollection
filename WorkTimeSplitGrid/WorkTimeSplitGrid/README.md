@@ -25,9 +25,12 @@ deletes the original.
   - **Zuordnen / Assign** — `sst_worksubtypecompleted = Yes` **and**
     `sst_timereport` empty; a multi-select list with a **Create delivery notes**
     action.
-  The `completed`, `project` and `delivery-note` values are read via the WebAPI
-  enrichment (not the bound view), so the filters are correct regardless of which
-  columns the view exposes.
+  The list is loaded **directly from the server with the mode filter already
+  applied** (`webApi.retrieveMultipleRecords` on `sst_roundedtimeentries`),
+  rather than pulling every page of the bound view and filtering client-side.
+  This keeps the filters correct and the control fast even when the table holds
+  far more than Dataverse's 5000-record page cap (the previous approach showed an
+  empty list once the table exceeded that cap).
 - **Create delivery notes** (assign mode) — tick one or more entries; a bottom
   action bar shows the count and **two** buttons:
   - **Create delivery notes** — creates the notes and stays in the list (if
@@ -41,12 +44,13 @@ deletes the original.
   the user can't keep clicking. (Ported from the Schulz `createTimeReport`
   ribbon command.)
 - **Live search** across the title, type, date, **project number**, and
-  **resource name** (`sst_resource_ref.name`). The control auto-loads **all
-  pages** of the bound view (not just the first page), so the list and the search
-  cover every record. Enrichment runs in batched WebAPI calls once all pages are in.
+  **resource name** (`sst_resource_ref.name`) — over the full server-filtered
+  result set (not just one page).
 - **"My hours" chip** (preselected) — filters to entries whose resource's user is
-  the current user (`sst_resource_ref.userid = current user`). It is **locked on**
-  for everyone except holders of **System Administrator** or **SST | Dispo
+  the current user. The user's `bookableresource`(s) are resolved via
+  `_userid_value`, and the list query is restricted to those via
+  `_sst_resource_ref_value` (a server-side filter). It is **locked on** for
+  everyone except holders of **System Administrator** or **SST | Dispo
   Teamleitung Addon**, who may toggle it off to see all hours.
 - **Detail split panel** — selecting an entry loads its work-subtype rows
   (`sst_roundedtimeentryworksubtypes`) and lets the user edit the hours per

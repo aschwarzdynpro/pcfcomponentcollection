@@ -103,6 +103,12 @@
     color: #0b5394;
 }
 
+.wtsg-toast-error {
+    background: #fdf3f4;
+    border-color: #d13438;
+    color: #a4262c;
+}
+
 /* ---- Body: master / detail ---- */
 .wtsg-body {
     display: flex;

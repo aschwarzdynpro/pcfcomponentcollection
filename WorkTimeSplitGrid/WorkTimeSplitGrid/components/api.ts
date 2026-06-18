@@ -120,6 +120,123 @@ export async function userHasAnyRole(
     }
 }
 
+/** A Rounded Time Entry as loaded by the server-side mode query. */
+export interface LoadedEntry {
+    id: string;
+    name: string;
+    type: string;
+    date: string;
+    total: number;
+    totalFormatted: string;
+    completed: boolean;
+    project: string;
+    projectId: string;
+    resourceName: string;
+    timereport: string;
+}
+
+export interface LoadEntriesOptions {
+    /** "split" → not-yet-split; "assign" → split + no delivery note. */
+    mode: "split" | "assign";
+    /** When set, restrict to entries whose resource belongs to this user. */
+    resourceUserId: string | null;
+}
+
+const ENTRY_FMT = "@OData.Community.Display.V1.FormattedValue";
+
+function mapLoadedEntry(e: Record<string, any>): LoadedEntry {
+    const total = e.sst_duration == null ? 0 : Number(e.sst_duration);
+    const dateFmt = e[`sst_date${ENTRY_FMT}`];
+    return {
+        id: String(e.sst_roundedtimeentriesid ?? "").replace(/[{}]/g, ""),
+        name: String(e.sst_name ?? ""),
+        type: String(e.sst_type ?? ""),
+        date: dateFmt ? String(dateFmt).split(" ")[0] : "",
+        total: Number.isFinite(total) ? total : 0,
+        totalFormatted:
+            e[`sst_duration${ENTRY_FMT}`] ??
+            (Number.isFinite(total) ? String(total) : ""),
+        completed: e.sst_worksubtypecompleted === true,
+        project: e.sst_Project_id
+            ? String(e.sst_Project_id.sst_projectnumber ?? "")
+            : "",
+        projectId: String(e._sst_project_id_value ?? ""),
+        resourceName: e.sst_resource_ref
+            ? String(e.sst_resource_ref.name ?? "")
+            : String(e[`_sst_resource_ref_value${ENTRY_FMT}`] ?? ""),
+        timereport: String(e._sst_timereport_value ?? ""),
+    };
+}
+
+/**
+ * Load the entries for a mode directly from the server with the filter already
+ * applied — replacing the previous "pull every dataset page + enrich" approach,
+ * which does not scale past Dataverse's 5000-record page cap. Both modes require
+ * a project; split → not completed; assign → completed and no delivery note.
+ * When `resourceUserId` is set ("My hours"), restrict to that user's resource(s).
+ */
+export async function loadEntries(
+    webApi: ComponentFramework.WebApi,
+    opts: LoadEntriesOptions,
+): Promise<LoadedEntry[]> {
+    // "My hours": resolve the user's bookableresource(s), then filter on the
+    // resource lookup value. No resource → the user has no hours to show.
+    let resourceClause = "";
+    if (opts.resourceUserId) {
+        const uid = opts.resourceUserId.replace(/[{}]/g, "");
+        let resourceIds: string[] = [];
+        try {
+            const rr = await webApi.retrieveMultipleRecords(
+                "bookableresource",
+                `?$select=bookableresourceid&$filter=_userid_value eq ${uid}`,
+            );
+            resourceIds = (rr.entities ?? []).map((e: any) =>
+                String(e.bookableresourceid).replace(/[{}]/g, ""),
+            );
+        } catch {
+            resourceIds = [];
+        }
+        if (resourceIds.length === 0) return [];
+        resourceClause =
+            " and (" +
+            resourceIds
+                .map((rid) => `_sst_resource_ref_value eq ${rid}`)
+                .join(" or ") +
+            ")";
+    }
+
+    const modeClause =
+        opts.mode === "split"
+            ? " and sst_worksubtypecompleted eq false"
+            : " and sst_worksubtypecompleted eq true and _sst_timereport_value eq null";
+    const filter = "_sst_project_id_value ne null" + modeClause + resourceClause;
+
+    const query =
+        `?$select=sst_roundedtimeentriesid,sst_name,sst_type,sst_date,sst_duration,` +
+        `sst_worksubtypecompleted,_sst_project_id_value,_sst_timereport_value,_sst_resource_ref_value` +
+        `&$expand=sst_Project_id($select=sst_projectnumber),sst_resource_ref($select=name)` +
+        `&$filter=${filter}&$orderby=sst_date desc`;
+
+    const out: LoadedEntry[] = [];
+    let options: string | undefined = query;
+    let guard = 0;
+    while (options && guard++ < 20) {
+        const res: any = await webApi.retrieveMultipleRecords(
+            PARENT.logicalName,
+            options,
+            5000,
+        );
+        for (const e of (res.entities ?? []) as Record<string, any>[]) {
+            out.push(mapLoadedEntry(e));
+        }
+        // Follow server paging (rarely needed: filtered sets are small).
+        const next: string | undefined = res.nextLink;
+        const qi = next ? next.indexOf("?") : -1;
+        options = qi >= 0 ? next!.substring(qi) : undefined;
+    }
+    return out;
+}
+
 export interface SplitInput {
     id: string;
     name: string;
