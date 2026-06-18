@@ -8,9 +8,9 @@ Der destruktive Save (Subtypes updaten → Splits anlegen → Original + Pausen
 „completed" → Original löschen) ist die einzige Stelle, die echten Datenschaden
 anrichten kann.
 
-- 🔜 **Atomare Aufteilung** über einen `$batch`-Changeset (alles-oder-nichts).
-  Caveat: PCF-`webApi` kann kein Batch → direkter Aufruf des `$batch`-Endpunkts
-  oder Zwischenlösung (sichere Reihenfolge + Cleanup bei Fehler).
+- ✅ **Atomare Aufteilung** über einen `$batch`-Changeset (alles-oder-nichts),
+  mit Kompensations-Fallback über `context.webAPI`, falls der `$batch`-Endpunkt
+  im Host nicht erreichbar ist. — *v1.11.0; Rollback live gegen UAT verifiziert.*
 - 🔜 **Optimistic Concurrency (ETag)** — verhindert das Überschreiben bei
   parallelem Bearbeiten desselben Eintrags.
 - 🔜 **Retry bei transienten Fehlern** (429/Timeout) statt sofortigem Toast.
@@ -56,5 +56,5 @@ anrichten kann.
 
 ### Empfohlene Reihenfolge (Top 3)
 1. ~~Optimistisches Listen-Update (2)~~ — ✅ erledigt (v1.8.2).
-2. Atomare/abgesicherte Aufteilung (1) — schützt die einzige gefährliche Stelle.
+2. ~~Atomare/abgesicherte Aufteilung (1)~~ — ✅ erledigt (v1.11.0).
 3. ~~Zeitraum-/Filter-Chips + Sortierung (3)~~ — ✅ erledigt (v1.8.0).

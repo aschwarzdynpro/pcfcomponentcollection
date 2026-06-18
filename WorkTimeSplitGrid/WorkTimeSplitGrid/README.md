@@ -77,22 +77,22 @@ deletes the original.
   remaining amount to that field's current value (one tap to finish the split).
 - **Guarded save** — the *Save split* button only enables when the distributed
   hours equal the entry's total duration.
-- **Atomic split workflow** (faithful to the original Custom Page), executed via
-  `context.webAPI`:
-  1. persists each subtype's `sst_timevalue`,
-  2. creates one new Rounded Time Entry per subtype with hours > 0 — copying the
-     booking / work order / project lookups, date, name and notes, writing the
-     subtype name into `sst_workordersubtype`, the type as `<Type> (<Subtype>)`,
-     and `sst_worksubtypecompleted = Yes`,
-  2b. resolves the work type (`sst_worktype_ref` / `sst_worktype_title_str`) per
-     split from the composite key **(paytype, timetype)**: paytype from the
-     subtype's `sst_paytype_opt` (else its name matched to the option label),
-     timetype from the original entry's `sst_timetype_opt` (else its `sst_type`
-     text). The matching `sst_worktype` record is looked up at save time,
-  3. marks the original **and its related pauses** (same work order) as
-     completed,
-  4. deletes the original — its child subtype rows are removed automatically by
-     the cascade-delete relationship.
+- **Atomic split workflow** (faithful to the original Custom Page). It first
+  *prepares* everything read-only (reads the original, resolves the work type
+  from the composite **(paytype, timetype)** key, resolves the lookup
+  `@odata.bind` targets, builds the per-subtype create payloads and finds the
+  related pauses), then performs all mutations **transactionally**:
+  - creates one Rounded Time Entry per subtype with hours > 0 (copying the
+    booking / work order / project lookups, date, name, notes; subtype name into
+    `sst_workordersubtype`; type `<Type> (<Subtype>)`; `sst_worksubtypecompleted
+    = Yes`; the resolved `sst_worktype_ref` / `sst_worktype_title_str`),
+  - marks the original **and its related pauses** completed,
+  - deletes the original (child subtype rows cascade).
+  These run as a **single `$batch` changeset** (all-or-nothing) posted to the
+  Web API `$batch` endpoint. If that endpoint isn't reachable/authorized in the
+  host, it falls back to a **compensating sequence** over `context.webAPI` that
+  rolls the created splits back (and un-marks the original) if the delete fails —
+  so a split never leaves duplicates or an orphaned original.
 - **Confirmation dialog** before the destructive save/delete.
 
 ### 📱 Adaptive (desktop + mobile)

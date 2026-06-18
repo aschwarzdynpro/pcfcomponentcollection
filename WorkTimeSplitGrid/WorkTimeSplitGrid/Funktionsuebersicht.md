@@ -97,7 +97,16 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   noch nicht aufgeteilt ist.
 - **Bestätigungsdialog** vor der destruktiven Aktion (nennt Anzahl der
   Split-Datensätze und den Eintragsnamen).
-- Ablauf über `context.webAPI` (entspricht der ursprünglichen Custom Page):
+- **Transaktionaler Ablauf:** Zuerst wird alles **lesend vorbereitet** (Original
+  lesen, Zeiterfassungsart über den Key (paytype, timetype) auflösen, Lookup-
+  `@odata.bind`-Ziele auflösen, Create-Payloads je Subtype bauen, zugehörige
+  Pausen ermitteln). Dann laufen **alle Änderungen als ein einziges
+  `$batch`-Changeset** (alles-oder-nichts) gegen den Web-API-`$batch`-Endpunkt.
+  Ist der Endpunkt im Host nicht erreichbar/autorisiert, greift ein
+  **Kompensations-Fallback** über `context.webAPI`: Schlägt das Löschen des
+  Originals fehl, werden die bereits angelegten Splits wieder gelöscht (und das
+  Original ent-markiert) — so bleiben nie Duplikate oder ein verwaistes Original
+  zurück. Inhaltlich (entspricht der ursprünglichen Custom Page):
   1. Persistiert je Subtype den `sst_timevalue`.
   2. Legt pro Subtype mit Wert > 0 eine neue Rounded Time Entry an:
      `sst_workordersubtype` = Subtype-Name, `sst_duration` = Subtype-Stunden,
