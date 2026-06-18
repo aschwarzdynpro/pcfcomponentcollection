@@ -37,6 +37,8 @@ export interface Strings {
     colType: string;
     colDate: string;
     back: string;
+    /** Composed list/detail title: "<type> am <date> auf Projekt <project>". */
+    title: (type: string, date: string, project: string) => string;
 }
 
 export const STRINGS: Record<Lang, Strings> = {
@@ -68,6 +70,12 @@ export const STRINGS: Record<Lang, Strings> = {
         colType: "Type",
         colDate: "Date",
         back: "Back",
+        title: (type, date, project) => {
+            let s = type || "—";
+            if (date) s += ` on ${date}`;
+            if (project) s += ` on project ${project}`;
+            return s;
+        },
     },
     de: {
         searchPlaceholder: "Einträge suchen…",
@@ -97,6 +105,12 @@ export const STRINGS: Record<Lang, Strings> = {
         colType: "Typ",
         colDate: "Datum",
         back: "Zurück",
+        title: (type, date, project) => {
+            let s = type || "—";
+            if (date) s += ` am ${date}`;
+            if (project) s += ` auf Projekt ${project}`;
+            return s;
+        },
     },
     fr: {
         searchPlaceholder: "Rechercher des entrées…",
@@ -126,5 +140,11 @@ export const STRINGS: Record<Lang, Strings> = {
         colType: "Type",
         colDate: "Date",
         back: "Retour",
+        title: (type, date, project) => {
+            let s = type || "—";
+            if (date) s += ` le ${date}`;
+            if (project) s += ` sur le projet ${project}`;
+            return s;
+        },
     },
 };

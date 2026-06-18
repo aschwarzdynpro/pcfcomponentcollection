@@ -91,6 +91,9 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const [loadingSubtypes, setLoadingSubtypes] = React.useState(false);
     const [subtypeError, setSubtypeError] = React.useState<string | null>(null);
     const [toast, setToast] = React.useState<string | null>(null);
+    const [enrich, setEnrich] = React.useState<
+        Map<string, { type: string; date: string; project: string }>
+    >(() => new Map());
 
     const entityName = React.useMemo(() => getEntityName(dataset), [dataset]);
 
@@ -116,9 +119,80 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         });
     }, [rows, search, showCompleted, fields.pauseValue]);
 
+    // Enrich the visible page with title fields that may live outside the bound
+    // view: sst_date and the related project number
+    // (sst_project_id.sst_projectnumber). One WebAPI call per page, keyed by
+    // record id; best-effort — falls back to dataset values on failure.
+    const idsKey = React.useMemo(
+        () => (dataset.sortedRecordIds ?? []).join(","),
+        [dataset],
+    );
+    React.useEffect(() => {
+        const ids = (dataset.sortedRecordIds ?? []).map((i) =>
+            i.replace(/[{}]/g, ""),
+        );
+        if (ids.length === 0) return;
+        let cancelled = false;
+        const filter = ids
+            .map((id) => `sst_roundedtimeentriesid eq ${id}`)
+            .join(" or ");
+        const query =
+            `?$select=sst_roundedtimeentriesid,sst_type,sst_date` +
+            `&$expand=sst_Project_id($select=sst_projectnumber)` +
+            `&$filter=${filter}`;
+        props.webApi
+            .retrieveMultipleRecords("sst_roundedtimeentries", query)
+            .then(
+                (res) => {
+                    if (cancelled) return;
+                    const m = new Map<
+                        string,
+                        { type: string; date: string; project: string }
+                    >();
+                    for (const e of (res.entities ?? []) as Record<
+                        string,
+                        any
+                    >[]) {
+                        const rid = String(
+                            e["sst_roundedtimeentriesid"] ?? "",
+                        ).replace(/[{}]/g, "");
+                        const fmt =
+                            e["sst_date@OData.Community.Display.V1.FormattedValue"];
+                        const date = fmt ? String(fmt).split(" ")[0] : "";
+                        const proj = e["sst_Project_id"]
+                            ? e["sst_Project_id"]["sst_projectnumber"]
+                            : "";
+                        m.set(rid, {
+                            type: String(e["sst_type"] ?? ""),
+                            date,
+                            project: String(proj ?? ""),
+                        });
+                    }
+                    setEnrich(m);
+                },
+                () => {
+                    /* best-effort */
+                },
+            );
+        return () => {
+            cancelled = true;
+        };
+    }, [idsKey, props.webApi]);
+
+    // Compose the display title: "<type> am <date> auf Projekt <project>".
+    const displayRows = React.useMemo(() => {
+        return visibleRows.map((r) => {
+            const ex = enrich.get(r.id);
+            const type = ex?.type || r.type;
+            const date = ex?.date || r.date;
+            const project = ex?.project || "";
+            return { ...r, type, date, name: t.title(type, date, project) };
+        });
+    }, [visibleRows, enrich, t]);
+
     const selected = React.useMemo(
-        () => visibleRows.find((r) => r.id === selectedId) ?? null,
-        [visibleRows, selectedId],
+        () => displayRows.find((r) => r.id === selectedId) ?? null,
+        [displayRows, selectedId],
     );
 
     // Load subtypes whenever the selected entry changes.
@@ -227,7 +301,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             <div className={`wtsg-body ${dataset.loading ? "wtsg-loading" : ""}`}>
                 {(!props.isMobile || !selected) && (
                     <EntryList
-                        rows={visibleRows}
+                        rows={displayRows}
                         selectedId={selectedId}
                         onSelect={setSelectedId}
                         strings={t}

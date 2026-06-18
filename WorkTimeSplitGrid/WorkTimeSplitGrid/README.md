@@ -13,6 +13,11 @@ deletes the original.
 ### 🎯 Core functionality
 - **Master list** of Rounded Time Entries straight from the bound view
   (project, type, date, total duration), with a live search box.
+- **Composed entry title** (list + detail): `<type> am <date> auf Projekt
+  <project number>` (e.g. *Arbeit am 07.08.2024 auf Projekt P10002233*). The
+  date and the related project number (`sst_project_id.sst_projectnumber`) are
+  fetched per page via one WebAPI `$expand` call, so the title works even when
+  those columns aren't in the bound view. Missing parts are omitted gracefully.
 - **Split / not-split toggle** — filters the list on the
   `sst_worksubtypecompleted` flag; pause entries (`sst_type = Pause`) are hidden.
 - **Detail split panel** — selecting an entry loads its work-subtype rows

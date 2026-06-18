@@ -13,6 +13,12 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 ### Master-Liste (links)
 - Zeigt die Rounded Time Entries aus der gebundenen View (Projekt/Name, Typ,
   Datum, Gesamtdauer) als Karten.
+- **Zusammengesetzter Titel** (Liste + Detail): `<sst_type> am <sst_date> auf
+  Projekt <sst_projectnumber>` (z. B. „Arbeit am 07.08.2024 auf Projekt
+  P10002233"). `sst_date` und die Projektnummer des verknüpften Projekts
+  (`sst_project_id.sst_projectnumber` auf `msdyn_project`) werden je Seite über
+  EINEN WebAPI-`$expand`-Aufruf nachgeladen — der Titel funktioniert also auch,
+  wenn diese Spalten nicht in der View liegen. Fehlende Teile werden weggelassen.
 - **Freitext-Suche** über Name, Typ, Datum und sichtbare View-Spalten.
 - **Umschalter „Nicht aufgeteilt / Aufgeteilt"** filtert über das Feld
   `sst_worksubtypecompleted`. Einträge vom Typ `Pause` werden ausgeblendet.
