@@ -10,6 +10,7 @@ import {
     createTimeReports,
     loadEntries,
     LoadedEntry,
+    CreatedReport,
 } from "./api";
 
 type Mode = "split" | "assign";
@@ -61,6 +62,10 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         () => new Set(),
     );
     const [creating, setCreating] = React.useState(false);
+    // When "create & open" produced several delivery notes, offer a picker.
+    const [reportPicker, setReportPicker] = React.useState<
+        CreatedReport[] | null
+    >(null);
     const [subtypes, setSubtypes] = React.useState<SubtypeRow[] | null>(null);
     const [loadingSubtypes, setLoadingSubtypes] = React.useState(false);
     const [subtypeError, setSubtypeError] = React.useState<string | null>(null);
@@ -218,6 +223,20 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         });
     }, []);
 
+    const openReport = React.useCallback(
+        (reportId: string) => {
+            try {
+                props.navigation.openForm({
+                    entityName: TIMEREPORT.logicalName,
+                    entityId: reportId,
+                });
+            } catch {
+                /* ignore navigation errors */
+            }
+        },
+        [props.navigation],
+    );
+
     const handleCreateReports = React.useCallback(
         async (openAfter: boolean) => {
             const ids = [...checkedIds];
@@ -236,22 +255,15 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 );
                 setCheckedIds(new Set());
                 reloadEntries();
-                // "Create & open" opens every created delivery note; plain
-                // "create" only opens when exactly one note resulted.
-                const toOpen = openAfter
-                    ? res.reportIds
-                    : res.singleReportId
-                      ? [res.singleReportId]
-                      : [];
-                for (const reportId of toOpen) {
-                    try {
-                        props.navigation.openForm({
-                            entityName: TIMEREPORT.logicalName,
-                            entityId: reportId,
-                        });
-                    } catch {
-                        /* ignore navigation errors */
-                    }
+                // Plain "create" opens only when exactly one note resulted.
+                // "Create & open": one note → open it; several → show a picker.
+                if (openAfter && res.reports.length > 1) {
+                    setReportPicker(res.reports);
+                } else {
+                    const id = openAfter
+                        ? res.reports[0]?.id ?? null
+                        : res.singleReportId;
+                    if (id) openReport(id);
                 }
             } catch (e) {
                 const msg =
@@ -265,7 +277,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             checkedIds,
             creating,
             props.webApi,
-            props.navigation,
+            openReport,
             reloadEntries,
             flashToast,
             t,
@@ -442,6 +454,65 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                     <div className="wtsg-overlay-box">
                         <span className="wtsg-spinner" aria-hidden="true" />
                         <span>{t.creatingReports}</span>
+                    </div>
+                </div>
+            )}
+
+            {reportPicker && (
+                <div
+                    className="wtsg-modal"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={t.pickReportTitle(reportPicker.length)}
+                >
+                    <div className="wtsg-modal-card">
+                        <h4>{t.pickReportTitle(reportPicker.length)}</h4>
+                        <p>{t.pickReportPrompt}</p>
+                        <div className="wtsg-report-list">
+                            {reportPicker.map((rep) => (
+                                <button
+                                    key={rep.id}
+                                    type="button"
+                                    className="wtsg-report-item"
+                                    title={rep.name}
+                                    onClick={() => {
+                                        openReport(rep.id);
+                                        setReportPicker(null);
+                                    }}
+                                >
+                                    <span className="wtsg-report-name">
+                                        {rep.woName || rep.name}
+                                    </span>
+                                    <span
+                                        className="wtsg-report-open"
+                                        aria-hidden="true"
+                                    >
+                                        ↗
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                        <div className="wtsg-modal-actions">
+                            <button
+                                type="button"
+                                className="wtsg-btn-secondary"
+                                onClick={() => setReportPicker(null)}
+                            >
+                                {t.closeLabel}
+                            </button>
+                            <button
+                                type="button"
+                                className="wtsg-btn-primary"
+                                onClick={() => {
+                                    reportPicker.forEach((rep) =>
+                                        openReport(rep.id),
+                                    );
+                                    setReportPicker(null);
+                                }}
+                            >
+                                {t.openAll}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

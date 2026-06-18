@@ -459,14 +459,21 @@ export async function saveSplit(
     return { created: active.length };
 }
 
+/** A delivery note created by createTimeReports (for the "open" picker). */
+export interface CreatedReport {
+    id: string;
+    name: string;
+    woName: string;
+}
+
 export interface CreateReportsResult {
     /** At least one selected entry already had a delivery note → nothing done. */
     blocked: boolean;
     reportsCreated: number;
     assigned: number;
     failed: number;
-    /** Every created delivery-note id (one per work order). */
-    reportIds: string[];
+    /** Every created delivery note (one per work order), with id + name. */
+    reports: CreatedReport[];
     /** The single created report id (when exactly one) — for opening the form. */
     singleReportId: string | null;
 }
@@ -511,7 +518,7 @@ export async function createTimeReports(
             reportsCreated: 0,
             assigned: 0,
             failed: 0,
-            reportIds: [],
+            reports: [],
             singleReportId: null,
         };
     }
@@ -535,18 +542,19 @@ export async function createTimeReports(
     }
 
     let assigned = 0;
-    const reportIds: string[] = [];
+    const reports: CreatedReport[] = [];
     const dateStr = new Date().toDateString();
 
     for (const wo of byWo.values()) {
         let reportId: string;
+        const reportName = `Report ${wo.woName} On ${dateStr}`;
         try {
             const created = await webApi.createRecord(TIMEREPORT.logicalName, {
-                [TIMEREPORT.name]: `Report ${wo.woName} On ${dateStr}`,
+                [TIMEREPORT.name]: reportName,
                 [`${TIMEREPORT.workorderNav}@odata.bind`]: `/${WORKORDER_SET}(${wo.woId})`,
             });
             reportId = created.id;
-            reportIds.push(created.id);
+            reports.push({ id: created.id, name: reportName, woName: wo.woName });
         } catch {
             failed += wo.entryIds.length; // report creation failed → its entries fail
             continue;
@@ -565,10 +573,10 @@ export async function createTimeReports(
 
     return {
         blocked: false,
-        reportsCreated: reportIds.length,
+        reportsCreated: reports.length,
         assigned,
         failed,
-        reportIds,
-        singleReportId: reportIds.length === 1 ? reportIds[0] : null,
+        reports,
+        singleReportId: reports.length === 1 ? reports[0].id : null,
     };
 }

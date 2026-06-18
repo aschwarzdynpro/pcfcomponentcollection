@@ -39,8 +39,9 @@ deletes the original.
   action bar shows the count and **two** buttons:
   - **Create delivery notes** — creates the notes and stays in the list (if
     exactly one note results it still opens automatically).
-  - **Create & open ↗** — does the same, then opens **every** created delivery
-    note as a Dataverse record.
+  - **Create & open ↗** — does the same, then opens the result: a single
+    delivery note opens directly; if **several** were created, a picker overlay
+    lists them so the user chooses which to open (or **Open all**).
   Both create one delivery note (`sst_timereports`) per work order across the
   selection and link each selected entry to its work order's note via
   `sst_TimeReport`. Entries already assigned to a delivery note are rejected.

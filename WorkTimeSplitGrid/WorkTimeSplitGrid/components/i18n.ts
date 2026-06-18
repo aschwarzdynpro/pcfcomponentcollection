@@ -29,6 +29,11 @@ export interface Strings {
     reportsDone: (reports: number, assigned: number) => string;
     reportsPartial: (assigned: number, total: number) => string;
     reportsBlocked: string;
+    /** Picker shown when "create & open" produced several delivery notes. */
+    pickReportTitle: (n: number) => string;
+    pickReportPrompt: string;
+    openAll: string;
+    closeLabel: string;
     loading: string;
     loadingSubtypes: string;
     errorPrefix: string;
@@ -76,6 +81,10 @@ export const STRINGS: Record<Lang, Strings> = {
             `${assigned} of ${total} entries assigned; some could not be assigned.`,
         reportsBlocked:
             "Only entries that are not yet assigned to a delivery note can be processed.",
+        pickReportTitle: (n) => `${n} delivery notes created`,
+        pickReportPrompt: "Which delivery note would you like to open?",
+        openAll: "Open all",
+        closeLabel: "Close",
         loading: "Loading entries…",
         loadingSubtypes: "Loading subtypes…",
         errorPrefix: "Could not load the grid",
@@ -126,6 +135,10 @@ export const STRINGS: Record<Lang, Strings> = {
             `${assigned} von ${total} Einträgen zugeordnet; einige konnten nicht zugeordnet werden.`,
         reportsBlocked:
             "Es können nur Zeiteinträge verarbeitet werden, die noch keinem Lieferschein zugeordnet wurden.",
+        pickReportTitle: (n) => `${n} Lieferscheine erstellt`,
+        pickReportPrompt: "Welchen Lieferschein möchtest du öffnen?",
+        openAll: "Alle öffnen",
+        closeLabel: "Schließen",
         loading: "Einträge werden geladen…",
         loadingSubtypes: "Subtypes werden geladen…",
         errorPrefix: "Grid konnte nicht geladen werden",
@@ -176,6 +189,10 @@ export const STRINGS: Record<Lang, Strings> = {
             `${assigned} sur ${total} entrées affectées ; certaines n'ont pas pu l'être.`,
         reportsBlocked:
             "Seules les entrées non encore affectées à un bon de livraison peuvent être traitées.",
+        pickReportTitle: (n) => `${n} bons de livraison créés`,
+        pickReportPrompt: "Quel bon de livraison souhaitez-vous ouvrir ?",
+        openAll: "Tout ouvrir",
+        closeLabel: "Fermer",
         loading: "Chargement des entrées…",
         loadingSubtypes: "Chargement des sous-types…",
         errorPrefix: "Impossible de charger la grille",

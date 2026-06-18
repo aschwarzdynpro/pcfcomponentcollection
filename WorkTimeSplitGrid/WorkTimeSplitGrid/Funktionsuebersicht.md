@@ -40,8 +40,10 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   Buttons:
   - **Lieferscheine erstellen** — erstellt die Lieferscheine und bleibt in der
     Liste (entsteht genau ein Lieferschein, wird er trotzdem geöffnet).
-  - **Erstellen & öffnen ↗** — dasselbe, öffnet danach aber **jeden** erstellten
-    Lieferschein als Datensatz im Dataverse.
+  - **Erstellen & öffnen ↗** — dasselbe, öffnet danach das Ergebnis: ein einzelner
+    Lieferschein wird direkt geöffnet; wurden **mehrere** erstellt, erscheint ein
+    Auswahl-Overlay, in dem der Benutzer wählt, welchen er öffnet (oder **Alle
+    öffnen**).
   Beide erstellen **je Arbeitsauftrag** einen Lieferschein (`sst_timereports`,
   `sst_name` = „Report <WO> On <Datum>", `sst_Arbeitsauftrag` → msdyn_workorder)
   und verknüpfen jeden ausgewählten Eintrag via `sst_TimeReport` mit dem

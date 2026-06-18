@@ -552,6 +552,49 @@
     gap: 8px;
 }
 
+/* ---- Delivery-note picker (create & open, multiple results) ---- */
+.wtsg-report-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0 0 16px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.wtsg-report-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    border: 1px solid #e1dfdd;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 13px;
+    color: #242424;
+    cursor: pointer;
+}
+
+.wtsg-report-item:hover {
+    background: #eef6fc;
+    border-color: #0f6cbd;
+}
+
+.wtsg-report-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wtsg-report-open {
+    flex: 0 0 auto;
+    color: #0f6cbd;
+    font-weight: 600;
+}
+
 .wtsg-btn-primary,
 .wtsg-btn-secondary {
     height: 34px;
