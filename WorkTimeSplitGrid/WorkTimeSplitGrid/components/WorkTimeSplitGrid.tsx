@@ -92,6 +92,11 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const [subtypes, setSubtypes] = React.useState<SubtypeRow[] | null>(null);
     const [loadingSubtypes, setLoadingSubtypes] = React.useState(false);
     const [subtypeError, setSubtypeError] = React.useState<string | null>(null);
+    // The entry id the currently held `subtypes` belong to — lets us tell stale
+    // data (during a switch) from freshly loaded data, avoiding a summary flicker.
+    const [subtypesEntryId, setSubtypesEntryId] = React.useState<string | null>(
+        null,
+    );
     const [toast, setToast] = React.useState<string | null>(null);
     const [enrich, setEnrich] = React.useState<
         Map<
@@ -276,21 +281,25 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         if (!selectedId) {
             setSubtypes(null);
             setSubtypeError(null);
+            setSubtypesEntryId(null);
             return;
         }
+        const forId = selectedId;
         let cancelled = false;
         setLoadingSubtypes(true);
         setSubtypeError(null);
-        loadSubtypes(props.webApi, selectedId).then(
+        loadSubtypes(props.webApi, forId).then(
             (rows) => {
                 if (cancelled) return;
                 setSubtypes(rows);
+                setSubtypesEntryId(forId);
                 setLoadingSubtypes(false);
             },
             () => {
                 if (cancelled) return;
                 setSubtypes([]);
                 setSubtypeError(t.errLoadSubtypes);
+                setSubtypesEntryId(forId);
                 setLoadingSubtypes(false);
             },
         );
@@ -298,6 +307,10 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             cancelled = true;
         };
     }, [selectedId, props.webApi, t.errLoadSubtypes]);
+
+    // The held subtypes are only valid for the SplitPanel once they belong to the
+    // selected entry; until then the panel shows a progress indicator (no flicker).
+    const subtypesMatched = !!selectedId && subtypesEntryId === selectedId;
 
     const flashToast = React.useCallback((msg: string) => {
         setToast(msg);
@@ -401,9 +414,11 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 {(!props.isMobile || !!selected) && (
                     <SplitPanel
                         entry={selected}
-                        subtypes={subtypes}
-                        loading={loadingSubtypes}
-                        error={subtypeError}
+                        subtypes={subtypesMatched ? subtypes : null}
+                        loading={
+                            !!selected && (loadingSubtypes || !subtypesMatched)
+                        }
+                        error={subtypesMatched ? subtypeError : null}
                         fields={fields}
                         webApi={props.webApi}
                         utils={props.utils}

@@ -188,32 +188,42 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
                 </div>
             )}
 
-            <div className="wtsg-summary">
-                <div>
-                    <span>{t.total}</span>
-                    <strong>{entry.totalFormatted || total}</strong>
-                </div>
-                <div>
-                    <span>{t.distributed}</span>
-                    <strong>{round(distributed)}</strong>
-                </div>
-                <div className={Math.abs(remaining) < EPSILON ? "ok" : "warn"}>
-                    <span>{t.remaining}</span>
-                    <strong>{round(remaining)}</strong>
-                </div>
-            </div>
+            {!props.loading &&
+                !props.error &&
+                (subtypes?.length ?? 0) > 0 && (
+                    <>
+                        <div className="wtsg-summary">
+                            <div>
+                                <span>{t.total}</span>
+                                <strong>{entry.totalFormatted || total}</strong>
+                            </div>
+                            <div>
+                                <span>{t.distributed}</span>
+                                <strong>{round(distributed)}</strong>
+                            </div>
+                            <div
+                                className={
+                                    Math.abs(remaining) < EPSILON ? "ok" : "warn"
+                                }
+                            >
+                                <span>{t.remaining}</span>
+                                <strong>{round(remaining)}</strong>
+                            </div>
+                        </div>
 
-            <div className="wtsg-actions">
-                <button
-                    type="button"
-                    className="wtsg-save"
-                    disabled={!canSave}
-                    title={!sumMatches ? t.saveDisabledSum : t.save}
-                    onClick={() => setConfirming(true)}
-                >
-                    {saving ? t.saving : t.save}
-                </button>
-            </div>
+                        <div className="wtsg-actions">
+                            <button
+                                type="button"
+                                className="wtsg-save"
+                                disabled={!canSave}
+                                title={!sumMatches ? t.saveDisabledSum : t.save}
+                                onClick={() => setConfirming(true)}
+                            >
+                                {saving ? t.saving : t.save}
+                            </button>
+                        </div>
+                    </>
+                )}
 
             {confirming && (
                 <div className="wtsg-modal" role="dialog" aria-modal="true">
