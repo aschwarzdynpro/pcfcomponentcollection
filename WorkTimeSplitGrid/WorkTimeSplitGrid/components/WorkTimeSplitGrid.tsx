@@ -375,49 +375,59 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         });
     }, []);
 
-    const handleCreateReports = React.useCallback(async () => {
-        const ids = [...checkedIds];
-        if (ids.length === 0 || creating) return;
-        setCreating(true);
-        try {
-            const res = await createTimeReports(props.webApi, ids);
-            if (res.blocked) {
-                flashToast(t.reportsBlocked);
-                return;
-            }
-            flashToast(
-                res.failed > 0
-                    ? t.reportsPartial(res.assigned, ids.length)
-                    : t.reportsDone(res.reportsCreated, res.assigned),
-            );
-            setCheckedIds(new Set());
-            dataset.refresh();
-            if (res.singleReportId) {
-                try {
-                    props.navigation.openForm({
-                        entityName: TIMEREPORT.logicalName,
-                        entityId: res.singleReportId,
-                    });
-                } catch {
-                    /* ignore navigation errors */
+    const handleCreateReports = React.useCallback(
+        async (openAfter: boolean) => {
+            const ids = [...checkedIds];
+            if (ids.length === 0 || creating) return;
+            setCreating(true);
+            try {
+                const res = await createTimeReports(props.webApi, ids);
+                if (res.blocked) {
+                    flashToast(t.reportsBlocked);
+                    return;
                 }
+                flashToast(
+                    res.failed > 0
+                        ? t.reportsPartial(res.assigned, ids.length)
+                        : t.reportsDone(res.reportsCreated, res.assigned),
+                );
+                setCheckedIds(new Set());
+                dataset.refresh();
+                // "Create & open" opens every created delivery note; plain
+                // "create" only opens when exactly one note resulted.
+                const toOpen = openAfter
+                    ? res.reportIds
+                    : res.singleReportId
+                      ? [res.singleReportId]
+                      : [];
+                for (const reportId of toOpen) {
+                    try {
+                        props.navigation.openForm({
+                            entityName: TIMEREPORT.logicalName,
+                            entityId: reportId,
+                        });
+                    } catch {
+                        /* ignore navigation errors */
+                    }
+                }
+            } catch (e) {
+                const msg =
+                    (e as { message?: string })?.message ?? String(e ?? "");
+                flashToast(`${t.createReports}: ${msg}`);
+            } finally {
+                setCreating(false);
             }
-        } catch (e) {
-            const msg =
-                (e as { message?: string })?.message ?? String(e ?? "");
-            flashToast(`${t.createReports}: ${msg}`);
-        } finally {
-            setCreating(false);
-        }
-    }, [
-        checkedIds,
-        creating,
-        props.webApi,
-        props.navigation,
-        dataset,
-        flashToast,
-        t,
-    ]);
+        },
+        [
+            checkedIds,
+            creating,
+            props.webApi,
+            props.navigation,
+            dataset,
+            flashToast,
+            t,
+        ],
+    );
 
     if (!entityName && rows.length === 0 && !dataset.loading) {
         return (
@@ -549,14 +559,36 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                     <span className="wtsg-actionbar-count">
                         {t.selectedCount(checkedIds.size)}
                     </span>
-                    <button
-                        type="button"
-                        className="wtsg-actionbar-btn"
-                        disabled={creating}
-                        onClick={handleCreateReports}
-                    >
-                        {creating ? t.creatingReports : t.createReports}
-                    </button>
+                    <div className="wtsg-actionbar-btns">
+                        <button
+                            type="button"
+                            className="wtsg-actionbar-btn wtsg-actionbar-btn-secondary"
+                            disabled={creating}
+                            onClick={() => handleCreateReports(false)}
+                        >
+                            {t.createReports}
+                        </button>
+                        <button
+                            type="button"
+                            className="wtsg-actionbar-btn"
+                            disabled={creating}
+                            onClick={() => handleCreateReports(true)}
+                        >
+                            {t.createReportsOpen}
+                            <span className="wtsg-btn-ext" aria-hidden="true">
+                                {" ↗"}
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {creating && (
+                <div className="wtsg-overlay" role="status" aria-live="polite">
+                    <div className="wtsg-overlay-box">
+                        <span className="wtsg-spinner" aria-hidden="true" />
+                        <span>{t.creatingReports}</span>
+                    </div>
                 </div>
             )}
         </div>

@@ -336,6 +336,8 @@ export interface CreateReportsResult {
     reportsCreated: number;
     assigned: number;
     failed: number;
+    /** Every created delivery-note id (one per work order). */
+    reportIds: string[];
     /** The single created report id (when exactly one) — for opening the form. */
     singleReportId: string | null;
 }
@@ -380,6 +382,7 @@ export async function createTimeReports(
             reportsCreated: 0,
             assigned: 0,
             failed: 0,
+            reportIds: [],
             singleReportId: null,
         };
     }
@@ -436,6 +439,7 @@ export async function createTimeReports(
         reportsCreated: reportIds.length,
         assigned,
         failed,
+        reportIds,
         singleReportId: reportIds.length === 1 ? reportIds[0] : null,
     };
 }

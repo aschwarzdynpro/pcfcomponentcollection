@@ -23,6 +23,8 @@ export interface Strings {
     assignHint: string;
     selectedCount: (n: number) => string;
     createReports: string;
+    /** Second assign-mode action: create the delivery notes and open them. */
+    createReportsOpen: string;
     creatingReports: string;
     reportsDone: (reports: number, assigned: number) => string;
     reportsPartial: (assigned: number, total: number) => string;
@@ -66,6 +68,7 @@ export const STRINGS: Record<Lang, Strings> = {
         assignHint: "Select entries to create delivery notes.",
         selectedCount: (n) => (n === 1 ? "1 selected" : `${n} selected`),
         createReports: "Create delivery notes",
+        createReportsOpen: "Create & open",
         creatingReports: "Creating delivery notes…",
         reportsDone: (reports, assigned) =>
             `${reports} delivery note(s) created, ${assigned} entr${assigned === 1 ? "y" : "ies"} assigned.`,
@@ -115,6 +118,7 @@ export const STRINGS: Record<Lang, Strings> = {
         assignHint: "Einträge auswählen, um Lieferscheine zu erstellen.",
         selectedCount: (n) => (n === 1 ? "1 ausgewählt" : `${n} ausgewählt`),
         createReports: "Lieferscheine erstellen",
+        createReportsOpen: "Erstellen & öffnen",
         creatingReports: "Lieferscheine werden erstellt…",
         reportsDone: (reports, assigned) =>
             `${reports} Lieferschein(e) erstellt, ${assigned} Eintrag/Einträge zugeordnet.`,
@@ -164,6 +168,7 @@ export const STRINGS: Record<Lang, Strings> = {
         assignHint: "Sélectionnez des entrées pour créer des bons de livraison.",
         selectedCount: (n) => (n === 1 ? "1 sélectionné" : `${n} sélectionnés`),
         createReports: "Créer les bons de livraison",
+        createReportsOpen: "Créer et ouvrir",
         creatingReports: "Création des bons de livraison…",
         reportsDone: (reports, assigned) =>
             `${reports} bon(s) de livraison créé(s), ${assigned} entrée(s) affectée(s).`,

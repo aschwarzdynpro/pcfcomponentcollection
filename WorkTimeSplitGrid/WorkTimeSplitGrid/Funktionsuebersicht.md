@@ -29,13 +29,20 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   gelesen (nicht aus dem View) — die Filter stimmen also unabhängig davon, welche
   Spalten der gebundene View enthält.
 - **Lieferscheine erstellen** (Zuordnen-Modus) — ein oder mehrere Einträge per
-  Checkbox markieren; unten erscheint eine Aktionsleiste mit Anzahl + Button.
-  Erstellt **je Arbeitsauftrag** einen Lieferschein (`sst_timereports`,
+  Checkbox markieren; unten erscheint eine Aktionsleiste mit Anzahl und **zwei**
+  Buttons:
+  - **Lieferscheine erstellen** — erstellt die Lieferscheine und bleibt in der
+    Liste (entsteht genau ein Lieferschein, wird er trotzdem geöffnet).
+  - **Erstellen & öffnen ↗** — dasselbe, öffnet danach aber **jeden** erstellten
+    Lieferschein als Datensatz im Dataverse.
+  Beide erstellen **je Arbeitsauftrag** einen Lieferschein (`sst_timereports`,
   `sst_name` = „Report <WO> On <Datum>", `sst_Arbeitsauftrag` → msdyn_workorder)
-  und verknüpft jeden ausgewählten Eintrag via `sst_TimeReport` mit dem
+  und verknüpfen jeden ausgewählten Eintrag via `sst_TimeReport` mit dem
   Lieferschein seines Arbeitsauftrags. Bereits zugeordnete Einträge werden
-  abgewiesen; entsteht genau ein Lieferschein, wird er geöffnet. (Portiert aus
-  dem Schulz-Ribbon-Command `createTimeReport`.)
+  abgewiesen. Während der Erstellung blendet sich ein **Fortschritts-Overlay**
+  über die Liste, damit der Benutzer nicht weiterklickt und sieht, dass im
+  Hintergrund etwas passiert. (Portiert aus dem Schulz-Ribbon-Command
+  `createTimeReport`.)
 - **Freitext-Suche** über Titel, Typ, Datum, **Projektnummer** und
   **Ressourcenname** (`sst_resource_ref.name`). Das Control lädt **alle Seiten**
   des gebundenen Views automatisch nach (nicht nur die erste) — Liste und Suche

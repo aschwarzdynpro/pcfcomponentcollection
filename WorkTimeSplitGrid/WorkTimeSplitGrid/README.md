@@ -29,11 +29,16 @@ deletes the original.
   enrichment (not the bound view), so the filters are correct regardless of which
   columns the view exposes.
 - **Create delivery notes** (assign mode) — tick one or more entries; a bottom
-  action bar shows the count and a **Create delivery notes** button. It creates
-  one delivery note (`sst_timereports`) per work order across the selection and
-  links each selected entry to its work order's note via `sst_TimeReport`.
-  Entries already assigned to a delivery note are rejected; if exactly one note
-  results it opens automatically. (Ported from the Schulz `createTimeReport`
+  action bar shows the count and **two** buttons:
+  - **Create delivery notes** — creates the notes and stays in the list (if
+    exactly one note results it still opens automatically).
+  - **Create & open ↗** — does the same, then opens **every** created delivery
+    note as a Dataverse record.
+  Both create one delivery note (`sst_timereports`) per work order across the
+  selection and link each selected entry to its work order's note via
+  `sst_TimeReport`. Entries already assigned to a delivery note are rejected.
+  While the notes are being created a **progress overlay** blocks the list so
+  the user can't keep clicking. (Ported from the Schulz `createTimeReport`
   ribbon command.)
 - **Live search** across the title, type, date, **project number**, and
   **resource name** (`sst_resource_ref.name`). The control auto-loads **all
