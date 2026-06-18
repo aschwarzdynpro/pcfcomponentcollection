@@ -41,6 +41,9 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   akzeptieren Komma und Punkt als Dezimaltrenner.
 - Live-Zusammenfassung **Gesamt / Verteilt / Rest**; „Rest = 0" wird grün
   hervorgehoben.
+- **„Rest übernehmen"-Icon** — solange noch Restzeit unverteilt ist, erscheint
+  neben jedem leeren/0-Feld ein kleines Pfeil-Icon; ein Klick übernimmt den Rest
+  in das danebenstehende Feld (Aufteilung mit einem Klick abschließen).
 
 ### Speichern (Aufteilung)
 - Der Button **„Aufteilung speichern"** ist nur aktiv, wenn die Summe der

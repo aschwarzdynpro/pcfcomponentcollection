@@ -2,7 +2,7 @@ import * as React from "react";
 import { EntryRow, Lang, SubtypeRow } from "./types";
 import { STRINGS } from "./i18n";
 import { FieldConfig, EPSILON } from "./schema";
-import { parseNumber, saveSplit, SplitInput } from "./api";
+import { parseNumber, formatNumber, saveSplit, SplitInput } from "./api";
 
 export interface SplitPanelProps {
     entry: EntryRow | null;
@@ -126,9 +126,50 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
                 <div className="wtsg-rows">
                     {subtypes!.map((s) => {
                         const invalid = Number.isNaN(parseNumber(s.value));
+                        const editable =
+                            !entry.completed && !props.disabled && !saving;
+                        // Offer "use remaining" on empty/zero rows while time is left.
+                        const showFill =
+                            editable &&
+                            remaining > EPSILON &&
+                            parseNumber(s.value) === 0;
                         return (
                             <label key={s.id} className="wtsg-rowitem">
                                 <span className="wtsg-rowname">{s.name}</span>
+                                <span className="wtsg-rowfill">
+                                    {showFill && (
+                                        <button
+                                            type="button"
+                                            className="wtsg-fillbtn"
+                                            title={`${t.takeRemaining} (${round(remaining)})`}
+                                            aria-label={`${t.takeRemaining} (${round(remaining)})`}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleValueChange(
+                                                    s.id,
+                                                    formatNumber(remaining),
+                                                );
+                                            }}
+                                        >
+                                            <svg
+                                                width="16"
+                                                height="16"
+                                                viewBox="0 0 16 16"
+                                                aria-hidden="true"
+                                            >
+                                                <path
+                                                    d="M2.5 8h8M7.5 4.5 11 8l-3.5 3.5M13 3.5v9"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.6"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                />
+                                            </svg>
+                                        </button>
+                                    )}
+                                </span>
                                 <input
                                     type="text"
                                     inputMode="decimal"

@@ -39,6 +39,7 @@ export interface Strings {
     colType: string;
     colDate: string;
     back: string;
+    takeRemaining: string;
     /** Composed list/detail title: "<type> am <date> auf Projekt <project>". */
     title: (type: string, date: string, project: string) => string;
 }
@@ -74,6 +75,7 @@ export const STRINGS: Record<Lang, Strings> = {
         colType: "Type",
         colDate: "Date",
         back: "Back",
+        takeRemaining: "Use remaining",
         title: (type, date, project) => {
             let s = type || "—";
             if (date) s += ` on ${date}`;
@@ -111,6 +113,7 @@ export const STRINGS: Record<Lang, Strings> = {
         colType: "Typ",
         colDate: "Datum",
         back: "Zurück",
+        takeRemaining: "Rest übernehmen",
         title: (type, date, project) => {
             let s = type || "—";
             if (date) s += ` am ${date}`;
@@ -148,6 +151,7 @@ export const STRINGS: Record<Lang, Strings> = {
         colType: "Type",
         colDate: "Date",
         back: "Retour",
+        takeRemaining: "Reporter le reste",
         title: (type, date, project) => {
             let s = type || "—";
             if (date) s += ` le ${date}`;
