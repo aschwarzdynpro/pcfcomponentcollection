@@ -56,6 +56,13 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
      plus übernommene Felder (`sst_name`, `sst_date`, `sst_freitextfeld`) und
      Lookups (`sst_workorder`, `sst_bookableresourcebooking`, `sst_project_id`)
      vom Original.
+  2b. Setzt die **Zeiterfassungsart** (`sst_worktype_ref` + `sst_worktype_title_str`)
+     je Split über den zusammengesetzten Key **(paytype, timetype)**: paytype aus
+     dem Subtype (`sst_paytype_opt`, sonst Subtype-Name gegen das OptionSet-Label),
+     timetype aus dem Original-Eintrag (`sst_timetype_opt`, sonst `sst_type`-Text
+     gegen das Label). Das passende `sst_worktype`-Record wird beim Speichern
+     ermittelt (einmalige Abfrage aller `sst_worktypes`, Label→Wert aus deren
+     Formatted Values). Findet sich kein Treffer, bleibt die Zeiterfassungsart leer.
   3. Markiert das Original **und zugehörige Pausen** (gleicher Arbeitsauftrag,
      `sst_type = Pause`) als `sst_worksubtypecompleted = Ja`.
   4. Löscht das Original — die Kind-Subtype-Zeilen werden über die

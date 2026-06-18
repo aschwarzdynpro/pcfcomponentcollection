@@ -69,6 +69,7 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
             id: s.id,
             name: s.name,
             value: parseNumber(s.value),
+            paytype: s.paytype ?? null,
         }));
         try {
             await saveSplit(props.webApi, props.utils, fields, entry.id, input);

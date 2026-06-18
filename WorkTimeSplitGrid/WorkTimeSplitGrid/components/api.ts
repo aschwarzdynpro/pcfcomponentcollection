@@ -3,6 +3,9 @@ import {
     CHILD,
     PARENT_LOOKUPS,
     WORKORDER_VALUE,
+    WORKTYPE,
+    ENTRY_TIMETYPE,
+    normalizeLabel,
     FieldConfig,
     SUBTYPE_ORDER,
 } from "./schema";
@@ -53,17 +56,19 @@ export async function loadSubtypes(
 ): Promise<SubtypeRow[]> {
     const id = parentId.replace(/[{}]/g, "");
     const query =
-        `?$select=${CHILD.primaryId},${CHILD.name},${CHILD.timeValue}` +
+        `?$select=${CHILD.primaryId},${CHILD.name},${CHILD.timeValue},${CHILD.payType}` +
         `&$filter=${CHILD.parentLookupValue} eq ${id}`;
     const res = await webApi.retrieveMultipleRecords(CHILD.logicalName, query);
     const rows: SubtypeRow[] = (res.entities ?? []).map((e: any) => {
         const value =
             e[CHILD.timeValue] == null ? 0 : Number(e[CHILD.timeValue]);
+        const pay = e[CHILD.payType];
         return {
             id: e[CHILD.primaryId] as string,
             name: (e[CHILD.name] as string) ?? "",
             value: formatNumber(value),
             originalValue: value,
+            paytype: pay == null ? null : Number(pay),
         };
     });
     return sortSubtypes(rows);
@@ -117,6 +122,60 @@ export interface SplitInput {
     id: string;
     name: string;
     value: number;
+    /** Pay-type option value from the subtype row (sst_paytype_opt), if set. */
+    paytype: number | null;
+}
+
+/** Resolved work-type lookup tables, derived from the sst_worktype records. */
+interface WorktypeMaps {
+    /** "<paytype>|<timetype>" → { id, title }. */
+    byKey: Map<string, { id: string; title: string }>;
+    /** normalized paytype label → paytype value (name-match fallback). */
+    payLabel: Map<string, number>;
+    /** normalized timetype label → timetype value (name-match fallback). */
+    timeLabel: Map<string, number>;
+}
+
+/**
+ * Load the sst_worktype ("Zeiterfassungsart") records once and index them by the
+ * composite (paytype, timetype) key, plus label→value maps for the name-match
+ * fallback. Best-effort: returns empty maps on failure (no worktype is set).
+ */
+async function resolveWorktypes(
+    webApi: ComponentFramework.WebApi,
+): Promise<WorktypeMaps> {
+    const maps: WorktypeMaps = {
+        byKey: new Map(),
+        payLabel: new Map(),
+        timeLabel: new Map(),
+    };
+    try {
+        const res = await webApi.retrieveMultipleRecords(
+            WORKTYPE.logicalName,
+            `?$select=${WORKTYPE.id},${WORKTYPE.title},${WORKTYPE.payType},${WORKTYPE.timeType}`,
+        );
+        const fmt = "@OData.Community.Display.V1.FormattedValue";
+        for (const e of (res.entities ?? []) as Record<string, any>[]) {
+            const pay = e[WORKTYPE.payType];
+            const time = e[WORKTYPE.timeType];
+            const wid = e[WORKTYPE.id];
+            const title = String(e[WORKTYPE.title] ?? "");
+            if (pay != null && time != null && wid) {
+                maps.byKey.set(`${pay}|${time}`, { id: String(wid), title });
+            }
+            const payLbl = e[WORKTYPE.payType + fmt];
+            if (pay != null && payLbl) {
+                maps.payLabel.set(normalizeLabel(payLbl), Number(pay));
+            }
+            const timeLbl = e[WORKTYPE.timeType + fmt];
+            if (time != null && timeLbl) {
+                maps.timeLabel.set(normalizeLabel(timeLbl), Number(time));
+            }
+        }
+    } catch {
+        /* best-effort — splits are created without a worktype */
+    }
+    return maps;
 }
 
 export interface SaveResult {
@@ -145,6 +204,7 @@ export async function saveSplit(
         fields.date,
         fields.type,
         fields.notes,
+        ENTRY_TIMETYPE,
         WORKORDER_VALUE,
         lookupSelects,
     ]
@@ -160,6 +220,16 @@ export async function saveSplit(
     const originalName = (original[PARENT.primaryName] as string) ?? "";
     const originalDate = original[fields.date] ?? null;
     const originalNotes = original[fields.notes] ?? null;
+
+    // Resolve the work type ("Zeiterfassungsart") per split via the composite
+    // (paytype, timetype) key. timetype comes from the original entry's
+    // sst_timetype_opt, else its sst_type text matched to the option label.
+    const worktypes = await resolveWorktypes(webApi);
+    const originalTimetypeRaw = original[ENTRY_TIMETYPE];
+    const timetypeValue: number | null =
+        originalTimetypeRaw != null
+            ? Number(originalTimetypeRaw)
+            : worktypes.timeLabel.get(normalizeLabel(originalType)) ?? null;
 
     // Resolve @odata.bind targets for the lookups present on the original.
     const lookupBinds: Record<string, string> = {};
@@ -203,6 +273,22 @@ export async function saveSplit(
         if (originalName) payload[PARENT.primaryName] = originalName;
         if (originalDate != null) payload[fields.date] = originalDate;
         if (originalNotes != null) payload[fields.notes] = originalNotes;
+
+        // Work type = sst_worktype keyed by (paytype, timetype). paytype comes
+        // from the subtype's sst_paytype_opt, else its name matched to the label.
+        const paytypeValue: number | null =
+            s.paytype != null
+                ? s.paytype
+                : worktypes.payLabel.get(normalizeLabel(s.name)) ?? null;
+        if (paytypeValue != null && timetypeValue != null) {
+            const wt = worktypes.byKey.get(`${paytypeValue}|${timetypeValue}`);
+            if (wt) {
+                payload[`${WORKTYPE.navProp}@odata.bind`] =
+                    `/${WORKTYPE.entitySet}(${wt.id})`;
+                payload[WORKTYPE.titleStr] = wt.title;
+            }
+        }
+
         await webApi.createRecord(PARENT.logicalName, payload);
     }
 

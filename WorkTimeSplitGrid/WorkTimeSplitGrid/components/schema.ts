@@ -23,10 +23,47 @@ export const CHILD = {
     primaryId: "sst_roundedtimeentryworksubtypesid",
     name: "sst_name",
     timeValue: "sst_timevalue",
+    /** Pay-type optionset on the subtype row (part of the worktype key). */
+    payType: "sst_paytype_opt",
     /** Lookup back to the parent; filter via `_sst_roundedtimeentry_value`. */
     parentLookup: "sst_roundedtimeentry",
     parentLookupValue: "_sst_roundedtimeentry_value",
 } as const;
+
+/**
+ * Work type ("Zeiterfassungsart") on the entry. The target sst_worktype is keyed
+ * by the composite (paytype, timetype):
+ *   paytype  ← the subtype row's sst_paytype_opt, else its name matched to the
+ *              paytype option label
+ *   timetype ← the original entry's sst_timetype_opt, else its sst_type text
+ *              matched to the timetype option label
+ */
+export const WORKTYPE = {
+    /** Logical name (webApi.retrieveMultipleRecords). */
+    logicalName: "sst_worktype",
+    /** Entity set (for @odata.bind). */
+    entitySet: "sst_worktypes",
+    id: "sst_worktypeid",
+    title: "sst_title_str",
+    payType: "sst_paytype_opt",
+    timeType: "sst_timetype_opt",
+    /** @odata.bind navigation property on the entry. */
+    navProp: "sst_worktype_ref",
+    /** Denormalized worktype title text on the entry. */
+    titleStr: "sst_worktype_title_str",
+} as const;
+
+/** Timetype optionset on the entry (part of the worktype key). */
+export const ENTRY_TIMETYPE = "sst_timetype_opt";
+
+/** Normalize a label/name for option matching (case/space/slash-insensitive). */
+export function normalizeLabel(s: string | null | undefined): string {
+    return (s ?? "")
+        .toLowerCase()
+        .replace(/\s*\/\s*/g, "/")
+        .replace(/\s+/g, " ")
+        .trim();
+}
 
 /**
  * Parent lookups copied onto each split record. `logical` is the `_x_value`

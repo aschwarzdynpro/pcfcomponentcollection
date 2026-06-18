@@ -34,4 +34,6 @@ export interface SubtypeRow {
     value: string;
     /** Original persisted value (to detect changes). */
     originalValue: number;
+    /** Pay-type option value on the subtype row (sst_paytype_opt), if set. */
+    paytype: number | null;
 }

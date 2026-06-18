@@ -38,6 +38,11 @@ deletes the original.
      booking / work order / project lookups, date, name and notes, writing the
      subtype name into `sst_workordersubtype`, the type as `<Type> (<Subtype>)`,
      and `sst_worksubtypecompleted = Yes`,
+  2b. resolves the work type (`sst_worktype_ref` / `sst_worktype_title_str`) per
+     split from the composite key **(paytype, timetype)**: paytype from the
+     subtype's `sst_paytype_opt` (else its name matched to the option label),
+     timetype from the original entry's `sst_timetype_opt` (else its `sst_type`
+     text). The matching `sst_worktype` record is looked up at save time,
   3. marks the original **and its related pauses** (same work order) as
      completed,
   4. deletes the original — its child subtype rows are removed automatically by
