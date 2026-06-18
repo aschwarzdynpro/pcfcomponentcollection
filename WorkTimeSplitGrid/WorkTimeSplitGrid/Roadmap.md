@@ -16,9 +16,9 @@ anrichten kann.
 - 🔜 **Retry bei transienten Fehlern** (429/Timeout) statt sofortigem Toast.
 
 ## 2. Performance & gefühlte Geschwindigkeit
-- 🔜 **Optimistisches Listen-Update** statt Full-Reload nach jedem Save: die
+- ✅ **Optimistisches Listen-Update** statt Full-Reload nach jedem Save: die
   bearbeitete Zeile lokal entfernen (sie verlässt den Filter ohnehin) → kein
-  Flackern. Kleiner Aufwand, großer Effekt.
+  Flackern. — *v1.8.2.*
 - 🔜 **`$batch` für die vielen `updateRecord`-Calls** (Subtypes, Pausen) →
   weniger Round-Trips.
 - 🔜 **Worktype-Cache**: `resolveWorktypes` lädt aktuell bei jedem Save alle
@@ -54,6 +54,6 @@ anrichten kann.
 ---
 
 ### Empfohlene Reihenfolge (Top 3)
-1. Optimistisches Listen-Update (2) — sofort spürbar, geringer Aufwand.
+1. ~~Optimistisches Listen-Update (2)~~ — ✅ erledigt (v1.8.2).
 2. Atomare/abgesicherte Aufteilung (1) — schützt die einzige gefährliche Stelle.
 3. ~~Zeitraum-/Filter-Chips + Sortierung (3)~~ — ✅ erledigt (v1.8.0).

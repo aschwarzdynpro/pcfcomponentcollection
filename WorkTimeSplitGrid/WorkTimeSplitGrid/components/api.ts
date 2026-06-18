@@ -478,6 +478,8 @@ export interface CreateReportsResult {
     reportsCreated: number;
     assigned: number;
     failed: number;
+    /** Ids of the entries that were actually linked (for optimistic removal). */
+    assignedIds: string[];
     /** Every created delivery note (one per work order), with id + name. */
     reports: CreatedReport[];
     /** The single created report id (when exactly one) — for opening the form. */
@@ -524,6 +526,7 @@ export async function createTimeReports(
             reportsCreated: 0,
             assigned: 0,
             failed: 0,
+            assignedIds: [],
             reports: [],
             singleReportId: null,
         };
@@ -548,6 +551,7 @@ export async function createTimeReports(
     }
 
     let assigned = 0;
+    const assignedIds: string[] = [];
     const reports: CreatedReport[] = [];
     const dateStr = new Date().toDateString();
 
@@ -589,6 +593,7 @@ export async function createTimeReports(
                     [`${TIMEREPORT.entryNav}@odata.bind`]: `/${TIMEREPORT.entitySet}(${reportId})`,
                 });
                 assigned += 1;
+                assignedIds.push(eid);
             } catch {
                 failed += 1;
             }
@@ -600,6 +605,7 @@ export async function createTimeReports(
         reportsCreated: reports.length,
         assigned,
         failed,
+        assignedIds,
         reports,
         singleReportId: reports.length === 1 ? reports[0].id : null,
     };

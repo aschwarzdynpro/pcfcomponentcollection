@@ -114,7 +114,12 @@ deletes the original.
   from the original record's lookup annotations + entity metadata, so the work
   order / booking / project links survive the split regardless of their target
   tables.
-- **Optimistic feel**: success/error toasts; `dataset.refresh()` after save.
+- **Optimistic list updates**: after a split-save or delivery-note assignment the
+  affected rows leave the current filter, so they're dropped from the list locally
+  (the split original and the assigned entries) instead of triggering a full
+  server reload — instant, no flicker. A mode switch or "My hours" toggle reloads
+  fresh from the server. `createTimeReports` returns the actually-assigned ids so
+  only those are removed (partial failures keep their rows).
 
 ## 🚀 Component structure
 

@@ -112,7 +112,12 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
      `sst_type = Pause`) als `sst_worksubtypecompleted = Ja`.
   4. Löscht das Original — die Kind-Subtype-Zeilen werden über die
      Cascade-Delete-Beziehung automatisch mitentfernt.
-- Erfolgs-/Fehler-Toast; danach `dataset.refresh()`.
+- Erfolgs-/Fehler-Toast. **Optimistisches Listen-Update:** Nach dem Speichern
+  (bzw. Zuordnen) verlassen die betroffenen Zeilen den aktuellen Filter und werden
+  **lokal** aus der Liste entfernt — kein Full-Reload, kein Flackern. Ein
+  Moduswechsel oder das Umschalten von „Meine Stunden" lädt frisch vom Server.
+  `createTimeReports` liefert die tatsächlich zugeordneten IDs zurück, sodass bei
+  Teilfehlern nur die erfolgreich verarbeiteten Zeilen entfernt werden.
 
 ### @odata.bind robust
 - Beim Anlegen der Split-Records werden die Lookup-Ziele

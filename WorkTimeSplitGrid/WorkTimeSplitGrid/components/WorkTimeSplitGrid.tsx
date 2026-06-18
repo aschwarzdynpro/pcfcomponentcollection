@@ -138,8 +138,6 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const [entries, setEntries] = React.useState<EntryRow[] | null>(null);
     const [loadingEntries, setLoadingEntries] = React.useState(true);
     const [entriesError, setEntriesError] = React.useState<string | null>(null);
-    // Bumped to force a reload of the entry list (after save / assign).
-    const [reloadKey, setReloadKey] = React.useState(0);
     const [myHoursOnly, setMyHoursOnly] = React.useState(true);
     const [isAdmin, setIsAdmin] = React.useState(false);
 
@@ -193,10 +191,17 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             cancelled = true;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [mode, myHoursActive, currentUserId, props.webApi, reloadKey, t]);
+    }, [mode, myHoursActive, currentUserId, props.webApi, t]);
 
-    const reloadEntries = React.useCallback(() => {
-        setReloadKey((k) => k + 1);
+    // Optimistic update: drop rows that left the current filter (split-saved or
+    // assigned to a delivery note) without a full server reload — instant, no
+    // flicker. A mode switch / "My hours" toggle reloads fresh from the server.
+    const removeEntries = React.useCallback((ids: string[]) => {
+        if (ids.length === 0) return;
+        const rm = new Set(ids.map((i) => i.replace(/[{}]/g, "")));
+        setEntries((prev) =>
+            prev ? prev.filter((e) => !rm.has(e.id)) : prev,
+        );
     }, []);
 
     // Period filter + free-text search (title, type, date, project number,
@@ -270,10 +275,12 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
 
     const handleSaved = React.useCallback(() => {
         flashToast(t.saveSucceeded);
+        // The split original is deleted (and its splits are completed), so it
+        // leaves the "split" list — drop it locally instead of reloading.
+        if (selectedId) removeEntries([selectedId]);
         setSelectedId(null);
         setSubtypes(null);
-        reloadEntries();
-    }, [reloadEntries, flashToast, t.saveSucceeded]);
+    }, [selectedId, removeEntries, flashToast, t.saveSucceeded]);
 
     const switchMode = React.useCallback((m: Mode) => {
         setMode(m);
@@ -321,7 +328,9 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                         : t.reportsDone(res.reportsCreated, res.assigned),
                 );
                 setCheckedIds(new Set());
-                reloadEntries();
+                // Assigned entries now have a delivery note → they leave the
+                // "assign" list. Drop exactly those locally (no full reload).
+                removeEntries(res.assignedIds);
                 // Plain "create" opens only when exactly one note resulted.
                 // "Create & open": one note → open it; several → show a picker.
                 if (openAfter && res.reports.length > 1) {
@@ -345,7 +354,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             creating,
             props.webApi,
             openReport,
-            reloadEntries,
+            removeEntries,
             flashToast,
             t,
         ],
