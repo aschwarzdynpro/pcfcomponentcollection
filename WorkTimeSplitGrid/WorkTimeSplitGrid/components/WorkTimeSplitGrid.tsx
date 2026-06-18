@@ -138,6 +138,9 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const [entries, setEntries] = React.useState<EntryRow[] | null>(null);
     const [loadingEntries, setLoadingEntries] = React.useState(true);
     const [entriesError, setEntriesError] = React.useState<string | null>(null);
+    // Manual/pull refresh: bumping the key re-runs the server load.
+    const [refreshKey, setRefreshKey] = React.useState(0);
+    const [refreshing, setRefreshing] = React.useState(false);
     const [myHoursOnly, setMyHoursOnly] = React.useState(true);
     const [isAdmin, setIsAdmin] = React.useState(false);
 
@@ -179,19 +182,26 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 if (cancelled) return;
                 setEntries(loaded.map((e) => toEntryRow(e, t.title)));
                 setLoadingEntries(false);
+                setRefreshing(false);
             },
             () => {
                 if (cancelled) return;
                 setEntries([]);
                 setEntriesError(t.errorPrefix);
                 setLoadingEntries(false);
+                setRefreshing(false);
             },
         );
         return () => {
             cancelled = true;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [mode, myHoursActive, currentUserId, props.webApi, t]);
+    }, [mode, myHoursActive, currentUserId, props.webApi, refreshKey, t]);
+
+    const refresh = React.useCallback(() => {
+        setRefreshing(true);
+        setRefreshKey((k) => k + 1);
+    }, []);
 
     // Optimistic update: drop rows that left the current filter (split-saved or
     // assigned to a delivery note) without a full server reload — instant, no
@@ -514,6 +524,10 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                         ? t.noResultsSearch
                                         : t.noResults
                                 }
+                                highlight={search.trim()}
+                                enablePull={props.isMobile}
+                                refreshing={refreshing}
+                                onRefresh={refresh}
                                 strings={t}
                             />
                         )}
@@ -550,6 +564,10 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                         emptyMessage={
                             search.trim() ? t.noResultsSearch : t.noResults
                         }
+                        highlight={search.trim()}
+                        enablePull={props.isMobile}
+                        refreshing={refreshing}
+                        onRefresh={refresh}
                         strings={t}
                     />
                 )}

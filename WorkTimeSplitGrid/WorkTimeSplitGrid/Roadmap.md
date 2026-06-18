@@ -42,7 +42,7 @@ anrichten kann.
   in den Modals.
 - 🔜 **Manueller Refresh-Button** (serverseitige Änderungen sieht man sonst erst
   bei Moduswechsel).
-- 🔜 Suchtreffer hervorheben; Pull-to-Refresh auf Mobil.
+- ✅ Suchtreffer hervorheben; Pull-to-Refresh auf Mobil. — *v1.9.0.*
 
 ## 5. Qualität & Wartbarkeit
 - 🔜 **Unit-Tests** für die reinen Funktionen (`parseNumber`, Filteraufbau,

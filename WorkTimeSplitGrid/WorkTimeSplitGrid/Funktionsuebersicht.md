@@ -62,6 +62,10 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   als eigenes, bibliotheksfreies React-Dropdown (schließt per Klick-außerhalb /
   Esc, Tastatur-Navigation). Beide wirken clientseitig auf die geladene Menge —
   also sofort.
+- **Treffer-Hervorhebung** — passende Teilstrings werden beim Tippen im
+  Karten-Titel und in den Chips hervorgehoben.
+- **Pull-to-Refresh (Mobil)** — auf dem Handy die Liste über die Schwelle nach
+  unten ziehen, um vom Server neu zu laden (gedämpfter Zieh-Indikator + Spinner).
 - **Leerzustand** — wenn keine Einträge passen (oder eine Suche keine Treffer
   liefert), zeigt die Liste ein Fernglas-Symbol und einen kurzen 1-Zeiler statt
   einer leeren Fläche.

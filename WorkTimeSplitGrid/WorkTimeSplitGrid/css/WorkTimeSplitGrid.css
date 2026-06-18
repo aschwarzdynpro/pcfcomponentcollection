@@ -270,13 +270,10 @@
     max-width: none;
 }
 
-/* Empty-state (no entries / no search matches) */
-.wtsg-list-empty {
-    justify-content: center;
-    align-items: center;
-}
-
+/* Empty-state (no entries / no search matches) — margin:auto centers it while
+   keeping any pull-to-refresh indicator pinned to the top. */
 .wtsg-empty-state {
+    margin: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -293,6 +290,32 @@
 
 .wtsg-empty-icon {
     color: #c8c6c4;
+}
+
+/* Search-match highlight */
+.wtsg-hl {
+    background: #fff3a3;
+    color: inherit;
+    border-radius: 2px;
+    padding: 0 1px;
+}
+
+/* Pull-to-refresh indicator (mobile) */
+.wtsg-ptr {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: #0f6cbd;
+}
+
+.wtsg-ptr-arrow {
+    transition: transform 0.15s ease;
+}
+
+.wtsg-ptr-arrow.armed {
+    transform: rotate(180deg);
 }
 
 /* Assign mode: bottom action bar with the "create delivery notes" button. */

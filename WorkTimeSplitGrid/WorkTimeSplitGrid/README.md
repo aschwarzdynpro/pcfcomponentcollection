@@ -57,6 +57,10 @@ deletes the original.
   (**date newest/oldest, project, resource, duration**) as a custom, dependency-
   free React dropdown (click-outside / Escape close, keyboard navigation). Both
   apply client-side over the loaded set, so they're instant.
+- **Search-match highlight** — matching substrings are highlighted in the card
+  title and chips as you type.
+- **Pull-to-refresh (mobile)** — on a phone, pull the list down past the
+  threshold to reload from the server (a damped pull indicator + spinner).
 - **Empty state** — when no entries qualify (or a search has no matches) the list
   shows a binoculars icon and a short one-liner instead of a blank pane.
 - **"My hours" chip** (preselected) — filters to entries whose resource's user is
