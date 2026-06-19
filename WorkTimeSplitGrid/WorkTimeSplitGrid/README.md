@@ -118,8 +118,12 @@ deletes the original.
 - The control is **online-only** (live server-side queries + a `$batch` save). In
   the Power Apps mobile app's offline mode it detects `context.client.isOffline()`
   and shows a clear "not available offline" notice (and skips the queries) instead
-  of failing with a generic platform error. Full offline support is scoped in
-  [`OfflinePlan.md`](OfflinePlan.md).
+  of failing with a generic platform error.
+- For that notice to appear at all, `WebAPI`/`Utility` are declared
+  **`required="false"`** in the manifest: the host refuses to render a control
+  whose *required* feature is unavailable (WebAPI is unavailable offline), which
+  otherwise hid the notice behind a generic "control can't load" error.
+- Full offline support is scoped in [`OfflinePlan.md`](OfflinePlan.md).
 
 ### 🔧 Technical
 - **React 17** + TypeScript, no extra runtime libraries.
