@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="WorkTime" constructor="WorkTimeSplitGrid" version="1.16.0" display-name-key="WorkTimeSplitGrid_Display" description-key="WorkTimeSplitGrid_Desc" control-type="standard">
+    <!-- Bound dataset: the Rounded Time Entries shown as the master list -->
+    <data-set name="entries" display-name-key="entries_Display" description-key="entries_Desc"></data-set>
+
+    <!-- All properties below are optional overrides. Defaults target the SST
+         (Schulz Systemtechnik) Rounded Time Entry schema and live in schema.ts. -->
+
+    <!-- Decimal column holding the entry's total duration (default: sst_duration) -->
+    <property name="totalField" display-name-key="totalField_Display" description-key="totalField_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- DateTime column shown in the list (default: sst_date) -->
+    <property name="dateField" display-name-key="dateField_Display" description-key="dateField_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- Text column holding the entry type (default: sst_type). Values like Arbeit/Fahrzeit/Pause -->
+    <property name="typeField" display-name-key="typeField_Display" description-key="typeField_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- Type value that marks a break/pause and is hidden from the list (default: Pause) -->
+    <property name="pauseValue" display-name-key="pauseValue_Display" description-key="pauseValue_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- TwoOptions/boolean column flagging an entry as already split (default: sst_worksubtypecompleted) -->
+    <property name="completedField" display-name-key="completedField_Display" description-key="completedField_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- Text column on the new split records that stores the subtype name (default: sst_workordersubtype) -->
+    <property name="subtypeField" display-name-key="subtypeField_Display" description-key="subtypeField_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <resources>
+      <code path="index.ts" order="1"/>
+      <css path="css/WorkTimeSplitGrid.css" order="1" />
+      <resx path="strings/WorkTimeSplitGrid.1033.resx" version="1.0.0" />
+    </resources>
+
+    <!-- required="false": a control whose required feature is unavailable (e.g.
+         WebAPI offline) is NOT rendered by the host at all — which hid the React
+         offline notice behind a generic "control can't load" error. With optional
+         features the control loads everywhere; offline it shows its own notice
+         and skips the (guarded) WebAPI calls. -->
+    <feature-usage>
+      <uses-feature name="WebAPI" required="false" />
+      <uses-feature name="Utility" required="false" />
+    </feature-usage>
+  </control>
+</manifest>

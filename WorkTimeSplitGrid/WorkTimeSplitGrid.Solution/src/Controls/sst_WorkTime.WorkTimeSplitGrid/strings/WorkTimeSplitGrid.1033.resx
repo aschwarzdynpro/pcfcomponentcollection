@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="WorkTimeSplitGrid_Display" xml:space="preserve">
+    <value>Work Time Split Grid</value>
+    <comment>Display name for the control</comment>
+  </data>
+  <data name="WorkTimeSplitGrid_Desc" xml:space="preserve">
+    <value>Dataset control for Rounded Time Entries: pick an entry and distribute its total duration across work subtypes (Normal/Overtime/Night-Sunday/Holiday); saving creates the split records, marks the original and its pauses as completed, and removes the original.</value>
+    <comment>Description for the control</comment>
+  </data>
+  <data name="entries_Display" xml:space="preserve">
+    <value>Rounded Time Entries</value>
+    <comment>Display name for the bound dataset</comment>
+  </data>
+  <data name="entries_Desc" xml:space="preserve">
+    <value>The Rounded Time Entries shown as the master list to be split.</value>
+    <comment>Description for the bound dataset</comment>
+  </data>
+  <data name="totalField_Display" xml:space="preserve">
+    <value>Total Duration Column</value>
+    <comment>Display name for the total field override</comment>
+  </data>
+  <data name="totalField_Desc" xml:space="preserve">
+    <value>Logical name of the decimal column holding the entry's total duration. Default: sst_duration.</value>
+    <comment>Description for the total field override</comment>
+  </data>
+  <data name="dateField_Display" xml:space="preserve">
+    <value>Date Column</value>
+    <comment>Display name for the date field override</comment>
+  </data>
+  <data name="dateField_Desc" xml:space="preserve">
+    <value>Logical name of the date/time column shown in the list. Default: sst_date.</value>
+    <comment>Description for the date field override</comment>
+  </data>
+  <data name="typeField_Display" xml:space="preserve">
+    <value>Type Column</value>
+    <comment>Display name for the type field override</comment>
+  </data>
+  <data name="typeField_Desc" xml:space="preserve">
+    <value>Logical name of the text column holding the entry type (Arbeit/Fahrzeit/Pause). Default: sst_type.</value>
+    <comment>Description for the type field override</comment>
+  </data>
+  <data name="pauseValue_Display" xml:space="preserve">
+    <value>Pause Value</value>
+    <comment>Display name for the pause value override</comment>
+  </data>
+  <data name="pauseValue_Desc" xml:space="preserve">
+    <value>Type value that marks a break/pause; these entries are hidden from the list and marked completed on save. Default: Pause.</value>
+    <comment>Description for the pause value override</comment>
+  </data>
+  <data name="completedField_Display" xml:space="preserve">
+    <value>Completed Flag Column</value>
+    <comment>Display name for the completed flag override</comment>
+  </data>
+  <data name="completedField_Desc" xml:space="preserve">
+    <value>Logical name of the boolean column flagging an entry as already split. Default: sst_worksubtypecompleted.</value>
+    <comment>Description for the completed flag override</comment>
+  </data>
+  <data name="subtypeField_Display" xml:space="preserve">
+    <value>Subtype Target Column</value>
+    <comment>Display name for the subtype target override</comment>
+  </data>
+  <data name="subtypeField_Desc" xml:space="preserve">
+    <value>Logical name of the text column on the new split records that stores the subtype name. Default: sst_workordersubtype.</value>
+    <comment>Description for the subtype target override</comment>
+  </data>
+</root>

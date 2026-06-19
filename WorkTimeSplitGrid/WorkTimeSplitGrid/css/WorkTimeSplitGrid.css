@@ -1,0 +1,1138 @@
+.wtsg-host {
+    width: 100%;
+    height: 100%;
+}
+
+.wtsg-root {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 420px;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    color: #242424;
+    box-sizing: border-box;
+}
+
+.wtsg-root *,
+.wtsg-root *::before,
+.wtsg-root *::after {
+    box-sizing: border-box;
+}
+
+/* ---- Toolbar ---- */
+.wtsg-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border-bottom: 1px solid #e1dfdd;
+    flex: 0 0 auto;
+}
+
+.wtsg-search {
+    flex: 1 1 220px;
+    max-width: 320px;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid #c8c6c4;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.wtsg-toggle {
+    display: inline-flex;
+    border: 1px solid #c8c6c4;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.wtsg-toggle button {
+    border: none;
+    background: #fff;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #424242;
+}
+
+.wtsg-toggle button.active {
+    background: #0f6cbd;
+    color: #fff;
+}
+
+/* "My hours" filter chip */
+.wtsg-chip-filter {
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 16px;
+    border: 1px solid #c8c6c4;
+    background: #fff;
+    color: #424242;
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.wtsg-chip-filter.active {
+    background: #0f6cbd;
+    border-color: #0f6cbd;
+    color: #fff;
+}
+
+.wtsg-chip-filter:disabled {
+    cursor: not-allowed;
+}
+
+.wtsg-count {
+    margin-left: auto;
+    font-size: 12px;
+    color: #616161;
+}
+
+/* ---- Sub-toolbar: period filter + sort ---- */
+.wtsg-subbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 10px;
+    border-bottom: 1px solid #e1dfdd;
+    flex: 0 0 auto;
+}
+
+.wtsg-period button {
+    font-size: 12px;
+    padding: 5px 10px;
+}
+
+.wtsg-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    font-size: 12px;
+    color: #616161;
+}
+
+/* ---- Custom dropdown (sort) ---- */
+.wtsg-dd {
+    position: relative;
+    display: inline-block;
+}
+
+.wtsg-dd-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 160px;
+    height: 30px;
+    padding: 0 10px;
+    border: 1px solid #c8c6c4;
+    border-radius: 6px;
+    background: #fff;
+    color: #242424;
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color 0.1s, box-shadow 0.1s;
+}
+
+.wtsg-dd-trigger:hover {
+    border-color: #0f6cbd;
+}
+
+.wtsg-dd-trigger.open {
+    border-color: #0f6cbd;
+    box-shadow: 0 0 0 1px #0f6cbd;
+}
+
+.wtsg-dd-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wtsg-dd-chevron {
+    flex: 0 0 auto;
+    color: #616161;
+    transition: transform 0.15s ease;
+}
+
+.wtsg-dd-trigger.open .wtsg-dd-chevron {
+    transform: rotate(180deg);
+}
+
+.wtsg-dd-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 30;
+    min-width: 100%;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: #fff;
+    border: 1px solid #e1dfdd;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+    white-space: nowrap;
+    animation: wtsg-dd-in 0.12s ease;
+}
+
+@keyframes wtsg-dd-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+}
+
+.wtsg-dd-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 6px;
+    background: none;
+    color: #242424;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.wtsg-dd-item:hover {
+    background: #f3f2f1;
+}
+
+.wtsg-dd-item.selected {
+    color: #0f6cbd;
+    font-weight: 600;
+}
+
+.wtsg-dd-check {
+    flex: 0 0 14px;
+    width: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #0f6cbd;
+}
+
+/* ---- Toast ---- */
+.wtsg-toast {
+    margin: 8px 10px 0;
+    padding: 8px 12px;
+    background: #f3f9ff;
+    border: 1px solid #0f6cbd;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #0b5394;
+}
+
+.wtsg-toast-error {
+    background: #fdf3f4;
+    border-color: #d13438;
+    color: #a4262c;
+}
+
+/* ---- Body: master / detail ---- */
+.wtsg-body {
+    display: flex;
+    gap: 10px;
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 10px;
+}
+
+.wtsg-body.wtsg-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* ---- Master list ---- */
+.wtsg-list {
+    flex: 0 0 38%;
+    max-width: 420px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 4px;
+}
+
+/* Assign mode: the list takes the full width (no detail panel). */
+.wtsg-assign .wtsg-list {
+    flex: 1 1 auto;
+    max-width: none;
+}
+
+/* Empty-state (no entries / no search matches) — margin:auto centers it while
+   keeping any pull-to-refresh indicator pinned to the top. */
+.wtsg-empty-state {
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 32px 16px;
+    color: #909090;
+    text-align: center;
+}
+
+.wtsg-empty-state span {
+    font-size: 14px;
+    max-width: 280px;
+}
+
+.wtsg-empty-icon {
+    color: #c8c6c4;
+}
+
+/* Search-match highlight */
+.wtsg-hl {
+    background: #fff3a3;
+    color: inherit;
+    border-radius: 2px;
+    padding: 0 1px;
+}
+
+/* Pull-to-refresh indicator (mobile) */
+.wtsg-ptr {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: #0f6cbd;
+}
+
+.wtsg-ptr-arrow {
+    transition: transform 0.15s ease;
+}
+
+.wtsg-ptr-arrow.armed {
+    transform: rotate(180deg);
+}
+
+/* Assign mode: bottom action bar with the "create delivery notes" button. */
+.wtsg-actionbar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-top: 1px solid #e1dfdd;
+    background: #fff;
+}
+
+.wtsg-actionbar-count {
+    font-size: 13px;
+    color: #424242;
+}
+
+.wtsg-actionbar-btns {
+    display: flex;
+    gap: 8px;
+}
+
+.wtsg-actionbar-btn {
+    height: 38px;
+    padding: 0 20px;
+    border: none;
+    border-radius: 4px;
+    background: #0f6cbd;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.wtsg-actionbar-btn:disabled {
+    background: #c8c6c4;
+    cursor: not-allowed;
+}
+
+/* Plain "create" button: outlined so the filled "create & open" reads primary. */
+.wtsg-actionbar-btn-secondary {
+    background: #fff;
+    color: #0f6cbd;
+    border: 1px solid #0f6cbd;
+}
+
+.wtsg-actionbar-btn-secondary:disabled {
+    background: #fff;
+    color: #c8c6c4;
+    border-color: #c8c6c4;
+}
+
+.wtsg-btn-ext {
+    font-weight: 400;
+}
+
+.wtsg-mobile .wtsg-actionbar {
+    padding: 12px 14px;
+    flex-wrap: wrap;
+}
+
+.wtsg-mobile .wtsg-actionbar-btns {
+    flex: 1 1 100%;
+}
+
+.wtsg-mobile .wtsg-actionbar-btn {
+    height: 46px;
+    flex: 1 1 0;
+}
+
+/* ---- Progress overlay (delivery-note creation in flight) ---- */
+.wtsg-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.6);
+    cursor: progress;
+}
+
+.wtsg-overlay-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    background: #fff;
+    border: 1px solid #e1dfdd;
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    font-size: 14px;
+    color: #242424;
+}
+
+.wtsg-card {
+    border: 1px solid #e1dfdd;
+    border-left: 3px solid #c8c6c4;
+    border-radius: 6px;
+    padding: 10px 12px;
+    cursor: pointer;
+    background: #fff;
+    transition: background 0.1s, border-color 0.1s;
+}
+
+.wtsg-card:hover {
+    background: #faf9f8;
+}
+
+.wtsg-card.selected {
+    border-left-color: #0f6cbd;
+    background: #eef6fc;
+}
+
+.wtsg-card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Multi-select checkbox (assign mode) */
+.wtsg-check {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid #c8c6c4;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: #fff;
+}
+
+.wtsg-check.checked {
+    background: #0f6cbd;
+    border-color: #0f6cbd;
+}
+
+.wtsg-card-title {
+    font-weight: 600;
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1 1 auto;
+}
+
+.wtsg-badge {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+}
+
+.wtsg-badge.open {
+    background: #d13438;
+}
+
+.wtsg-badge.done {
+    background: #107c10;
+}
+
+.wtsg-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 12px;
+    color: #616161;
+    margin-top: 6px;
+}
+
+.wtsg-card-total {
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.wtsg-card-extras {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.wtsg-chip {
+    background: #f3f2f1;
+    border-radius: 10px;
+    padding: 1px 8px;
+    font-size: 11px;
+    color: #424242;
+    max-width: 160px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ---- Detail panel ---- */
+.wtsg-panel {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 1px solid #e1dfdd;
+    border-radius: 6px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 16px;
+    overflow-y: auto;
+}
+
+.wtsg-panel-empty {
+    align-items: center;
+    justify-content: center;
+    color: #909090;
+}
+
+.wtsg-panel-head h3 {
+    margin: 0;
+    font-size: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.wtsg-panel-sub {
+    font-size: 13px;
+    color: #616161;
+    margin-top: 2px;
+}
+
+.wtsg-panel-loading,
+.wtsg-panel-error {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #616161;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.wtsg-panel-error {
+    color: #a4262c;
+}
+
+.wtsg-panel-note {
+    margin-top: 16px;
+    padding: 8px 12px;
+    background: #fff8e6;
+    border: 1px solid #f0c000;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #8a6d00;
+}
+
+.wtsg-rows {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.wtsg-rowitem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.wtsg-rowname {
+    flex: 1 1 auto;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+/* Fixed slot keeps the inputs aligned whether or not the fill icon shows. */
+.wtsg-rowfill {
+    flex: 0 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wtsg-fillbtn {
+    border: none;
+    background: none;
+    color: #0f6cbd;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+}
+
+.wtsg-fillbtn:hover {
+    background: #eef6fc;
+}
+
+.wtsg-rowinput {
+    flex: 0 0 120px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid #c8c6c4;
+    border-radius: 4px;
+    font-size: 15px;
+    text-align: right;
+}
+
+.wtsg-rowinput:focus {
+    outline: 2px solid #0f6cbd;
+    outline-offset: -1px;
+}
+
+.wtsg-rowinput.invalid {
+    border-color: #d13438;
+    background: #fdf3f4;
+}
+
+.wtsg-rowinput:disabled {
+    background: #f3f2f1;
+    color: #909090;
+}
+
+/* ---- Mobile +/− stepper ---- */
+.wtsg-stepper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.wtsg-step {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    border: 1px solid #c8c6c4;
+    border-radius: 10px;
+    background: #fff;
+    color: #0f6cbd;
+    font-size: 26px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.wtsg-step:active {
+    background: #eef6fc;
+}
+
+.wtsg-step:disabled {
+    color: #c8c6c4;
+    border-color: #e1dfdd;
+    cursor: not-allowed;
+}
+
+/* ---- Summary ---- */
+.wtsg-summary {
+    margin-top: 16px;
+    display: flex;
+    gap: 20px;
+    padding-top: 12px;
+    border-top: 1px solid #edebe9;
+}
+
+.wtsg-summary > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.wtsg-summary span {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #909090;
+}
+
+.wtsg-summary strong {
+    font-size: 17px;
+}
+
+.wtsg-summary .ok strong {
+    color: #107c10;
+}
+
+.wtsg-summary .warn strong {
+    color: #ca5010;
+}
+
+/* ---- Actions ---- */
+.wtsg-actions {
+    margin-top: auto;
+    padding-top: 16px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.wtsg-save {
+    height: 38px;
+    padding: 0 20px;
+    border: none;
+    border-radius: 4px;
+    background: #107c10;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.wtsg-save:disabled {
+    background: #c8c6c4;
+    cursor: not-allowed;
+}
+
+/* ---- Confirm modal ---- */
+.wtsg-modal {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+}
+
+.wtsg-modal-card {
+    background: #fff;
+    border-radius: 6px;
+    padding: 20px;
+    max-width: 420px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.wtsg-modal-card h4 {
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+
+.wtsg-modal-card p {
+    margin: 0 0 16px;
+    font-size: 13px;
+    color: #424242;
+    line-height: 1.5;
+}
+
+.wtsg-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* ---- Delivery-note picker (create & open, multiple results) ---- */
+.wtsg-report-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0 0 16px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.wtsg-report-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    border: 1px solid #e1dfdd;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 13px;
+    color: #242424;
+    cursor: pointer;
+}
+
+.wtsg-report-item:hover {
+    background: #eef6fc;
+    border-color: #0f6cbd;
+}
+
+.wtsg-report-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.wtsg-report-number {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wtsg-report-sub {
+    font-size: 11px;
+    color: #909090;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wtsg-report-open {
+    flex: 0 0 auto;
+    color: #0f6cbd;
+    font-weight: 600;
+}
+
+.wtsg-btn-primary,
+.wtsg-btn-secondary {
+    height: 34px;
+    padding: 0 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.wtsg-btn-primary {
+    border: none;
+    background: #107c10;
+    color: #fff;
+    font-weight: 600;
+}
+
+.wtsg-btn-secondary {
+    border: 1px solid #c8c6c4;
+    background: #fff;
+    color: #424242;
+}
+
+/* ---- Empty / spinner ---- */
+.wtsg-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 100%;
+    color: #616161;
+    font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+/* ---- Offline banner ---- */
+.wtsg-offline-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 10px 0;
+    padding: 6px 12px;
+    background: #fff8e6;
+    border: 1px solid #f0c000;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #8a6d00;
+}
+
+.wtsg-offline-bar svg {
+    flex: 0 0 auto;
+    color: #c79a00;
+}
+
+.wtsg-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #c8c6c4;
+    border-top-color: #0f6cbd;
+    border-radius: 50%;
+    display: inline-block;
+    animation: wtsg-spin 0.8s linear infinite;
+}
+
+@keyframes wtsg-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive: stack the desktop two-pane on a narrow (non-phone) host */
+@media (max-width: 720px) {
+    .wtsg-root:not(.wtsg-mobile) .wtsg-body {
+        flex-direction: column;
+    }
+    .wtsg-root:not(.wtsg-mobile) .wtsg-list {
+        flex: 0 0 auto;
+        max-width: none;
+        max-height: 40%;
+    }
+}
+
+/* ============================================================
+   Mobile (phone form factor): single-pane, touch-first layout.
+   List and detail swap full-screen; bigger tap targets + inputs.
+   ============================================================ */
+.wtsg-mobile .wtsg-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.wtsg-mobile .wtsg-search {
+    flex: 1 1 100%;
+    max-width: none;
+    height: 40px;
+    font-size: 16px;
+}
+
+.wtsg-mobile .wtsg-toggle {
+    flex: 1 1 auto;
+}
+
+.wtsg-mobile .wtsg-toggle button {
+    flex: 1 1 0;
+    padding: 10px 12px;
+    font-size: 14px;
+}
+
+.wtsg-mobile .wtsg-chip-filter {
+    height: 40px;
+    font-size: 14px;
+}
+
+.wtsg-mobile .wtsg-count {
+    margin-left: 0;
+}
+
+.wtsg-mobile .wtsg-subbar {
+    gap: 8px;
+}
+
+.wtsg-mobile .wtsg-period {
+    flex: 1 1 100%;
+}
+
+.wtsg-mobile .wtsg-period button {
+    flex: 1 1 0;
+    padding: 8px 6px;
+    font-size: 13px;
+}
+
+.wtsg-mobile .wtsg-sort {
+    flex: 1 1 100%;
+    margin-left: 0;
+    justify-content: space-between;
+}
+
+.wtsg-mobile .wtsg-dd {
+    flex: 1 1 auto;
+}
+
+.wtsg-mobile .wtsg-dd-trigger {
+    width: 100%;
+    height: 38px;
+    font-size: 14px;
+}
+
+.wtsg-mobile .wtsg-dd-item {
+    padding: 11px 12px;
+    font-size: 14px;
+}
+
+.wtsg-mobile .wtsg-body {
+    flex-direction: column;
+    padding: 0;
+    gap: 0;
+}
+
+.wtsg-mobile .wtsg-list {
+    flex: 1 1 auto;
+    max-width: none;
+    max-height: none;
+    padding: 10px;
+    gap: 10px;
+    padding-right: 10px;
+}
+
+/* Bigger, finger-friendly cards */
+.wtsg-mobile .wtsg-card {
+    padding: 14px 16px;
+}
+
+.wtsg-mobile .wtsg-card-title {
+    font-size: 16px;
+}
+
+.wtsg-mobile .wtsg-card-meta {
+    font-size: 13px;
+}
+
+.wtsg-mobile .wtsg-card-total {
+    font-size: 14px;
+}
+
+/* Full-screen detail */
+.wtsg-mobile .wtsg-panel {
+    border: none;
+    border-radius: 0;
+    padding: 0;
+}
+
+.wtsg-mobile-head {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    background: #fff;
+    border-bottom: 1px solid #e1dfdd;
+}
+
+.wtsg-back {
+    border: none;
+    background: none;
+    color: #0f6cbd;
+    font-size: 16px;
+    padding: 8px 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    min-height: 40px;
+}
+
+.wtsg-back span {
+    font-size: 24px;
+    line-height: 1;
+}
+
+.wtsg-mobile .wtsg-panel-head {
+    padding: 12px 16px 0;
+}
+
+.wtsg-mobile .wtsg-rows {
+    padding: 14px 16px;
+    gap: 14px;
+}
+
+/* Compact single-line split rows: label + fill + stepper all on one line, so
+   every subtype is visible at a glance. */
+.wtsg-mobile .wtsg-rowitem {
+    flex-wrap: nowrap;
+    gap: 10px;
+}
+
+.wtsg-mobile .wtsg-rowname {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.wtsg-mobile .wtsg-stepper {
+    flex: 0 0 auto;
+    gap: 6px;
+}
+
+/* Big, glove-/grease-friendly tap targets. */
+.wtsg-mobile .wtsg-step {
+    width: 52px;
+    height: 52px;
+    font-size: 26px;
+    border-radius: 10px;
+}
+
+/* Narrow, centered number field — a few digits don't need much room. */
+.wtsg-mobile .wtsg-stepper .wtsg-rowinput {
+    flex: 0 0 auto;
+    width: 66px;
+    flex-basis: auto;
+    height: 52px;
+    font-size: 19px;
+    text-align: center;
+    padding: 0 6px;
+}
+
+.wtsg-mobile .wtsg-rowfill {
+    flex: 0 0 26px;
+}
+
+.wtsg-mobile .wtsg-fillbtn {
+    padding: 5px;
+}
+
+.wtsg-mobile .wtsg-fillbtn {
+    padding: 8px;
+}
+
+.wtsg-mobile .wtsg-summary {
+    margin-top: 8px;
+    padding: 12px 16px;
+}
+
+/* Pin the save action to the bottom of the screen */
+.wtsg-mobile .wtsg-actions {
+    position: sticky;
+    bottom: 0;
+    margin-top: auto;
+    padding: 12px 16px;
+    background: #fff;
+    border-top: 1px solid #edebe9;
+}
+
+.wtsg-mobile .wtsg-save {
+    width: 100%;
+    height: 48px;
+    font-size: 16px;
+}
+
+.wtsg-mobile .wtsg-modal-card {
+    margin: 0 16px;
+}
