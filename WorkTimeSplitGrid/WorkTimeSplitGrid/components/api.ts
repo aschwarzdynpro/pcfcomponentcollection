@@ -7,6 +7,7 @@ import {
     ENTRY_TIMETYPE,
     TIMEREPORT,
     WORKORDER_SET,
+    PROJECT_TYPE,
     normalizeLabel,
     FieldConfig,
     SUBTYPE_ORDER,
@@ -222,8 +223,15 @@ export async function loadEntries(
     const pauseClause = pause
         ? ` and sst_type ne '${pause.replace(/'/g, "''")}'`
         : "";
+    // Exclude entries on fixed-price ("Festpreis") projects — both modes. Filter
+    // on the project's hso_projecttype via the lookup navigation property; `ne`
+    // keeps projects with no type set.
+    const projectTypeClause =
+        ` and ${PROJECT_TYPE.nav}/${PROJECT_TYPE.field}` +
+        ` ne ${PROJECT_TYPE.fixedPriceValue}`;
     const filter =
         "_sst_project_id_value ne null" +
+        projectTypeClause +
         modeClause +
         pauseClause +
         resourceClause;

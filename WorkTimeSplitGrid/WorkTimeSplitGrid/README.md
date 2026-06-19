@@ -28,7 +28,9 @@ deletes the original.
     `sst_timereport` empty; a multi-select list with a **Create delivery notes**
     action.
   Breaks (`sst_type` = `pauseValue`, default `Pause`) are excluded from both
-  modes. The list is loaded **directly from the server with the mode filter
+  modes, as are entries on **fixed-price ("Festpreis") projects** (the project's
+  `hso_projecttype = 100000001`, filtered via the `sst_Project_id` navigation
+  property). The list is loaded **directly from the server with the mode filter
   already applied** (`webApi.retrieveMultipleRecords` on
   `sst_roundedtimeentries`), rather than pulling every page of the bound view and
   filtering client-side.

@@ -81,6 +81,22 @@ export const TIMEREPORT = {
 /** Work-order entity set (target of the Lieferschein's work-order lookup). */
 export const WORKORDER_SET = "msdyn_workorders";
 
+/**
+ * Project-type exclusion: both modes hide entries whose related project is of
+ * type "Festpreis" (fixed price). The type lives on the project (msdyn_project),
+ * field `hso_projecttype`; filtered via the lookup navigation property.
+ * Verified live (UAT 2026-06-19): `sst_projecttype_fx` does NOT exist — the real
+ * field is `hso_projecttype`; 100000001 = Festpreis.
+ */
+export const PROJECT_TYPE = {
+    /** Single-valued navigation property RTE → msdyn_project. */
+    nav: "sst_Project_id",
+    /** Project-type picklist on msdyn_project. */
+    field: "hso_projecttype",
+    /** Festpreis (fixed price) option value — excluded from both modes. */
+    fixedPriceValue: 100000001,
+} as const;
+
 /** Normalize a label/name for option matching (case/space/slash-insensitive). */
 export function normalizeLabel(s: string | null | undefined): string {
     return (s ?? "")

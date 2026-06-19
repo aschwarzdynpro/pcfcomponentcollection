@@ -28,10 +28,11 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   - **Zuordnen** — `sst_worksubtypecompleted = Ja` **und** `sst_timereport` leer
     → Mehrfachauswahl-Liste mit Aktion **„Lieferscheine erstellen"**.
   **Pausen** (`sst_type` = `pauseValue`, Default `Pause`) werden in beiden Modi
-  ausgeblendet. Die Liste wird **direkt vom Server geladen, mit bereits
-  angewandtem Modus-Filter** (`webApi.retrieveMultipleRecords` auf
-  `sst_roundedtimeentries`) — statt alle Seiten des gebundenen Views zu laden und
-  clientseitig zu filtern.
+  ausgeblendet — ebenso Einträge auf **Festpreis-Projekten** (Projekt-Feld
+  `hso_projecttype = 100000001`, gefiltert über die `sst_Project_id`-Navigation).
+  Die Liste wird **direkt vom Server geladen, mit bereits angewandtem
+  Modus-Filter** (`webApi.retrieveMultipleRecords` auf `sst_roundedtimeentries`)
+  — statt alle Seiten des gebundenen Views zu laden und clientseitig zu filtern.
   Dadurch stimmen die Filter und das Control bleibt schnell, auch wenn die Tabelle
   deutlich mehr als Dataverses 5000-Datensatz-Seitenlimit enthält (der frühere
   Ansatz zeigte ab dieser Grenze eine leere Liste).
