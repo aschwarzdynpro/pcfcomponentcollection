@@ -378,7 +378,9 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
 
     // Load subtypes whenever the selected entry changes.
     React.useEffect(() => {
-        if (!selectedId) {
+        // Offline is read-only — the split editor isn't shown, so don't load the
+        // subtypes (the live $expand query can't run from the local cache anyway).
+        if (!selectedId || props.isOffline) {
             setSubtypes(null);
             setSubtypeError(null);
             setSubtypesEntryId(null);
@@ -406,7 +408,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         return () => {
             cancelled = true;
         };
-    }, [selectedId, props.webApi, t.errLoadSubtypes]);
+    }, [selectedId, props.isOffline, props.webApi, t.errLoadSubtypes]);
 
     // The held subtypes are only valid for the SplitPanel once they belong to the
     // selected entry; until then the panel shows a progress indicator (no flicker).
@@ -418,22 +420,14 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     }, []);
 
     const handleSaved = React.useCallback(() => {
+        // Saving is online-only (offline is read-only). The split original is
+        // deleted (and its splits are completed), so it leaves the "split" list —
+        // drop it locally without a full server reload.
         flashToast(t.saveSucceeded);
-        // The split original is deleted (and its splits are completed), so it
-        // leaves the "split" list — drop it locally (online) or re-read the
-        // offline-cached dataset (offline).
-        if (props.isOffline) props.dataset.refresh();
-        else if (selectedId) removeEntries([selectedId]);
+        if (selectedId) removeEntries([selectedId]);
         setSelectedId(null);
         setSubtypes(null);
-    }, [
-        props.isOffline,
-        props.dataset,
-        selectedId,
-        removeEntries,
-        flashToast,
-        t.saveSucceeded,
-    ]);
+    }, [selectedId, removeEntries, flashToast, t.saveSucceeded]);
 
     const switchMode = React.useCallback((m: Mode) => {
         setMode(m);
@@ -485,11 +479,10 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                         : t.reportsDone(res.reportsCreated, res.assigned),
                 );
                 setCheckedIds(new Set());
-                // Assigned entries now have a delivery note → they leave the
-                // "assign" list. Drop those locally (online) or re-read the
-                // offline-cached dataset (offline).
-                if (props.isOffline) props.dataset.refresh();
-                else removeEntries(res.assignedIds);
+                // Assigning is online-only (offline is read-only). The assigned
+                // entries now have a delivery note → they leave the "assign" list.
+                // Drop those locally without a full server reload.
+                removeEntries(res.assignedIds);
                 // Plain "create" opens only when exactly one note resulted.
                 // "Create & open": one note → open it; several → show a picker.
                 if (openAfter && res.reports.length > 1) {
@@ -514,8 +507,6 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             creating,
             props.webApi,
             props.logger,
-            props.isOffline,
-            props.dataset,
             openReport,
             removeEntries,
             flashToast,
@@ -735,7 +726,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                         rows={displayRows}
                         selectedId={null}
                         onSelect={() => undefined}
-                        selectable
+                        selectable={!props.isOffline}
                         checkedIds={checkedIds}
                         onToggleCheck={toggleCheck}
                         emptyMessage={
@@ -750,7 +741,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 )}
             </div>
 
-            {mode === "assign" && checkedIds.size > 0 && (
+            {mode === "assign" && !props.isOffline && checkedIds.size > 0 && (
                 <div className="wtsg-actionbar">
                     <span className="wtsg-actionbar-count">
                         {t.selectedCount(checkedIds.size)}

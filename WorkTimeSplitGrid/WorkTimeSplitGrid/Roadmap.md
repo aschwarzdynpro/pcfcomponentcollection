@@ -49,10 +49,14 @@ anrichten kann.
 ## 4b. Offline
 - ✅ **Offline-Hinweis statt Fehler** (`context.client.isOffline()`) — *v1.14.0
   (Option A); Manifest `required="false"` v1.14.2.*
-- 🚧 **Volle Offline-Fähigkeit (Option C)** — *Iteration 1 in v1.15.0 auf Branch
-  `feature/worktime-split-grid-offline`*: Lesen aus dem Dataset + Kompensations-
-  Save. **Offen:** Geräte-Validierung (Phase 0) + Härtung — siehe
-  [`OfflinePlan.md`](OfflinePlan.md).
+- ✅ **Read-only Offline** — *v1.16.0 auf Branch `feature/worktime-split-grid-offline`*:
+  Liste aus dem (offline-gecachten) Dataset; **schreibende Aktionen offline
+  deaktiviert** (Aufteilen-Save + Lieferschein-Erstellung). Damit kein
+  Sync-Konflikt-Risiko. Siehe [`OfflinePlan.md`](OfflinePlan.md).
+- 🔜 **Voll schreibfähiges Offline (Option C)** — *zurückgestellt*: destruktiver,
+  transaktionaler Save offline = Sync-Konflikt-Minenfeld; bräuchte Schema-
+  Erweiterung + serverseitiges Aufräum-Plugin + Konfliktstrategie. Nur bei
+  zwingendem Bedarf.
 
 ## 5. Qualität & Wartbarkeit
 - 🔜 **Unit-Tests** für die reinen Funktionen (`parseNumber`, Filteraufbau,

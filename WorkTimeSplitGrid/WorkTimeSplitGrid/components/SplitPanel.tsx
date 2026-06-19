@@ -18,7 +18,7 @@ export interface SplitPanelProps {
     utils: ComponentFramework.Utility;
     disabled: boolean;
     isMobile: boolean;
-    /** Offline → skip the $batch save (use the queued webAPI compensating path). */
+    /** Offline → read-only: show the entry head + a notice, no editor/save. */
     isOffline: boolean;
     lang: Lang;
     logger: Logger;
@@ -94,7 +94,6 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
                 entry.id,
                 input,
                 props.logger,
-                !props.isOffline,
             );
             props.onSaved();
         } catch (e) {
@@ -111,6 +110,43 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
         return (
             <div className="wtsg-panel wtsg-panel-empty">
                 <p>{t.selectHint}</p>
+            </div>
+        );
+    }
+
+    // Offline → read-only: the split is a destructive server transaction, so it
+    // can't run from the local cache. Show the entry head + a notice instead of
+    // the editor/save.
+    if (props.isOffline) {
+        return (
+            <div className="wtsg-panel">
+                {props.isMobile && (
+                    <div className="wtsg-mobile-head">
+                        <button
+                            type="button"
+                            className="wtsg-back"
+                            onClick={props.onBack}
+                            aria-label={t.back}
+                        >
+                            <span aria-hidden="true">‹</span> {t.back}
+                        </button>
+                    </div>
+                )}
+                <div className="wtsg-panel-head">
+                    <h3 title={entry.name}>{entry.name}</h3>
+                    <div className="wtsg-panel-sub">
+                        {entry.type || "—"} · {entry.date || "—"}
+                    </div>
+                </div>
+                <div className="wtsg-summary">
+                    <div>
+                        <span>{t.total}</span>
+                        <strong>{entry.totalFormatted || total}</strong>
+                    </div>
+                </div>
+                <div className="wtsg-panel-note" role="status">
+                    {t.offlineReadOnly}
+                </div>
             </div>
         );
     }

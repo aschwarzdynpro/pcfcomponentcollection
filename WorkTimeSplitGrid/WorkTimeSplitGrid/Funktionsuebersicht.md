@@ -170,28 +170,27 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 - **Dreisprachige Oberfläche** (Deutsch / Englisch / Französisch), automatisch
   nach `context.userSettings.languageId`.
 
-### Offline (hybrid)
+### Offline (read-only)
 - **Online** → Live-Server-Abfragen + `$batch`-Save (wie oben).
 - **Offline** (`context.client.isOffline()`) → das Control schaltet auf einen
-  Dataset-Pfad um:
+  **schreibgeschützten** Dataset-Pfad um:
   - **Lesen:** Die Liste wird aus dem gebundenen **(offline-gecachten) Dataset**
     gebaut und clientseitig gefiltert (Pausen raus; Aufteilen→nicht completed;
     Zuordnen→completed & kein Lieferschein; Projekt erforderlich, wenn die
     Projekt-Spalte im View liegt). **Festpreis-** und **„Meine Stunden"**-Filter
     entfallen offline (Projekttyp bzw. Ressource→User sind im lokalen Cache nicht
     verlässlich verfügbar).
-  - **Schreiben:** Der Split-Save überspringt `$batch` und nutzt die
-    **Kompensations-`context.webAPI`-Sequenz** — deren create/update/delete werden
-    vom Offline-Runtime zur Synchronisation eingereiht; Lieferschein-Erstellung
-    ebenso.
-  - Ein schmales **Offline-Banner** wird eingeblendet; Subtypes laden weiter über
-    `context.webAPI`.
+  - **Schreiben deaktiviert:** Aufteilen-Save und Lieferschein-Erstellung sind
+    offline **gesperrt** — das Split-Panel zeigt den Eintrag schreibgeschützt mit
+    Hinweis, die Zuordnen-Liste ist nicht auswählbar. So läuft der destruktive,
+    transaktionale Save nie gegen den lokalen Cache (**Sync-Konflikt-Risiko**
+    vermieden). Subtypes werden offline nicht geladen (kein `$expand` nötig).
+  - Ein schmales **Offline-Banner** signalisiert den schreibgeschützten Modus.
 - `WebAPI`/`Utility` sind **`required="false"`**, damit der Host das Control offline
   überhaupt rendert.
 - ⚠️ Offline braucht ein **Offline-Profil** (Admin) mit den relevanten
-  Tabellen/Spalten, und das destruktive Aufteilen reiht ein Löschen ein →
-  **Sync-Konflikt-Risiko**. Das ist **Iteration 1** und muss auf einem echten
-  Gerät validiert werden (Phase 0 in [`OfflinePlan.md`](OfflinePlan.md)).
+  Tabellen/Spalten, damit das Dataset befüllt ist. Voll **schreibfähiges** Offline
+  (Option C) ist zurückgestellt — siehe [`OfflinePlan.md`](OfflinePlan.md).
 
 ## Konfiguration (Manifest-Properties)
 Alle Felder haben verifizierte SST-Defaults und sind pro Platzierung

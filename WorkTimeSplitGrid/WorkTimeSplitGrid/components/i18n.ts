@@ -51,6 +51,8 @@ export interface Strings {
     pickReportPrompt: string;
     closeLabel: string;
     offlineBanner: string;
+    /** Read-only notice shown in the detail/action area while offline. */
+    offlineReadOnly: string;
     loading: string;
     loadingSubtypes: string;
     errorPrefix: string;
@@ -115,7 +117,8 @@ export const STRINGS: Record<Lang, Strings> = {
         pickReportPrompt: "Which delivery note would you like to open?",
         closeLabel: "Close",
         offlineBanner:
-            "Offline — data from the local cache; changes sync when you're back online.",
+            "Offline — read-only view from the local cache. Editing is available online.",
+        offlineReadOnly: "Offline — editing is only available online.",
         loading: "Loading entries…",
         loadingSubtypes: "Loading subtypes…",
         errorPrefix: "Could not load the grid",
@@ -183,7 +186,8 @@ export const STRINGS: Record<Lang, Strings> = {
         pickReportPrompt: "Welchen Lieferschein möchtest du öffnen?",
         closeLabel: "Schließen",
         offlineBanner:
-            "Offline — Daten aus dem lokalen Cache; Änderungen werden bei Verbindung synchronisiert.",
+            "Offline — schreibgeschützte Ansicht aus dem lokalen Cache. Bearbeiten ist nur online möglich.",
+        offlineReadOnly: "Offline — Bearbeiten ist nur online möglich.",
         loading: "Einträge werden geladen…",
         loadingSubtypes: "Subtypes werden geladen…",
         errorPrefix: "Grid konnte nicht geladen werden",
@@ -251,7 +255,8 @@ export const STRINGS: Record<Lang, Strings> = {
         pickReportPrompt: "Quel bon de livraison souhaitez-vous ouvrir ?",
         closeLabel: "Fermer",
         offlineBanner:
-            "Hors connexion — données du cache local ; les modifications seront synchronisées.",
+            "Hors connexion — vue en lecture seule du cache local. La modification est possible en ligne.",
+        offlineReadOnly: "Hors connexion — la modification n'est possible qu'en ligne.",
         loading: "Chargement des entrées…",
         loadingSubtypes: "Chargement des sous-types…",
         errorPrefix: "Impossible de charger la grille",

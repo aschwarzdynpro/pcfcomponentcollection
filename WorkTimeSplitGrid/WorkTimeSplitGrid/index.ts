@@ -81,9 +81,11 @@ export class WorkTimeSplitGrid
     }
 
     /**
-     * The control is live-data only (server-side filtered queries + a $batch
-     * save), so it can't work offline. We detect it and show a friendly message
-     * instead of letting the queries fail with a generic platform error.
+     * Offline → read-only. The list is read from the bound (offline-cached)
+     * dataset, but the write actions (split save, delivery-note creation) are
+     * disabled because they need live server queries + a transactional $batch.
+     * We detect it so the UI can switch to the read-only path instead of letting
+     * the live queries fail with a generic platform error.
      */
     private isOffline(): boolean {
         try {

@@ -1,14 +1,21 @@
-# WorkTimeSplitGrid — Offline-Fähigkeit (Option C) — Plan & Status
+# WorkTimeSplitGrid — Offline-Fähigkeit — Plan & Status
 
-> **Status (v1.15.0, Branch `feature/worktime-split-grid-offline`):**
-> **Iteration 1 umgesetzt** — Phase 1 (Lesen aus dem Dataset) + Phase 3
-> (Kompensations-Save ohne `$batch`) sind im Code; Manifest-Features auf
-> `required="false"`. **NOCH OFFEN & blockierend: Phase 0** (Validierung auf
-> echtem Gerät) sowie die Phasen 2/4-Härtung. Heißt: Der Code ist da, aber das
-> tatsächliche Offline-Verhalten (greift `context.webAPI` offline? hat der View/
-> das Offline-Profil die nötigen Spalten?) ist noch **nicht gerätegetestet**.
-> Vorgeschichte: bis v1.14.x fiel das Control offline auf einen generischen
-> Fehler; Option A (Offline-Hinweis) war der erste Schritt.
+> **Status (v1.16.0, Branch `feature/worktime-split-grid-offline`):**
+> **Entscheidung: read-only Offline.** Die schreibenden Aktivitäten offline
+> wurden **bewusst verworfen** (siehe §4) — kein destruktiver Save, kein
+> Sync-Konflikt-Risiko. Offline gilt:
+> - **Lesen:** Liste aus dem (offline-gecachten) gebundenen Dataset
+>   (`buildOfflineEntries`), clientseitige Filter; Festpreis- und „Meine
+>   Stunden"-Filter offline ausgespart (Join nicht verfügbar).
+> - **Schreiben deaktiviert:** Aufteilen-Save und Lieferschein-Erstellung sind
+>   offline gesperrt; Split-Panel zeigt schreibgeschützt einen Hinweis, die
+>   Zuordnen-Liste ist offline nicht auswählbar. Banner: „nur online bearbeitbar".
+> - Subtypes werden offline **nicht** geladen (kein `$expand` nötig).
+>
+> Der frühere v1.15.0-Stand (Kompensations-Save offline) wurde damit zurückgebaut.
+> Voll schreibfähiges Offline (Option C, unten) bleibt zurückgestellt. Vorgeschichte:
+> bis v1.14.x fiel das Control offline auf einen generischen Fehler; Option A
+> (Offline-Hinweis) war der erste Schritt.
 
 ## 1. Warum es heute offline nicht geht
 Das Control ist ein **Live-Daten-Editor**:

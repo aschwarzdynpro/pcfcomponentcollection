@@ -114,26 +114,27 @@ deletes the original.
 - **Trilingual UI** (German / English / French), chosen automatically from the
   user's Dataverse language (`context.userSettings.languageId`).
 
-### 📴 Offline (hybrid)
+### 📴 Offline (read-only)
 - **Online** → the live server-side queries + `$batch` save (as above).
 - **Offline** (`context.client.isOffline()`) → the control switches to a
-  dataset-based path:
+  **read-only** dataset-based path:
   - **Read:** the list is built from the bound **(offline-cached) dataset** and
     filtered client-side (pauses excluded; split→not completed; assign→completed
     & no delivery note; project required when the project column is in the view).
     The **Festpreis** and **My hours** filters are skipped offline (the project
     type and resource→user mapping aren't reliably in the local cache).
-  - **Write:** the split save skips `$batch` and runs the **compensating
-    `context.webAPI` sequence**, whose create/update/delete are queued for sync by
-    the offline runtime; delivery-note creation works the same way.
-  - A slim **offline banner** is shown; subtypes still load via `context.webAPI`.
+  - **Write disabled:** the split save and delivery-note creation are **turned
+    off offline** — the split panel shows the entry read-only with a notice, and
+    the assign list isn't selectable. This avoids the destructive, transactional
+    save running against the local cache (a **sync-conflict** minefield). Subtypes
+    aren't loaded offline (no `$expand` needed).
+  - A slim **offline banner** signals the read-only mode.
 - `WebAPI`/`Utility` are declared **`required="false"`** so the host renders the
   control offline at all (a *required* unavailable feature otherwise blocks it
   with a generic "control can't load" error).
 - ⚠️ Offline needs an **offline profile** (admin) that includes the relevant
-  tables/columns, and the destructive split queues a delete → **sync-conflict
-  risk**. This is **iteration 1** and must be validated on a real device (Phase 0
-  in [`OfflinePlan.md`](OfflinePlan.md)).
+  tables/columns so the dataset is populated. Full **write-enabled** offline
+  (Option C) is deferred — see [`OfflinePlan.md`](OfflinePlan.md).
 
 ### 🔧 Technical
 - **React 17** + TypeScript, no extra runtime libraries.
