@@ -3,9 +3,14 @@
     Builds the WorkTimeSplitGrid PCF and packs it into Dataverse-importable
     solution zips (unmanaged + managed).
 
-    Output:
+    Output (canonical "latest" — overwritten each build):
         bin\WorkTimeSplitGrid.zip          (Unmanaged)
         bin\WorkTimeSplitGrid_managed.zip  (Managed)
+
+    Plus versioned archive copies (NEVER overwritten — version read from
+    src\Other\Solution.xml), so old builds stay available for roll-back:
+        bin\WorkTimeSplitGrid_<version>.zip
+        bin\WorkTimeSplitGrid_managed_<version>.zip
 
     Prerequisites:
         - Node.js + npm
@@ -64,6 +69,16 @@ if ($LASTEXITCODE -ne 0) { throw 'pac solution pack (Unmanaged) failed.' }
 pac solution pack --zipfile $managed   --folder (Join-Path $solutionRoot 'src') --packagetype Managed
 if ($LASTEXITCODE -ne 0) { throw 'pac solution pack (Managed) failed.' }
 
+# Versioned archive copies (never overwritten) so older builds stay available
+# for roll-back without git. Version comes from the solution manifest.
+$solutionXml = Join-Path $solutionRoot 'src\Other\Solution.xml'
+$version = ([xml](Get-Content -Raw -Path $solutionXml)).ImportExportXml.SolutionManifest.Version
+$unmanagedV = Join-Path $binDir "WorkTimeSplitGrid_$version.zip"
+$managedV   = Join-Path $binDir "WorkTimeSplitGrid_managed_$version.zip"
+Copy-Item $unmanaged $unmanagedV -Force
+Copy-Item $managed   $managedV   -Force
+Write-Host "==> Archived versioned copies for $version" -ForegroundColor Cyan
+
 Write-Host ''
 Write-Host 'Built solution packages:' -ForegroundColor Green
-Get-ChildItem $binDir -Filter '*.zip' | Format-Table Name, Length, LastWriteTime
+Get-ChildItem $binDir -Filter '*.zip' | Sort-Object Name | Format-Table Name, Length, LastWriteTime
