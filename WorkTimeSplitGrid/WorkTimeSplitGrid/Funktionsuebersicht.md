@@ -170,6 +170,13 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 - **Dreisprachige Oberfläche** (Deutsch / Englisch / Französisch), automatisch
   nach `context.userSettings.languageId`.
 
+### Offline
+- Das Control ist **nur online** nutzbar (Live-Server-Abfragen + `$batch`-Save).
+  Im Offline-Modus der Power-Apps-Mobile-App erkennt es `context.client.isOffline()`
+  und zeigt einen klaren Hinweis „Offline nicht verfügbar" (und überspringt die
+  Abfragen) — statt mit einem generischen Plattform-Fehler zu scheitern. Die volle
+  Offline-Fähigkeit ist in [`OfflinePlan.md`](OfflinePlan.md) geplant.
+
 ## Konfiguration (Manifest-Properties)
 Alle Felder haben verifizierte SST-Defaults und sind pro Platzierung
 überschreibbar: `totalField` (`sst_duration`), `dateField` (`sst_date`),

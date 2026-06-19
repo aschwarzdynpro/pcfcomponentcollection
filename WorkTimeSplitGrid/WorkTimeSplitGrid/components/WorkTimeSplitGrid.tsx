@@ -83,6 +83,8 @@ export interface WorkTimeSplitGridProps {
     userId: string;
     /** Phone form factor → single-pane, touch-first layout. */
     isMobile: boolean;
+    /** App is offline → the control's live queries can't run; show a notice. */
+    isOffline: boolean;
     disabled: boolean;
     lang: Lang;
     logger: Logger;
@@ -154,7 +156,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     // Admins (System Administrator / SST Dispo Teamleitung Addon) may toggle the
     // "My hours" filter off; everyone else stays locked to their own hours.
     React.useEffect(() => {
-        if (!currentUserId) return;
+        if (!currentUserId || props.isOffline) return;
         let cancelled = false;
         userHasAnyRole(props.webApi, currentUserId, ADMIN_ROLES).then((admin) => {
             if (!cancelled) setIsAdmin(admin);
@@ -162,7 +164,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         return () => {
             cancelled = true;
         };
-    }, [currentUserId, props.webApi]);
+    }, [currentUserId, props.webApi, props.isOffline]);
 
     // Non-admins are locked to their own hours; admins may toggle it off.
     const myHoursActive = !isAdmin || myHoursOnly;
@@ -172,6 +174,10 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     // & no delivery note; "My hours"→the user's resource). This replaces pulling
     // every dataset page + enriching, which breaks past the 5000-record cap.
     React.useEffect(() => {
+        if (props.isOffline) {
+            setLoadingEntries(false);
+            return;
+        }
         let cancelled = false;
         setLoadingEntries(true);
         setEntriesError(null);
@@ -199,7 +205,15 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             cancelled = true;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [mode, myHoursActive, currentUserId, props.webApi, refreshKey, t]);
+    }, [
+        mode,
+        myHoursActive,
+        currentUserId,
+        props.webApi,
+        props.isOffline,
+        refreshKey,
+        t,
+    ]);
 
     const refresh = React.useCallback(() => {
         setRefreshing(true);
@@ -378,6 +392,34 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             t,
         ],
     );
+
+    // Offline → the live queries / $batch save can't run; show a clear notice
+    // instead of letting them fail with a generic platform error.
+    if (props.isOffline) {
+        return (
+            <div className="wtsg-root">
+                <div className="wtsg-offline" role="status">
+                    <svg
+                        width="56"
+                        height="56"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M17.5 19H7a4 4 0 0 1-.8-7.9 5 5 0 0 1 8-3" />
+                        <path d="M19.5 15.5A3.5 3.5 0 0 0 18 9" />
+                        <path d="M3 3l18 18" />
+                    </svg>
+                    <h3>{t.offlineTitle}</h3>
+                    <p>{t.offlineHint}</p>
+                </div>
+            </div>
+        );
+    }
 
     // First load (entries still null) → full-panel spinner.
     if (entries === null && loadingEntries) {

@@ -71,6 +71,19 @@ export class WorkTimeSplitGrid
         return width > 0 && width < 560;
     }
 
+    /**
+     * The control is live-data only (server-side filtered queries + a $batch
+     * save), so it can't work offline. We detect it and show a friendly message
+     * instead of letting the queries fail with a generic platform error.
+     */
+    private isOffline(): boolean {
+        try {
+            return this._context.client.isOffline();
+        } catch {
+            return false;
+        }
+    }
+
     private render(): void {
         const params = this._context.parameters;
         const props: WorkTimeSplitGridProps = {
@@ -79,6 +92,7 @@ export class WorkTimeSplitGrid
             utils: this._context.utils,
             navigation: this._context.navigation,
             isMobile: this.isMobile(),
+            isOffline: this.isOffline(),
             fields: resolveFieldConfig({
                 totalField: params.totalField?.raw,
                 dateField: params.dateField?.raw,

@@ -114,6 +114,13 @@ deletes the original.
 - **Trilingual UI** (German / English / French), chosen automatically from the
   user's Dataverse language (`context.userSettings.languageId`).
 
+### 📴 Offline
+- The control is **online-only** (live server-side queries + a `$batch` save). In
+  the Power Apps mobile app's offline mode it detects `context.client.isOffline()`
+  and shows a clear "not available offline" notice (and skips the queries) instead
+  of failing with a generic platform error. Full offline support is scoped in
+  [`OfflinePlan.md`](OfflinePlan.md).
+
 ### 🔧 Technical
 - **React 17** + TypeScript, no extra runtime libraries.
 - **Telemetry / logging**: a small structured logger (`telemetry.ts`) writes to

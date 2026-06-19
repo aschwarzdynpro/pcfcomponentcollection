@@ -46,6 +46,12 @@ anrichten kann.
 - ✅ **Touch-Stepper (+/− 0,25 h)** für die Zeiteingabe im Aufteilen-Editor
   (mobil), in eigener Zeile voller Breite. — *v1.13.0.*
 
+## 4b. Offline
+- ✅ **Offline-Hinweis statt Fehler** (`context.client.isOffline()`) — *v1.14.0
+  (Option A).*
+- 🔜 **Volle Offline-Fähigkeit** — siehe [`OfflinePlan.md`](OfflinePlan.md)
+  (Option C; großer Aufwand, Sync-Konflikt-Risiko beim destruktiven Save).
+
 ## 5. Qualität & Wartbarkeit
 - 🔜 **Unit-Tests** für die reinen Funktionen (`parseNumber`, Filteraufbau,
   Worktype-Key, Summen-Guard) — sichert gegen Regressionen ab.
