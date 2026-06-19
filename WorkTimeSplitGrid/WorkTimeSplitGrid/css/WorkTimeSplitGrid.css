@@ -635,6 +635,40 @@
     color: #909090;
 }
 
+/* ---- Mobile +/− stepper ---- */
+.wtsg-stepper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.wtsg-step {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    border: 1px solid #c8c6c4;
+    border-radius: 10px;
+    background: #fff;
+    color: #0f6cbd;
+    font-size: 26px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.wtsg-step:active {
+    background: #eef6fc;
+}
+
+.wtsg-step:disabled {
+    color: #c8c6c4;
+    border-color: #e1dfdd;
+    cursor: not-allowed;
+}
+
 /* ---- Summary ---- */
 .wtsg-summary {
     margin-top: 16px;
@@ -1005,6 +1039,22 @@
     flex-basis: 110px;
     height: 46px;
     font-size: 18px;
+}
+
+/* Stepper drops to its own full-width line below the subtype name. */
+.wtsg-mobile .wtsg-rowitem {
+    flex-wrap: wrap;
+}
+
+.wtsg-mobile .wtsg-stepper {
+    flex: 1 1 100%;
+}
+
+.wtsg-mobile .wtsg-stepper .wtsg-rowinput {
+    flex: 1 1 auto;
+    flex-basis: auto;
+    height: 48px;
+    text-align: center;
 }
 
 .wtsg-mobile .wtsg-rowfill {

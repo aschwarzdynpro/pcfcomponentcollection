@@ -104,7 +104,8 @@ deletes the original.
   - **Phone** → a single-pane, touch-first flow: full-width list → tap an entry
     → full-screen split editor with a **‹ Back** header → save returns to the
     list. Larger tap targets, big numeric inputs, and a bottom-pinned save
-    button.
+    button. Each subtype gets a **+/− stepper** (±0.25 h, floored at 0) on its
+    own full-width line so hours can be set by tapping; direct entry still works.
 - Assign the same control to **Web + Tablet + Phone** when adding it to the
   view; no separate mobile build to maintain.
 

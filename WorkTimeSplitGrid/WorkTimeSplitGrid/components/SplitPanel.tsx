@@ -5,6 +5,9 @@ import { FieldConfig, EPSILON } from "./schema";
 import { parseNumber, formatNumber, saveSplit, SplitInput } from "./api";
 import { Logger } from "./telemetry";
 
+/** Mobile stepper increment (hours). */
+const STEP = 0.25;
+
 export interface SplitPanelProps {
     entry: EntryRow | null;
     subtypes: SubtypeRow[] | null;
@@ -61,6 +64,14 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
         props.onSubtypesChange(
             subtypes.map((s) => (s.id === id ? { ...s, value } : s)),
         );
+    };
+
+    /** Mobile +/− stepper: adjust a subtype by ±STEP, floored at 0. */
+    const stepValue = (id: string, current: string, delta: number) => {
+        const parsed = parseNumber(current);
+        const base = Number.isNaN(parsed) ? 0 : parsed;
+        const next = Math.max(0, Math.round((base + delta) * 1000) / 1000);
+        handleValueChange(id, formatNumber(next));
     };
 
     const doSave = async () => {
@@ -180,17 +191,65 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
                                         </button>
                                     )}
                                 </span>
-                                <input
-                                    type="text"
-                                    inputMode="decimal"
-                                    className={`wtsg-rowinput ${invalid ? "invalid" : ""}`}
-                                    value={s.value}
-                                    placeholder="0"
-                                    disabled={entry.completed || props.disabled || saving}
-                                    onChange={(e) =>
-                                        handleValueChange(s.id, e.target.value)
-                                    }
-                                />
+                                {(() => {
+                                    const input = (
+                                        <input
+                                            type="text"
+                                            inputMode="decimal"
+                                            className={`wtsg-rowinput ${invalid ? "invalid" : ""}`}
+                                            value={s.value}
+                                            placeholder="0"
+                                            disabled={
+                                                entry.completed ||
+                                                props.disabled ||
+                                                saving
+                                            }
+                                            onChange={(e) =>
+                                                handleValueChange(
+                                                    s.id,
+                                                    e.target.value,
+                                                )
+                                            }
+                                        />
+                                    );
+                                    if (!props.isMobile) return input;
+                                    const cur = parseNumber(s.value);
+                                    return (
+                                        <div className="wtsg-stepper">
+                                            <button
+                                                type="button"
+                                                className="wtsg-step"
+                                                aria-label={`−${STEP}`}
+                                                disabled={
+                                                    !editable ||
+                                                    Number.isNaN(cur) ||
+                                                    cur <= 0
+                                                }
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    stepValue(s.id, s.value, -STEP);
+                                                }}
+                                            >
+                                                −
+                                            </button>
+                                            {input}
+                                            <button
+                                                type="button"
+                                                className="wtsg-step"
+                                                aria-label={`+${STEP}`}
+                                                disabled={!editable}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    stepValue(s.id, s.value, STEP);
+                                                }}
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    );
+                                })()}
                             </label>
                         );
                     })}

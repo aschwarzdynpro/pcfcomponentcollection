@@ -43,6 +43,8 @@ anrichten kann.
 - 🔜 **Manueller Refresh-Button** (serverseitige Änderungen sieht man sonst erst
   bei Moduswechsel).
 - ✅ Suchtreffer hervorheben; Pull-to-Refresh auf Mobil. — *v1.9.0.*
+- ✅ **Touch-Stepper (+/− 0,25 h)** für die Zeiteingabe im Aufteilen-Editor
+  (mobil), in eigener Zeile voller Breite. — *v1.13.0.*
 
 ## 5. Qualität & Wartbarkeit
 - 🔜 **Unit-Tests** für die reinen Funktionen (`parseNumber`, Filteraufbau,
