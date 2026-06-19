@@ -147,9 +147,10 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   - **Handy** → einspaltiger, touch-first Flow: Liste in voller Breite → Eintrag
     antippen → Vollbild-Split-Editor mit **‹ Zurück**-Header → nach dem Speichern
     zurück zur Liste. Größere Tap-Targets, große Zahlenfelder, am unteren Rand
-    fixierter Speichern-Button. Je Subtype gibt es einen **+/−-Stepper** (±0,25 h,
-    nicht unter 0) in eigener Zeile voller Breite — Stunden per Tippen setzbar;
-    direkte Eingabe bleibt möglich.
+    fixierter Speichern-Button. Jede Subtype-Zeile ist **eine kompakte Zeile** —
+    **Label + +/−-Stepper + schmales Zahlenfeld** (±0,25 h, nicht unter 0) —, damit
+    alle Subtypes auf einen Blick sichtbar sind; per Stepper tippen oder direkt
+    eingeben.
 - Beim Hinzufügen zur View dasselbe Control **Web + Tablet + Phone** zuweisen —
   kein separater Mobil-Build zu pflegen.
 
