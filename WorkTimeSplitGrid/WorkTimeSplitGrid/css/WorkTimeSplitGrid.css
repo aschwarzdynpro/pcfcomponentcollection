@@ -1028,20 +1028,20 @@
 
 .wtsg-mobile .wtsg-rows {
     padding: 14px 16px;
-    gap: 10px;
+    gap: 14px;
 }
 
 /* Compact single-line split rows: label + fill + stepper all on one line, so
    every subtype is visible at a glance. */
 .wtsg-mobile .wtsg-rowitem {
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 10px;
 }
 
 .wtsg-mobile .wtsg-rowname {
     flex: 1 1 auto;
     min-width: 0;
-    font-size: 15px;
+    font-size: 16px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1052,20 +1052,21 @@
     gap: 6px;
 }
 
+/* Big, glove-/grease-friendly tap targets. */
 .wtsg-mobile .wtsg-step {
-    width: 40px;
-    height: 40px;
-    font-size: 22px;
-    border-radius: 8px;
+    width: 52px;
+    height: 52px;
+    font-size: 26px;
+    border-radius: 10px;
 }
 
 /* Narrow, centered number field — a few digits don't need much room. */
 .wtsg-mobile .wtsg-stepper .wtsg-rowinput {
     flex: 0 0 auto;
-    width: 62px;
+    width: 66px;
     flex-basis: auto;
-    height: 40px;
-    font-size: 17px;
+    height: 52px;
+    font-size: 19px;
     text-align: center;
     padding: 0 6px;
 }
