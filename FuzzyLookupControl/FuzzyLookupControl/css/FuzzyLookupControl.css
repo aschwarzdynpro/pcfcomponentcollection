@@ -171,6 +171,10 @@
     0 0 0 1px rgba(0, 0, 0, 0.04),
     0 12px 28px 0 rgba(0, 0, 0, 0.20),
     0 2px 4px 0 rgba(0, 0, 0, 0.12);
+  /* `max-height` is set inline from the JS anchor calculator so the
+     dropdown never overflows the viewport regardless of how many result
+     rows would otherwise be rendered. The CSS value here is just a
+     fallback for the (unused) non-portal case. */
   max-height: 360px;
   overflow-y: auto;
   font-size: 13px;
@@ -653,6 +657,9 @@
   }
 
   .flc-dropdown {
+    /* Same fallback story as the desktop max-height above — the JS
+       anchor calculator drives the actual value inline, taking the
+       input's vertical position into account. */
     max-height: 70vh;
     border-radius: 6px;
   }

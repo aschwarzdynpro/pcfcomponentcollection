@@ -73,27 +73,55 @@ function escapeLucene(term: string): string {
     return term.replace(LUCENE_SPECIAL, "\\$&");
 }
 
+// Java/Lucene regex meta characters. Inside a Lucene regex (`/.../`) the
+// parser delegates to Java's regex grammar — so we escape *its* meta chars,
+// not Lucene query meta chars. Without this, a literal "(" in a search term
+// would be parsed as a regex group opener inside the `/.../` block.
+//
+// Every meta is individually backslash-escaped inside the character class
+// because TypeScript's lexer can misinterpret an unescaped `${` inside a
+// regex literal as a template-interpolation opener.
+const REGEX_SPECIAL = /[\\\^\$\.\*\+\?\(\)\[\]\{\}\|]/g;
+function escapeRegex(s: string): string {
+    return s.replace(REGEX_SPECIAL, "\\$&");
+}
+
 /**
- * Build the Lucene query string. Two transforms per token:
+ * Build the Lucene query string. Each token gets up to three matching
+ * strategies OR-joined inside its own group, and the groups are
+ * AND-joined at the top level by `searchmode: "all"` (set in the
+ * caller's options blob).
  *
- *   - prefix wildcard `token*` — gives the typeahead UX users expect
- *     (`nym` matches `Nymphenburg`). Without this, Lucene only matches
- *     exact whole-word tokens in the index.
- *   - fuzzy `token~` (edit distance up to 2) for tokens ≥ 4 chars — gives
- *     typo tolerance (`mitcrosoft~` matches `microsoft`). Skipped for short
- *     tokens because fuzzy on 2–3 chars matches almost anything.
+ *   1. PREFIX WILDCARD `token*` -- typeahead UX
+ *      (`nym*` matches `Nymphenburg`).
+ *   2. FUZZY `token~` (edit distance up to 2) for tokens of 4+ chars --
+ *      typo tolerance (`mitcrosoft~` matches `microsoft`). Skipped for
+ *      short tokens because fuzzy on 2-3 chars matches almost anything.
+ *   3. INFIX REGEX `/.<*>token.<*>/` -- substring match anywhere in an
+ *      indexed token. This is the one that catches cases like searching
+ *      `810` and expecting it to find the product number `15012810`,
+ *      where prefix alone would fail (the token `15012810` doesn't
+ *      *start* with `810`). Without this, multi-token queries that
+ *      mix a prefix-friendly name token with a substring-of-id token
+ *      (e.g. `ny 810`) returned 0 results via Search while OData's
+ *      `contains()` found them -- confusing UX where the OData fallback
+ *      kicked in and the user saw a "Search unavailable" banner.
  *
- * Both forms are combined with Lucene's default OR so a record matches via
- * either path. Tokens are space-joined which Lucene interprets as OR as well.
+ * Performance note: leading wildcards / regex are flagged by Lucene
+ * docs as slow on huge indexes. In practice, with our typical typeahead
+ * payload (single entity, additionalFilter narrowing first, top 25-50),
+ * Azure AI Search returns in well under a second.
  */
 function buildLuceneQuery(term: string): string {
     const tokens = term.trim().split(/\s+/).filter((t) => t.length > 0);
     return tokens
         .map((t) => {
-            const escaped = escapeLucene(t);
-            return t.length >= 4
-                ? `(${escaped}* OR ${escaped}~)`
-                : `${escaped}*`;
+            const lit = escapeLucene(t);
+            const re = escapeRegex(t);
+            const clauses: string[] = [`${lit}*`];
+            if (t.length >= 4) clauses.push(`${lit}~`);
+            clauses.push(`/.*${re}.*/`);
+            return `(${clauses.join(" OR ")})`;
         })
         .join(" ");
 }
@@ -370,28 +398,14 @@ export async function searchRecords(
         if (records.length > 0) {
             return { records, source: "search" };
         }
-        // Search returned 0 — typically because the target table is not
-        // enabled for Dataverse Search in this environment. In that case
-        // searchquery responds with `Value: []` instead of an error, so we
-        // try the OData fallback ourselves; if *that* finds something, we
-        // know the table is searchable via OData but missing from the
-        // search index and surface the banner. If OData is also empty we
-        // accept the original "0 hits" and stay in search mode.
-        // eslint-disable-next-line no-console
-        console.log(
-            "FuzzyLookupControl: searchquery returned 0 — probing OData " +
-                "contains() in case the table is not Dataverse-Search-indexed.",
-        );
-        const odata = await runODataFallback(webApi, opts);
-        if (odata.length > 0) {
-            return {
-                records: odata,
-                source: "odata",
-                fallbackReason:
-                    "Dataverse Search returned 0 results; OData found matches. " +
-                    "Check that the target table is enabled for Dataverse Search.",
-            };
-        }
+        // Search returned 0 cleanly (HTTP 200, no Error in envelope). We
+        // trust that answer: don't probe OData as a "rescue", because doing
+        // so surfaces the misleading "Dataverse Search unavailable" banner
+        // when in fact Search was reachable and said "nothing matches your
+        // query". The OData fallback still fires below when searchquery
+        // THROWS (HTTP error, network blip, malformed envelope) — that's
+        // the legitimate "search degraded" case where the banner is
+        // honest.
         return { records: [], source: "search" };
     } catch (e) {
         if ((e as { name?: string }).name === "AbortError") throw e;

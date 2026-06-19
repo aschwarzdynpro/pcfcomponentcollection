@@ -130,17 +130,39 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
     const MIN_DROPDOWN_WIDTH = 360;
     const MAX_DROPDOWN_WIDTH = 480;
     const VIEWPORT_GUTTER = 8;
+    // Vertical gutters reserve space between the dropdown and the viewport
+    // edges so the bottom row doesn't kiss the screen edge (uncomfortable
+    // to scroll on touch) and we don't overlap the OS gesture bar / iOS
+    // home indicator.
+    const VIEWPORT_GUTTER_BOTTOM = 16;
+    // Below this we'd rather flip the dropdown ABOVE the input than
+    // squeeze the result list to a single visible row.
+    const MIN_USABLE_HEIGHT = 160;
+    // Hard ceiling regardless of available viewport — keeps the dropdown
+    // visually proportional even on very tall screens. Mobile gets a
+    // taller ceiling (the suggestion list is the primary surface there,
+    // not a popover next to a form).
+    const MAX_HEIGHT_DESKTOP = 360;
+    const MAX_HEIGHT_MOBILE = 560;
     const MOBILE_BREAKPOINT = 640;
     const [anchorRect, setAnchorRect] = React.useState<{
         top: number;
         left: number;
         width: number;
+        maxHeight: number;
+        /** When `above`, the dropdown is rendered with its BOTTOM edge at
+         * `top` (i.e. `top` is the position of the input's top edge minus
+         * a small gap, and the dropdown grows upward via CSS transform).
+         * When `below` (the common case), `top` is the position of the
+         * input's bottom edge and the dropdown grows downward. */
+        placement: "below" | "above";
     } | null>(null);
     const recomputeAnchor = React.useCallback(() => {
         const el = hostRef.current;
         if (!el) return;
         const r = el.getBoundingClientRect();
         const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
         const isMobile = viewportWidth < MOBILE_BREAKPOINT;
 
         let width: number;
@@ -157,7 +179,23 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
                 left = Math.max(VIEWPORT_GUTTER, viewportWidth - width - VIEWPORT_GUTTER);
             }
         }
-        setAnchorRect({ top: r.bottom, left, width });
+
+        // Compute available vertical space below the input vs. above, then
+        // decide placement + max-height. Below is the default placement
+        // (matches OOB Lookup behaviour); we only flip up when below is
+        // cramped AND above has materially more room.
+        const ceiling = isMobile ? MAX_HEIGHT_MOBILE : MAX_HEIGHT_DESKTOP;
+        const spaceBelow = Math.max(0, viewportHeight - r.bottom - VIEWPORT_GUTTER_BOTTOM);
+        const spaceAbove = Math.max(0, r.top - VIEWPORT_GUTTER_BOTTOM);
+        const placement: "below" | "above" =
+            spaceBelow < MIN_USABLE_HEIGHT && spaceAbove > spaceBelow ? "above" : "below";
+        const maxHeight = Math.min(
+            ceiling,
+            placement === "below" ? spaceBelow : spaceAbove,
+        );
+
+        const top = placement === "below" ? r.bottom : r.top;
+        setAnchorRect({ top, left, width, maxHeight, placement });
     }, []);
 
     const scope: StorageScope = React.useMemo(
@@ -554,10 +592,26 @@ export const FuzzyLookup: React.FC<FuzzyLookupProps> = (props) => {
                     data-flc-dropdown
                     style={{
                         position: "fixed",
-                        top: anchorRect.top + 2,
+                        // For "below" placement, top is the input's bottom edge
+                        // and we push down by 2 px for visual breathing room.
+                        // For "above" placement, top is the input's top edge
+                        // and we use a CSS translate (-100%) to lift the
+                        // dropdown so its BOTTOM sits at `top - 2 px`.
+                        top: anchorRect.placement === "below"
+                            ? anchorRect.top + 2
+                            : anchorRect.top - 2,
                         left: anchorRect.left,
                         width: anchorRect.width,
                         right: "auto",
+                        // Drives the CSS overflow ceiling so the dropdown
+                        // never extends past the viewport edge regardless of
+                        // how many result rows would otherwise be needed.
+                        maxHeight: anchorRect.maxHeight,
+                        // When flipped above the input, lift the dropdown by
+                        // its own height so its bottom sits at the input's
+                        // top edge instead of starting there and growing
+                        // downward over the input.
+                        transform: anchorRect.placement === "above" ? "translateY(-100%)" : undefined,
                         zIndex: 2147483600,
                     }}
                 >
