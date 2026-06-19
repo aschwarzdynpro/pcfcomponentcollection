@@ -170,12 +170,28 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 - **Dreisprachige Oberfläche** (Deutsch / Englisch / Französisch), automatisch
   nach `context.userSettings.languageId`.
 
-### Offline
-- Das Control ist **nur online** nutzbar (Live-Server-Abfragen + `$batch`-Save).
-  Im Offline-Modus der Power-Apps-Mobile-App erkennt es `context.client.isOffline()`
-  und zeigt einen klaren Hinweis „Offline nicht verfügbar" (und überspringt die
-  Abfragen) — statt mit einem generischen Plattform-Fehler zu scheitern. Die volle
-  Offline-Fähigkeit ist in [`OfflinePlan.md`](OfflinePlan.md) geplant.
+### Offline (hybrid)
+- **Online** → Live-Server-Abfragen + `$batch`-Save (wie oben).
+- **Offline** (`context.client.isOffline()`) → das Control schaltet auf einen
+  Dataset-Pfad um:
+  - **Lesen:** Die Liste wird aus dem gebundenen **(offline-gecachten) Dataset**
+    gebaut und clientseitig gefiltert (Pausen raus; Aufteilen→nicht completed;
+    Zuordnen→completed & kein Lieferschein; Projekt erforderlich, wenn die
+    Projekt-Spalte im View liegt). **Festpreis-** und **„Meine Stunden"**-Filter
+    entfallen offline (Projekttyp bzw. Ressource→User sind im lokalen Cache nicht
+    verlässlich verfügbar).
+  - **Schreiben:** Der Split-Save überspringt `$batch` und nutzt die
+    **Kompensations-`context.webAPI`-Sequenz** — deren create/update/delete werden
+    vom Offline-Runtime zur Synchronisation eingereiht; Lieferschein-Erstellung
+    ebenso.
+  - Ein schmales **Offline-Banner** wird eingeblendet; Subtypes laden weiter über
+    `context.webAPI`.
+- `WebAPI`/`Utility` sind **`required="false"`**, damit der Host das Control offline
+  überhaupt rendert.
+- ⚠️ Offline braucht ein **Offline-Profil** (Admin) mit den relevanten
+  Tabellen/Spalten, und das destruktive Aufteilen reiht ein Löschen ein →
+  **Sync-Konflikt-Risiko**. Das ist **Iteration 1** und muss auf einem echten
+  Gerät validiert werden (Phase 0 in [`OfflinePlan.md`](OfflinePlan.md)).
 
 ## Konfiguration (Manifest-Properties)
 Alle Felder haben verifizierte SST-Defaults und sind pro Platzierung

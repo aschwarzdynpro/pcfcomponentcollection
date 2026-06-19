@@ -48,9 +48,11 @@ anrichten kann.
 
 ## 4b. Offline
 - ✅ **Offline-Hinweis statt Fehler** (`context.client.isOffline()`) — *v1.14.0
-  (Option A).*
-- 🔜 **Volle Offline-Fähigkeit** — siehe [`OfflinePlan.md`](OfflinePlan.md)
-  (Option C; großer Aufwand, Sync-Konflikt-Risiko beim destruktiven Save).
+  (Option A); Manifest `required="false"` v1.14.2.*
+- 🚧 **Volle Offline-Fähigkeit (Option C)** — *Iteration 1 in v1.15.0 auf Branch
+  `feature/worktime-split-grid-offline`*: Lesen aus dem Dataset + Kompensations-
+  Save. **Offen:** Geräte-Validierung (Phase 0) + Härtung — siehe
+  [`OfflinePlan.md`](OfflinePlan.md).
 
 ## 5. Qualität & Wartbarkeit
 - 🔜 **Unit-Tests** für die reinen Funktionen (`parseNumber`, Filteraufbau,

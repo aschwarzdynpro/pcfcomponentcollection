@@ -713,6 +713,7 @@ export async function saveSplit(
     parentId: string,
     subtypes: SplitInput[],
     logger: Logger = NOOP_LOGGER,
+    allowBatch = true,
 ): Promise<SaveResult> {
     const id = parentId.replace(/[{}]/g, "");
     const op = logger.op("splitSave", {
@@ -727,19 +728,26 @@ export async function saveSplit(
             pauses: prep.pauseIds.length,
         });
 
-        // Primary: atomic $batch changeset.
-        stage = "atomicBatch";
-        const result = await runSplitBatch(fields, id, prep);
-        if (result === "done") {
-            op.ok({ created: prep.activeCount, mode: "batch" });
-            return { created: prep.activeCount };
+        // Primary: atomic $batch changeset. Skipped offline (no $batch endpoint)
+        // → go straight to the compensating webAPI path, whose create/update/
+        // delete are queued for sync by the offline runtime.
+        if (allowBatch) {
+            stage = "atomicBatch";
+            const result = await runSplitBatch(fields, id, prep);
+            if (result === "done") {
+                op.ok({ created: prep.activeCount, mode: "batch" });
+                return { created: prep.activeCount };
+            }
         }
 
         // Fallback: compensating sequence over the supported webAPI.
-        op.step("batchUnavailable");
+        op.step(allowBatch ? "batchUnavailable" : "offlineCompensate");
         stage = "compensate";
         await saveSplitCompensating(webApi, fields, id, prep, op, logger);
-        op.ok({ created: prep.activeCount, mode: "compensate" });
+        op.ok({
+            created: prep.activeCount,
+            mode: allowBatch ? "compensate" : "offline",
+        });
         return { created: prep.activeCount };
     } catch (e) {
         op.fail(e, { stage });

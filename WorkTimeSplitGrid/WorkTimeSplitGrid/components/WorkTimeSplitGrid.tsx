@@ -112,6 +112,105 @@ function toEntryRow(
     };
 }
 
+const truthyVal = (v: unknown): boolean =>
+    v === true || v === 1 || v === "1" || v === "true";
+
+/** Best-effort ISO string from a dataset date value (Date / epoch / string). */
+function toIso(v: unknown): string {
+    if (v == null) return "";
+    if (v instanceof Date) return isNaN(v.getTime()) ? "" : v.toISOString();
+    if (typeof v === "number") {
+        const d = new Date(v);
+        return isNaN(d.getTime()) ? "" : d.toISOString();
+    }
+    return String(v);
+}
+
+/**
+ * OFFLINE read path: build + filter the entries from the bound dataset (which is
+ * offline-cached), since the live server queries can't run offline. Filters that
+ * the online path does server-side are applied client-side over the dataset
+ * columns: pauses excluded, split→not completed, assign→completed & no delivery
+ * note, project required (only when the project column is in the view). The
+ * Festpreis and "My hours" filters are NOT applied offline (the project type and
+ * the resource→user mapping aren't reliably in the local cache).
+ */
+function buildOfflineEntries(
+    dataset: ComponentFramework.PropertyTypes.DataSet,
+    fields: FieldConfig,
+    title: (type: string, date: string, project: string) => string,
+    mode: Mode,
+): EntryRow[] {
+    const cols = new Set((dataset.columns ?? []).map((c) => c.name));
+    const projectKnown = cols.has("sst_project_id");
+    const timereportKnown = cols.has("sst_timereport");
+    const pause = (fields.pauseValue ?? "").trim().toLowerCase();
+    const out: EntryRow[] = [];
+    for (const rawId of dataset.sortedRecordIds ?? []) {
+        const rec = dataset.records[rawId];
+        if (!rec) continue;
+        const get = (c: string): unknown => {
+            try {
+                return rec.getValue(c);
+            } catch {
+                return null;
+            }
+        };
+        const fmt = (c: string): string => {
+            try {
+                return rec.getFormattedValue(c) ?? "";
+            } catch {
+                return "";
+            }
+        };
+
+        const type = fmt(fields.type) || String(get(fields.type) ?? "");
+        if (pause && type.trim().toLowerCase() === pause) continue;
+
+        const completed = truthyVal(get(fields.completed));
+        if (mode === "split" ? completed : !completed) continue;
+
+        if (projectKnown && get("sst_project_id") == null) continue;
+
+        let timereport = "";
+        if (timereportKnown) {
+            timereport =
+                fmt("sst_timereport") ||
+                (get("sst_timereport") != null ? "x" : "");
+            if (mode === "assign" && timereport) continue;
+        }
+
+        const project = projectKnown ? fmt("sst_project_id") : "";
+        const dateFmt = fmt(fields.date);
+        const date = dateFmt ? dateFmt.split(" ")[0] : "";
+        const totalRaw = get(fields.total);
+        const total = totalRaw == null ? 0 : Number(totalRaw);
+        const resourceName =
+            fmt("sst_resource_ref") ||
+            fmt("sst_resource") ||
+            String(get("sst_resource") ?? "");
+
+        out.push({
+            id: String(rawId).replace(/[{}]/g, ""),
+            name: title(type, date, project),
+            date,
+            dateValue: toIso(get(fields.date)),
+            type,
+            total: Number.isFinite(total) ? total : 0,
+            totalFormatted:
+                fmt(fields.total) ||
+                (Number.isFinite(total) ? String(total) : ""),
+            completed,
+            project,
+            resourceName,
+            timereport,
+            projectPresent: projectKnown ? get("sst_project_id") != null : false,
+            extras: [],
+        });
+    }
+    return out;
+}
+
 export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const t = STRINGS[props.lang];
     const { fields } = props;
@@ -231,10 +330,28 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         );
     }, []);
 
+    // Offline: derive the list synchronously from the bound (offline-cached)
+    // dataset instead of the server query. Keyed on the record set + mode so it
+    // recomputes only when those change (not every render).
+    const offlineKey = props.isOffline
+        ? `${mode}:${(props.dataset.sortedRecordIds ?? []).join(",")}`
+        : "";
+    const offlineEntries = React.useMemo(
+        () =>
+            props.isOffline
+                ? buildOfflineEntries(props.dataset, fields, t.title, mode)
+                : null,
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [props.isOffline, offlineKey],
+    );
+
+    // Online → the server-loaded entries; offline → the dataset-derived ones.
+    const sourceEntries = props.isOffline ? offlineEntries : entries;
+
     // Period filter + free-text search (title, type, date, project number,
-    // resource name) + sorting — all client-side over the loaded entries.
+    // resource name) + sorting — all client-side over the source entries.
     const displayRows = React.useMemo(() => {
-        const all = entries ?? [];
+        const all = sourceEntries ?? [];
         const q = search.trim().toLowerCase();
         const start = periodStart(period);
         const filtered = all.filter((r) => {
@@ -252,7 +369,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             );
         });
         return sortRows(filtered, sortBy);
-    }, [entries, search, period, sortBy]);
+    }, [sourceEntries, search, period, sortBy]);
 
     const selected = React.useMemo(
         () => displayRows.find((r) => r.id === selectedId) ?? null,
@@ -303,11 +420,20 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const handleSaved = React.useCallback(() => {
         flashToast(t.saveSucceeded);
         // The split original is deleted (and its splits are completed), so it
-        // leaves the "split" list — drop it locally instead of reloading.
-        if (selectedId) removeEntries([selectedId]);
+        // leaves the "split" list — drop it locally (online) or re-read the
+        // offline-cached dataset (offline).
+        if (props.isOffline) props.dataset.refresh();
+        else if (selectedId) removeEntries([selectedId]);
         setSelectedId(null);
         setSubtypes(null);
-    }, [selectedId, removeEntries, flashToast, t.saveSucceeded]);
+    }, [
+        props.isOffline,
+        props.dataset,
+        selectedId,
+        removeEntries,
+        flashToast,
+        t.saveSucceeded,
+    ]);
 
     const switchMode = React.useCallback((m: Mode) => {
         setMode(m);
@@ -360,8 +486,10 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 );
                 setCheckedIds(new Set());
                 // Assigned entries now have a delivery note → they leave the
-                // "assign" list. Drop exactly those locally (no full reload).
-                removeEntries(res.assignedIds);
+                // "assign" list. Drop those locally (online) or re-read the
+                // offline-cached dataset (offline).
+                if (props.isOffline) props.dataset.refresh();
+                else removeEntries(res.assignedIds);
                 // Plain "create" opens only when exactly one note resulted.
                 // "Create & open": one note → open it; several → show a picker.
                 if (openAfter && res.reports.length > 1) {
@@ -386,6 +514,8 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             creating,
             props.webApi,
             props.logger,
+            props.isOffline,
+            props.dataset,
             openReport,
             removeEntries,
             flashToast,
@@ -393,36 +523,9 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         ],
     );
 
-    // Offline → the live queries / $batch save can't run; show a clear notice
-    // instead of letting them fail with a generic platform error.
-    if (props.isOffline) {
-        return (
-            <div className="wtsg-root">
-                <div className="wtsg-offline" role="status">
-                    <svg
-                        width="56"
-                        height="56"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                    >
-                        <path d="M17.5 19H7a4 4 0 0 1-.8-7.9 5 5 0 0 1 8-3" />
-                        <path d="M19.5 15.5A3.5 3.5 0 0 0 18 9" />
-                        <path d="M3 3l18 18" />
-                    </svg>
-                    <h3>{t.offlineTitle}</h3>
-                    <p>{t.offlineHint}</p>
-                </div>
-            </div>
-        );
-    }
-
-    // First load (entries still null) → full-panel spinner.
-    if (entries === null && loadingEntries) {
+    // First load (entries still null) → full-panel spinner. Offline reads the
+    // dataset synchronously, so it never shows this.
+    if (!props.isOffline && entries === null && loadingEntries) {
         return (
             <div className="wtsg-empty">
                 <span className="wtsg-spinner" aria-hidden="true" />
@@ -546,6 +649,27 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 </div>
             )}
 
+            {props.isOffline && (
+                <div className="wtsg-offline-bar" role="status">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M17.5 19H7a4 4 0 0 1-.8-7.9 5 5 0 0 1 8-3" />
+                        <path d="M19.5 15.5A3.5 3.5 0 0 0 18 9" />
+                        <path d="M3 3l18 18" />
+                    </svg>
+                    <span>{t.offlineBanner}</span>
+                </div>
+            )}
+
             {toast && (
                 <div className="wtsg-toast" role="status">
                     {toast}
@@ -596,6 +720,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 utils={props.utils}
                                 disabled={props.disabled}
                                 isMobile={props.isMobile}
+                                isOffline={props.isOffline}
                                 lang={props.lang}
                                 logger={props.logger}
                                 onBack={() => setSelectedId(null)}

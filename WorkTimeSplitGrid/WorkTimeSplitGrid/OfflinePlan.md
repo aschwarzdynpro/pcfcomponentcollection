@@ -1,9 +1,14 @@
-# WorkTimeSplitGrid — Offline-Fähigkeit (Option C) — Planung
+# WorkTimeSplitGrid — Offline-Fähigkeit (Option C) — Plan & Status
 
-> Planungsdokument, **keine** Umsetzung. Ziel: das Control in der Power-Apps-
-> Mobile-App **offline** nutzbar machen (Model-Driven-Offline). Heute (v1.13.x)
-> fällt es offline auf einen generischen Fehler — abgefangen seit v1.14.0
-> (Option A: Offline-Hinweis statt Fehler).
+> **Status (v1.15.0, Branch `feature/worktime-split-grid-offline`):**
+> **Iteration 1 umgesetzt** — Phase 1 (Lesen aus dem Dataset) + Phase 3
+> (Kompensations-Save ohne `$batch`) sind im Code; Manifest-Features auf
+> `required="false"`. **NOCH OFFEN & blockierend: Phase 0** (Validierung auf
+> echtem Gerät) sowie die Phasen 2/4-Härtung. Heißt: Der Code ist da, aber das
+> tatsächliche Offline-Verhalten (greift `context.webAPI` offline? hat der View/
+> das Offline-Profil die nötigen Spalten?) ist noch **nicht gerätegetestet**.
+> Vorgeschichte: bis v1.14.x fiel das Control offline auf einen generischen
+> Fehler; Option A (Offline-Hinweis) war der erste Schritt.
 
 ## 1. Warum es heute offline nicht geht
 Das Control ist ein **Live-Daten-Editor**:

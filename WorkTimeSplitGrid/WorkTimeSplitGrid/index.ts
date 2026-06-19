@@ -37,6 +37,15 @@ export class WorkTimeSplitGrid
         } catch {
             // older runtimes don't support trackContainerResize; ignore
         }
+        // Offline reads the list from the bound (cached) dataset — ask for a
+        // bigger page so more cached records are available without paging.
+        if (this.isOffline()) {
+            try {
+                context.parameters.entries.paging.setPageSize(500);
+            } catch {
+                // not ready / unsupported — first page still renders
+            }
+        }
         this.render();
     }
 

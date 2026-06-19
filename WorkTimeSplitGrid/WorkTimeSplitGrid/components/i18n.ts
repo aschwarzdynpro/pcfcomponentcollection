@@ -50,8 +50,7 @@ export interface Strings {
     pickReportTitle: (n: number) => string;
     pickReportPrompt: string;
     closeLabel: string;
-    offlineTitle: string;
-    offlineHint: string;
+    offlineBanner: string;
     loading: string;
     loadingSubtypes: string;
     errorPrefix: string;
@@ -115,9 +114,8 @@ export const STRINGS: Record<Lang, Strings> = {
         pickReportTitle: (n) => `${n} delivery notes created`,
         pickReportPrompt: "Which delivery note would you like to open?",
         closeLabel: "Close",
-        offlineTitle: "Not available offline",
-        offlineHint:
-            "This view needs a server connection to split and assign work times. Please go online and try again.",
+        offlineBanner:
+            "Offline — data from the local cache; changes sync when you're back online.",
         loading: "Loading entries…",
         loadingSubtypes: "Loading subtypes…",
         errorPrefix: "Could not load the grid",
@@ -184,9 +182,8 @@ export const STRINGS: Record<Lang, Strings> = {
         pickReportTitle: (n) => `${n} Lieferscheine erstellt`,
         pickReportPrompt: "Welchen Lieferschein möchtest du öffnen?",
         closeLabel: "Schließen",
-        offlineTitle: "Offline nicht verfügbar",
-        offlineHint:
-            "Diese Ansicht braucht eine Serververbindung, um Arbeitszeiten aufzuteilen und zuzuordnen. Bitte online gehen und erneut versuchen.",
+        offlineBanner:
+            "Offline — Daten aus dem lokalen Cache; Änderungen werden bei Verbindung synchronisiert.",
         loading: "Einträge werden geladen…",
         loadingSubtypes: "Subtypes werden geladen…",
         errorPrefix: "Grid konnte nicht geladen werden",
@@ -253,9 +250,8 @@ export const STRINGS: Record<Lang, Strings> = {
         pickReportTitle: (n) => `${n} bons de livraison créés`,
         pickReportPrompt: "Quel bon de livraison souhaitez-vous ouvrir ?",
         closeLabel: "Fermer",
-        offlineTitle: "Indisponible hors connexion",
-        offlineHint:
-            "Cette vue nécessite une connexion au serveur pour répartir et affecter les temps de travail. Veuillez vous reconnecter et réessayer.",
+        offlineBanner:
+            "Hors connexion — données du cache local ; les modifications seront synchronisées.",
         loading: "Chargement des entrées…",
         loadingSubtypes: "Chargement des sous-types…",
         errorPrefix: "Impossible de charger la grille",

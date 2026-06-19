@@ -114,16 +114,26 @@ deletes the original.
 - **Trilingual UI** (German / English / French), chosen automatically from the
   user's Dataverse language (`context.userSettings.languageId`).
 
-### 📴 Offline
-- The control is **online-only** (live server-side queries + a `$batch` save). In
-  the Power Apps mobile app's offline mode it detects `context.client.isOffline()`
-  and shows a clear "not available offline" notice (and skips the queries) instead
-  of failing with a generic platform error.
-- For that notice to appear at all, `WebAPI`/`Utility` are declared
-  **`required="false"`** in the manifest: the host refuses to render a control
-  whose *required* feature is unavailable (WebAPI is unavailable offline), which
-  otherwise hid the notice behind a generic "control can't load" error.
-- Full offline support is scoped in [`OfflinePlan.md`](OfflinePlan.md).
+### 📴 Offline (hybrid)
+- **Online** → the live server-side queries + `$batch` save (as above).
+- **Offline** (`context.client.isOffline()`) → the control switches to a
+  dataset-based path:
+  - **Read:** the list is built from the bound **(offline-cached) dataset** and
+    filtered client-side (pauses excluded; split→not completed; assign→completed
+    & no delivery note; project required when the project column is in the view).
+    The **Festpreis** and **My hours** filters are skipped offline (the project
+    type and resource→user mapping aren't reliably in the local cache).
+  - **Write:** the split save skips `$batch` and runs the **compensating
+    `context.webAPI` sequence**, whose create/update/delete are queued for sync by
+    the offline runtime; delivery-note creation works the same way.
+  - A slim **offline banner** is shown; subtypes still load via `context.webAPI`.
+- `WebAPI`/`Utility` are declared **`required="false"`** so the host renders the
+  control offline at all (a *required* unavailable feature otherwise blocks it
+  with a generic "control can't load" error).
+- ⚠️ Offline needs an **offline profile** (admin) that includes the relevant
+  tables/columns, and the destructive split queues a delete → **sync-conflict
+  risk**. This is **iteration 1** and must be validated on a real device (Phase 0
+  in [`OfflinePlan.md`](OfflinePlan.md)).
 
 ### 🔧 Technical
 - **React 17** + TypeScript, no extra runtime libraries.

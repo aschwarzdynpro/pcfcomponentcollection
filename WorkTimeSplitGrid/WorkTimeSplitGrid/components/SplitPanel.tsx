@@ -18,6 +18,8 @@ export interface SplitPanelProps {
     utils: ComponentFramework.Utility;
     disabled: boolean;
     isMobile: boolean;
+    /** Offline → skip the $batch save (use the queued webAPI compensating path). */
+    isOffline: boolean;
     lang: Lang;
     logger: Logger;
     onBack: () => void;
@@ -92,6 +94,7 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
                 entry.id,
                 input,
                 props.logger,
+                !props.isOffline,
             );
             props.onSaved();
         } catch (e) {
