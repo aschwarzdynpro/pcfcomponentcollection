@@ -28,6 +28,13 @@ export const CHILD = {
     /** Lookup back to the parent; filter via `_sst_roundedtimeentry_value`. */
     parentLookup: "sst_roundedtimeentry",
     parentLookupValue: "_sst_roundedtimeentry_value",
+    /**
+     * Parent → children collection navigation property. Loading the children via
+     * this relationship ($expand) is scoped to exactly one parent — unlike a
+     * `$filter` on the parent-lookup column, which (for some non-admin roles) was
+     * observed to return children of many entries. Verified live (UAT).
+     */
+    parentCollectionNav: "sst_sst_roundedtimeentryworksubtypes_RoundedT",
 } as const;
 
 /**

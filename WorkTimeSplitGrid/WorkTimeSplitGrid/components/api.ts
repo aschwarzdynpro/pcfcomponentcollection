@@ -53,17 +53,27 @@ function sortSubtypes<T extends { name: string }>(rows: T[]): T[] {
     });
 }
 
-/** Load the work-subtype rows belonging to a Rounded Time Entry. */
+/**
+ * Load the work-subtype rows belonging to a Rounded Time Entry.
+ *
+ * Loaded via the parent → children relationship (`$expand`) rather than a
+ * `$filter` on the child's parent-lookup column: the relationship is scoped to
+ * exactly one parent, whereas the filtered query was observed to return children
+ * of MANY entries for some non-admin roles (a record-level-access quirk) — which
+ * showed up as a long list of "Normal" rows in the split editor.
+ */
 export async function loadSubtypes(
     webApi: ComponentFramework.WebApi,
     parentId: string,
 ): Promise<SubtypeRow[]> {
     const id = parentId.replace(/[{}]/g, "");
+    const nav = CHILD.parentCollectionNav;
     const query =
-        `?$select=${CHILD.primaryId},${CHILD.name},${CHILD.timeValue},${CHILD.payType}` +
-        `&$filter=${CHILD.parentLookupValue} eq ${id}`;
-    const res = await webApi.retrieveMultipleRecords(CHILD.logicalName, query);
-    const rows: SubtypeRow[] = (res.entities ?? []).map((e: any) => {
+        `?$select=${PARENT.primaryId}` +
+        `&$expand=${nav}($select=${CHILD.primaryId},${CHILD.name},${CHILD.timeValue},${CHILD.payType})`;
+    const rec: any = await webApi.retrieveRecord(PARENT.logicalName, id, query);
+    const kids: any[] = Array.isArray(rec?.[nav]) ? rec[nav] : [];
+    const rows: SubtypeRow[] = kids.map((e: any) => {
         const value =
             e[CHILD.timeValue] == null ? 0 : Number(e[CHILD.timeValue]);
         const pay = e[CHILD.payType];
