@@ -86,6 +86,16 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   Normal → Überstunden → Nacht/Sonntag → Feiertag.
 - Pro Subtype ein **editierbares Stundenfeld** (`sst_timevalue`). Eingaben
   akzeptieren Komma und Punkt als Dezimaltrenner.
+- **Intelligente Vorbelegung** — beim Auswählen eines Eintrags wird die Verteilung
+  aus **Datum + Gesamtdauer** vorgeschlagen (der Benutzer kann weiterhin anpassen):
+  - **Sonntag** → alles auf *Nacht / Sonntag*.
+  - **Arbeitstag ≤ 8 h** → alles auf *Normal*; **> 8 h** → 8 h auf *Normal*, Rest
+    auf *Überstunde*.
+  - **Feiertag** → alles auf *Feiertag* (Phase 2 — die Feiertagsregel ist noch
+    nicht hinterlegt, daher werden Feiertage aktuell wie normale Arbeitstage
+    behandelt).
+  Die Subtype-Zeilen werden per Schlüsselwort gematcht (robust gegen
+  Überstunde/Überstunden).
 - Live-Zusammenfassung **Gesamt / Verteilt / Rest**; „Rest = 0" wird grün
   hervorgehoben.
 - **„Rest übernehmen"-Icon** — solange noch Restzeit unverteilt ist (Rest > 0),

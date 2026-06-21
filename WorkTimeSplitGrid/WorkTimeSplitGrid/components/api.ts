@@ -104,6 +104,68 @@ export function formatNumber(n: number): string {
     return String(Math.round(n * 1000) / 1000);
 }
 
+/** Hours that count as a normal workday before overtime kicks in. */
+export const NORMAL_DAY_HOURS = 8;
+
+/**
+ * Whether a date is a public holiday. Phase 2 will supply the real rule
+ * (calendar table / list); for now it is always false, so holidays are treated
+ * as normal workdays by suggestSplit until that rule is wired in.
+ */
+export function isHoliday(_date: Date): boolean {
+    return false;
+}
+
+/**
+ * Suggest an initial split distribution from the entry's date + total duration:
+ * - Holiday  → all on Feiertag (Phase 2; isHoliday is a stub today).
+ * - Sunday   → all on Nacht/Sonntag.
+ * - Workday ≤ 8h → all on Normal; > 8h → 8h Normal + the rest on Überstunde.
+ *
+ * Subtype rows are matched by keyword (robust to Überstunde/Überstunden and the
+ * "Nacht / Sonntag" spelling). Returns a NEW array with the values set; rows
+ * without a target (and any target whose row is missing) stay at 0, so the user
+ * can still adjust and the save guard stays honest.
+ */
+export function suggestSplit(
+    dateIso: string,
+    total: number,
+    rows: SubtypeRow[],
+): SubtypeRow[] {
+    if (!(total > 0)) return rows;
+    const lc = (s: string): string => (s ?? "").toLowerCase();
+    const normalRow = rows.find((r) => lc(r.name).includes("normal"));
+    const overtimeRow = rows.find((r) => lc(r.name).includes("überstund"));
+    const sundayRow = rows.find((r) => lc(r.name).includes("sonntag"));
+    const holidayRow = rows.find((r) => lc(r.name).includes("feiertag"));
+
+    const d = dateIso ? new Date(dateIso) : null;
+    const valid = !!d && !isNaN(d.getTime());
+
+    const target = new Map<string, number>(); // row.id → hours
+    if (valid && isHoliday(d as Date)) {
+        if (holidayRow) target.set(holidayRow.id, total);
+    } else if (valid && (d as Date).getDay() === 0) {
+        // Sunday
+        if (sundayRow) target.set(sundayRow.id, total);
+    } else if (total <= NORMAL_DAY_HOURS) {
+        if (normalRow) target.set(normalRow.id, total);
+    } else {
+        if (normalRow) target.set(normalRow.id, NORMAL_DAY_HOURS);
+        if (overtimeRow) {
+            target.set(
+                overtimeRow.id,
+                Math.round((total - NORMAL_DAY_HOURS) * 1000) / 1000,
+            );
+        }
+    }
+
+    return rows.map((r) => ({
+        ...r,
+        value: formatNumber(target.get(r.id) ?? 0),
+    }));
+}
+
 /**
  * True if the current user holds any of the given (directly-assigned) security
  * roles. Best-effort — returns false on error, which keeps the "My hours"

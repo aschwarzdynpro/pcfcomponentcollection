@@ -74,6 +74,14 @@ deletes the original.
 - **Detail split panel** — selecting an entry loads its work-subtype rows
   (`sst_roundedtimeentryworksubtypes`) and lets the user edit the hours per
   subtype, with a live **Total / Distributed / Remaining** summary.
+- **Smart pre-fill** — on selecting an entry the distribution is suggested from
+  the entry's **date + total duration** (the user can still adjust):
+  - **Sunday** → all on *Nacht / Sonntag*.
+  - **Workday ≤ 8 h** → all on *Normal*; **> 8 h** → 8 h on *Normal*, the rest on
+    *Überstunde*.
+  - **Holiday** → all on *Feiertag* (Phase 2 — the holiday rule isn't wired in
+    yet, so holidays are currently treated as normal workdays).
+  Subtype rows are matched by keyword (robust to Überstunde/Überstunden).
 - **"Use remaining" icon** — while time is still unallocated (remaining > 0), a
   small arrow icon appears next to **every** subtype field; clicking it adds the
   remaining amount to that field's current value (one tap to finish the split).
