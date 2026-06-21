@@ -8,7 +8,7 @@ control for import.
 | Field                | Value                              |
 |----------------------|------------------------------------|
 | Solution name        | `WorkTimeSplitGrid`                |
-| Version              | `1.17.0.0`                         |
+| Version              | `1.18.0.0`                         |
 | Publisher            | `Schulz Systemtechnik GmbH`        |
 | Customization prefix | `sst`                              |
 | Control unique name  | `sst_WorkTime.WorkTimeSplitGrid`   |

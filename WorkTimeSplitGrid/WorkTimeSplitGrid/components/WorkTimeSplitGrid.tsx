@@ -10,7 +10,6 @@ import {
     userHasAnyRole,
     createTimeReports,
     loadEntries,
-    suggestSplit,
     LoadedEntry,
     CreatedReport,
 } from "./api";
@@ -348,10 +347,6 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
 
     // Online → the server-loaded entries; offline → the dataset-derived ones.
     const sourceEntries = props.isOffline ? offlineEntries : entries;
-    // Latest entries, readable from effects without being a dependency (used to
-    // look up the selected entry's date/total for the auto-fill suggestion).
-    const entriesRef = React.useRef<EntryRow[]>([]);
-    entriesRef.current = sourceEntries ?? [];
 
     // Period filter + free-text search (title, type, date, project number,
     // resource name) + sorting — all client-side over the source entries.
@@ -398,13 +393,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         loadSubtypes(props.webApi, forId).then(
             (rows) => {
                 if (cancelled) return;
-                // Intelligently pre-fill the distribution from the entry's date +
-                // total (Sunday → Nacht/Sonntag, >8h → Normal + Überstunde, …).
-                const entry = entriesRef.current.find((e) => e.id === forId);
-                const filled = entry
-                    ? suggestSplit(entry.dateValue ?? "", entry.total, rows)
-                    : rows;
-                setSubtypes(filled);
+                setSubtypes(rows);
                 setSubtypesEntryId(forId);
                 setLoadingSubtypes(false);
             },

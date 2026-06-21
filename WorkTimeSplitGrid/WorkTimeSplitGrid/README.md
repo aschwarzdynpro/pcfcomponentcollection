@@ -74,14 +74,19 @@ deletes the original.
 - **Detail split panel** — selecting an entry loads its work-subtype rows
   (`sst_roundedtimeentryworksubtypes`) and lets the user edit the hours per
   subtype, with a live **Total / Distributed / Remaining** summary.
-- **Smart pre-fill** — on selecting an entry the distribution is suggested from
-  the entry's **date + total duration** (the user can still adjust):
+- **Smart pre-fill (★ button)** — a small star/AI button in the panel head fills
+  the distribution from the entry's **date + total duration** (on demand; the
+  user can still adjust). Rules:
+  - **Holiday** → all on *Feiertag*.
   - **Sunday** → all on *Nacht / Sonntag*.
   - **Workday ≤ 8 h** → all on *Normal*; **> 8 h** → 8 h on *Normal*, the rest on
     *Überstunde*.
-  - **Holiday** → all on *Feiertag* (Phase 2 — the holiday rule isn't wired in
-    yet, so holidays are currently treated as normal workdays).
-  Subtype rows are matched by keyword (robust to Überstunde/Überstunden).
+  Holidays are resolved live via the chain **entry → `sst_resource_ref`
+  (bookableresource) → `sst_site_ref` (sst_site) → `sst_country_ref`
+  (sst_country)**, then `sst_publicholiday` rows for that country whose
+  `[sst_startdate_dat, sst_enddate_dat]` range covers the date. Best-effort: if a
+  link is missing or unreadable, the day is treated as a normal workday. Subtype
+  rows are matched by keyword (robust to Überstunde/Überstunden).
 - **"Use remaining" icon** — while time is still unallocated (remaining > 0), a
   small arrow icon appears next to **every** subtype field; clicking it adds the
   remaining amount to that field's current value (one tap to finish the split).

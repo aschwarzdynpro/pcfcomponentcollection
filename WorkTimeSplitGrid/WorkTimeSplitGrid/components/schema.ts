@@ -89,6 +89,29 @@ export const TIMEREPORT = {
 export const WORKORDER_SET = "msdyn_workorders";
 
 /**
+ * Public-holiday lookup chain for the split auto-fill suggestion. From the entry:
+ *   entry `_sst_resource_ref_value` → bookableresource
+ *   bookableresource `_sst_site_ref_value` → sst_site
+ *   sst_site `_sst_country_ref_value` → sst_country
+ * then sst_publicholiday rows for that country whose [start, end] range covers
+ * the entry's date. Verified live (UAT 2026-06-21).
+ */
+export const HOLIDAY = {
+    table: "sst_publicholiday",
+    countryValue: "_sst_country_ref_value",
+    startDate: "sst_startdate_dat",
+    endDate: "sst_enddate_dat",
+    /** entry → resource (bookableresource). */
+    entryResourceValue: "_sst_resource_ref_value",
+    /** bookableresource → site (sst_site). */
+    resourceTable: "bookableresource",
+    resourceSiteValue: "_sst_site_ref_value",
+    /** sst_site → country (sst_country). */
+    siteTable: "sst_site",
+    siteCountryValue: "_sst_country_ref_value",
+} as const;
+
+/**
  * Project-type exclusion: both modes hide entries whose related project is of
  * type "Festpreis" (fixed price). The type lives on the project (msdyn_project),
  * field `hso_projecttype`; filtered via the lookup navigation property.

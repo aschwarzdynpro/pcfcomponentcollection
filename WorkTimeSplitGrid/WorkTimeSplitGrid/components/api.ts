@@ -8,6 +8,7 @@ import {
     TIMEREPORT,
     WORKORDER_SET,
     PROJECT_TYPE,
+    HOLIDAY,
     normalizeLabel,
     FieldConfig,
     SUBTYPE_ORDER,
@@ -107,18 +108,69 @@ export function formatNumber(n: number): string {
 /** Hours that count as a normal workday before overtime kicks in. */
 export const NORMAL_DAY_HOURS = 8;
 
+/** Local calendar date (YYYY-MM-DD) of an ISO timestamp — matches the display. */
+function localDateOnly(iso: string): string {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    const p = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 /**
- * Whether a date is a public holiday. Phase 2 will supply the real rule
- * (calendar table / list); for now it is always false, so holidays are treated
- * as normal workdays by suggestSplit until that rule is wired in.
+ * Whether the entry's date is a public holiday, resolved via the chain
+ * entry → bookableresource → sst_site → sst_country, then sst_publicholiday rows
+ * for that country whose [start, end] range covers the date. Best-effort: any
+ * failure (missing link, no read access) returns false → treated as a workday.
  */
-export function isHoliday(_date: Date): boolean {
-    return false;
+export async function isHolidayForEntry(
+    webApi: ComponentFramework.WebApi,
+    entryId: string,
+    dateIso: string,
+): Promise<boolean> {
+    const day = localDateOnly(dateIso);
+    if (!day) return false;
+    try {
+        const id = entryId.replace(/[{}]/g, "");
+        const entry: any = await webApi.retrieveRecord(
+            PARENT.logicalName,
+            id,
+            `?$select=${HOLIDAY.entryResourceValue}`,
+        );
+        const resourceId = entry?.[HOLIDAY.entryResourceValue];
+        if (!resourceId) return false;
+        const res: any = await webApi.retrieveRecord(
+            HOLIDAY.resourceTable,
+            String(resourceId),
+            `?$select=${HOLIDAY.resourceSiteValue}`,
+        );
+        const siteId = res?.[HOLIDAY.resourceSiteValue];
+        if (!siteId) return false;
+        const site: any = await webApi.retrieveRecord(
+            HOLIDAY.siteTable,
+            String(siteId),
+            `?$select=${HOLIDAY.siteCountryValue}`,
+        );
+        const countryId = site?.[HOLIDAY.siteCountryValue];
+        if (!countryId) return false;
+        const filter =
+            `${HOLIDAY.countryValue} eq ${countryId}` +
+            ` and ${HOLIDAY.startDate} le ${day}` +
+            ` and ${HOLIDAY.endDate} ge ${day}`;
+        const found = await webApi.retrieveMultipleRecords(
+            HOLIDAY.table,
+            `?$select=${HOLIDAY.table}id&$filter=${filter}`,
+            1,
+        );
+        return (found.entities?.length ?? 0) > 0;
+    } catch {
+        return false;
+    }
 }
 
 /**
  * Suggest an initial split distribution from the entry's date + total duration:
- * - Holiday  → all on Feiertag (Phase 2; isHoliday is a stub today).
+ * - Holiday  → all on Feiertag (caller passes `holiday` from isHolidayForEntry).
  * - Sunday   → all on Nacht/Sonntag.
  * - Workday ≤ 8h → all on Normal; > 8h → 8h Normal + the rest on Überstunde.
  *
@@ -131,6 +183,7 @@ export function suggestSplit(
     dateIso: string,
     total: number,
     rows: SubtypeRow[],
+    holiday = false,
 ): SubtypeRow[] {
     if (!(total > 0)) return rows;
     const lc = (s: string): string => (s ?? "").toLowerCase();
@@ -140,13 +193,12 @@ export function suggestSplit(
     const holidayRow = rows.find((r) => lc(r.name).includes("feiertag"));
 
     const d = dateIso ? new Date(dateIso) : null;
-    const valid = !!d && !isNaN(d.getTime());
+    const isSunday = !!d && !isNaN(d.getTime()) && d.getDay() === 0;
 
     const target = new Map<string, number>(); // row.id → hours
-    if (valid && isHoliday(d as Date)) {
+    if (holiday) {
         if (holidayRow) target.set(holidayRow.id, total);
-    } else if (valid && (d as Date).getDay() === 0) {
-        // Sunday
+    } else if (isSunday) {
         if (sundayRow) target.set(sundayRow.id, total);
     } else if (total <= NORMAL_DAY_HOURS) {
         if (normalRow) target.set(normalRow.id, total);

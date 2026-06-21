@@ -86,15 +86,19 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   Normal → Überstunden → Nacht/Sonntag → Feiertag.
 - Pro Subtype ein **editierbares Stundenfeld** (`sst_timevalue`). Eingaben
   akzeptieren Komma und Punkt als Dezimaltrenner.
-- **Intelligente Vorbelegung** — beim Auswählen eines Eintrags wird die Verteilung
-  aus **Datum + Gesamtdauer** vorgeschlagen (der Benutzer kann weiterhin anpassen):
+- **Intelligente Vorbelegung (★-Button)** — ein kleiner Stern-/KI-Button im
+  Panel-Kopf füllt die Verteilung **auf Klick** aus **Datum + Gesamtdauer** (der
+  Benutzer kann weiterhin anpassen). Regeln:
+  - **Feiertag** → alles auf *Feiertag*.
   - **Sonntag** → alles auf *Nacht / Sonntag*.
   - **Arbeitstag ≤ 8 h** → alles auf *Normal*; **> 8 h** → 8 h auf *Normal*, Rest
     auf *Überstunde*.
-  - **Feiertag** → alles auf *Feiertag* (Phase 2 — die Feiertagsregel ist noch
-    nicht hinterlegt, daher werden Feiertage aktuell wie normale Arbeitstage
-    behandelt).
-  Die Subtype-Zeilen werden per Schlüsselwort gematcht (robust gegen
+  Feiertage werden live über die Kette **Eintrag → `sst_resource_ref`
+  (bookableresource) → `sst_site_ref` (sst_site) → `sst_country_ref`
+  (sst_country)** ermittelt, dann `sst_publicholiday`-Datensätze des Landes, deren
+  Bereich `[sst_startdate_dat, sst_enddate_dat]` das Datum abdeckt. Best-effort:
+  fehlt ein Glied oder fehlt die Leseberechtigung, gilt der Tag als normaler
+  Arbeitstag. Subtype-Zeilen werden per Schlüsselwort gematcht (robust gegen
   Überstunde/Überstunden).
 - Live-Zusammenfassung **Gesamt / Verteilt / Rest**; „Rest = 0" wird grün
   hervorgehoben.

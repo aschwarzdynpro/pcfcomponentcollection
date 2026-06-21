@@ -2,7 +2,14 @@ import * as React from "react";
 import { EntryRow, Lang, SubtypeRow } from "./types";
 import { STRINGS } from "./i18n";
 import { FieldConfig, EPSILON } from "./schema";
-import { parseNumber, formatNumber, saveSplit, SplitInput } from "./api";
+import {
+    parseNumber,
+    formatNumber,
+    saveSplit,
+    suggestSplit,
+    isHolidayForEntry,
+    SplitInput,
+} from "./api";
 import { Logger } from "./telemetry";
 
 /** Mobile stepper increment (hours). */
@@ -34,11 +41,13 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
 
     const [saving, setSaving] = React.useState(false);
     const [confirming, setConfirming] = React.useState(false);
+    const [suggesting, setSuggesting] = React.useState(false);
 
     // Reset transient panel state when the selected entry changes.
     React.useEffect(() => {
         setSaving(false);
         setConfirming(false);
+        setSuggesting(false);
     }, [entry?.id]);
 
     const parsed = React.useMemo(
@@ -67,6 +76,32 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
             subtypes.map((s) => (s.id === id ? { ...s, value } : s)),
         );
     };
+
+    /** Star/AI button: pre-fill the distribution from the entry's date + total
+     *  (Sunday → Nacht/Sonntag, holiday → Feiertag, >8h → Normal + Überstunde). */
+    const handleSuggest = async () => {
+        if (!entry || !subtypes || suggesting) return;
+        setSuggesting(true);
+        try {
+            const holiday = await isHolidayForEntry(
+                props.webApi,
+                entry.id,
+                entry.dateValue ?? "",
+            );
+            props.onSubtypesChange(
+                suggestSplit(entry.dateValue ?? "", entry.total, subtypes, holiday),
+            );
+        } finally {
+            setSuggesting(false);
+        }
+    };
+
+    const canSuggest =
+        !!entry &&
+        !entry.completed &&
+        !props.disabled &&
+        !saving &&
+        (subtypes?.length ?? 0) > 0;
 
     /** Mobile +/− stepper: adjust a subtype by ±STEP, floored at 0. */
     const stepValue = (id: string, current: string, delta: number) => {
@@ -166,10 +201,37 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
                 </div>
             )}
             <div className="wtsg-panel-head">
-                <h3 title={entry.name}>{entry.name}</h3>
-                <div className="wtsg-panel-sub">
-                    {entry.type || "—"} · {entry.date || "—"}
+                <div className="wtsg-panel-head-text">
+                    <h3 title={entry.name}>{entry.name}</h3>
+                    <div className="wtsg-panel-sub">
+                        {entry.type || "—"} · {entry.date || "—"}
+                    </div>
                 </div>
+                {canSuggest && (
+                    <button
+                        type="button"
+                        className="wtsg-magic"
+                        onClick={handleSuggest}
+                        disabled={suggesting}
+                        title={t.suggest}
+                        aria-label={t.suggest}
+                    >
+                        {suggesting ? (
+                            <span className="wtsg-spinner" aria-hidden="true" />
+                        ) : (
+                            <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                aria-hidden="true"
+                            >
+                                <path d="M12 2l1.6 4.9L18.5 8.5 13.6 10 12 15l-1.6-5L5.5 8.5l4.9-1.6z" />
+                                <path d="M18.5 13l.8 2.3 2.3.8-2.3.8-.8 2.3-.8-2.3-2.3-.8 2.3-.8z" />
+                            </svg>
+                        )}
+                    </button>
+                )}
             </div>
 
             {props.loading ? (
