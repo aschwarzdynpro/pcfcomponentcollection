@@ -73,7 +73,10 @@ deletes the original.
   Teamleitung Addon**, who may toggle it off to see all hours.
 - **Detail split panel** — selecting an entry loads its work-subtype rows
   (`sst_roundedtimeentryworksubtypes`) and lets the user edit the hours per
-  subtype, with a live **Total / Distributed / Remaining** summary.
+  subtype, with a live **Total / Distributed / Remaining** summary. The detail
+  header is shortened to **project number / booking number** (e.g.
+  `P10006786 / S-120044`) — the type and date are already on the sub-line. The
+  booking number is the `bookableresourcebooking` display value.
 - **Smart pre-fill (★ button)** — a small star/AI button in the panel head fills
   the distribution from the entry's **date + total duration** (on demand; the
   user can still adjust). Rules:

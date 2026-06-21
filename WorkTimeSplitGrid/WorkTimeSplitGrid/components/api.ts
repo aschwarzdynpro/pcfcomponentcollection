@@ -262,6 +262,8 @@ export interface LoadedEntry {
     projectId: string;
     resourceName: string;
     timereport: string;
+    /** Booking number (bookableresourcebooking display value, e.g. S-120044). */
+    bookingNumber: string;
 }
 
 export interface LoadEntriesOptions {
@@ -298,6 +300,9 @@ function mapLoadedEntry(e: Record<string, any>): LoadedEntry {
             String(e[`_sst_resource_ref_value${ENTRY_FMT}`] ?? "") ||
             String(e.sst_resource ?? ""),
         timereport: String(e._sst_timereport_value ?? ""),
+        bookingNumber: String(
+            e[`_sst_bookableresourcebooking_value${ENTRY_FMT}`] ?? "",
+        ),
     };
 }
 
@@ -362,7 +367,8 @@ export async function loadEntries(
 
     const query =
         `?$select=sst_roundedtimeentriesid,sst_name,sst_type,sst_date,sst_duration,sst_resource,` +
-        `sst_worksubtypecompleted,_sst_project_id_value,_sst_timereport_value,_sst_resource_ref_value` +
+        `sst_worksubtypecompleted,_sst_project_id_value,_sst_timereport_value,_sst_resource_ref_value,` +
+        `_sst_bookableresourcebooking_value` +
         `&$expand=sst_Project_id($select=sst_projectnumber),sst_resource_ref($select=name)` +
         `&$filter=${filter}&$orderby=sst_date desc`;
 

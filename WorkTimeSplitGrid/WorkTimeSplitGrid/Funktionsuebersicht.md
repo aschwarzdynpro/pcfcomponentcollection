@@ -80,6 +80,9 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 - Statuspunkt je Karte (offen = rot, aufgeteilt = grün).
 
 ### Detail-Aufteilung (rechts)
+- **Detail-Titel gekürzt** auf **Projekt-ID / Booking-Nummer** (z. B.
+  `P10006786 / S-120044`) — Tätigkeitsart und Datum stehen bereits in der
+  Unterzeile. Die Booking-Nummer ist der Anzeigewert der `bookableresourcebooking`.
 - Auswahl eines Eintrags lädt die zugehörigen Work-Subtype-Zeilen
   (`sst_roundedtimeentryworksubtypes`, gefiltert über
   `_sst_roundedtimeentry_value`) und sortiert sie in der kanonischen Reihenfolge

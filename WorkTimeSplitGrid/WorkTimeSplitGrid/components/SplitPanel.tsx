@@ -149,6 +149,13 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
         );
     }
 
+    // Detail head title: project number / booking number (type + date are shown
+    // in the sub-line below, so the long composed title is redundant here).
+    const detailTitle =
+        [entry.project, entry.bookingNumber].filter(Boolean).join(" / ") ||
+        entry.type ||
+        "—";
+
     // Offline → read-only: the split is a destructive server transaction, so it
     // can't run from the local cache. Show the entry head + a notice instead of
     // the editor/save.
@@ -168,7 +175,7 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
                     </div>
                 )}
                 <div className="wtsg-panel-head">
-                    <h3 title={entry.name}>{entry.name}</h3>
+                    <h3 title={detailTitle}>{detailTitle}</h3>
                     <div className="wtsg-panel-sub">
                         {entry.type || "—"} · {entry.date || "—"}
                     </div>
@@ -202,7 +209,7 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
             )}
             <div className="wtsg-panel-head">
                 <div className="wtsg-panel-head-text">
-                    <h3 title={entry.name}>{entry.name}</h3>
+                    <h3 title={detailTitle}>{detailTitle}</h3>
                     <div className="wtsg-panel-sub">
                         {entry.type || "—"} · {entry.date || "—"}
                     </div>
