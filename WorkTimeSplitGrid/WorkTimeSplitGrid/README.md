@@ -79,7 +79,8 @@ deletes the original.
   booking number is the `bookableresourcebooking` display value.
 - **Smart pre-fill (★ button)** — a small star/AI button in the panel head fills
   the distribution from the entry's **date + total duration** (on demand; the
-  user can still adjust). Rules:
+  user can still adjust). **Hidden by default** — enable it with the
+  `showSuggestButton` manifest property (set it to `show`). Rules:
   - **Holiday** → all on *Feiertag*.
   - **Sunday** → all on *Nacht / Sonntag*.
   - **Workday ≤ 8 h** → all on *Normal*; **> 8 h** → 8 h on *Normal*, the rest on
@@ -211,6 +212,7 @@ other properties are **optional overrides** — the defaults target the SST
 | `pauseValue`        | `Pause`                      | Type value that marks a break (hidden + completed on save) |
 | `completedField`    | `sst_worksubtypecompleted`   | Boolean "already split" flag |
 | `subtypeField`      | `sst_workordersubtype`       | Text column on split records storing the subtype name |
+| `showSuggestButton` | *(empty = hidden)*           | Set to `show` (or true/yes/ja/1) to display the AI suggestion (★) button in the split detail |
 
 Fixed schema (in `schema.ts`): parent `sst_roundedtimeentries`, child
 `sst_roundedtimeentryworksubtypes` (`sst_name`, `sst_timevalue`,

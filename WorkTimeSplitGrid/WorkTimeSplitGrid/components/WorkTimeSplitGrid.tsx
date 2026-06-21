@@ -85,6 +85,8 @@ export interface WorkTimeSplitGridProps {
     isMobile: boolean;
     /** App is offline → the control's live queries can't run; show a notice. */
     isOffline: boolean;
+    /** Show the AI suggestion (★) button in the split detail (manifest toggle). */
+    showSuggest: boolean;
     disabled: boolean;
     lang: Lang;
     logger: Logger;
@@ -714,6 +716,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 disabled={props.disabled}
                                 isMobile={props.isMobile}
                                 isOffline={props.isOffline}
+                                showSuggest={props.showSuggest}
                                 lang={props.lang}
                                 logger={props.logger}
                                 onBack={() => setSelectedId(null)}

@@ -91,7 +91,8 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   akzeptieren Komma und Punkt als Dezimaltrenner.
 - **Intelligente Vorbelegung (★-Button)** — ein kleiner Stern-/KI-Button im
   Panel-Kopf füllt die Verteilung **auf Klick** aus **Datum + Gesamtdauer** (der
-  Benutzer kann weiterhin anpassen). Regeln:
+  Benutzer kann weiterhin anpassen). **Standardmäßig ausgeblendet** — per
+  Manifest-Property `showSuggestButton` einblendbar (Wert `show`). Regeln:
   - **Feiertag** → alles auf *Feiertag*.
   - **Sonntag** → alles auf *Nacht / Sonntag*.
   - **Arbeitstag ≤ 8 h** → alles auf *Normal*; **> 8 h** → 8 h auf *Normal*, Rest
@@ -214,6 +215,9 @@ Alle Felder haben verifizierte SST-Defaults und sind pro Platzierung
 überschreibbar: `totalField` (`sst_duration`), `dateField` (`sst_date`),
 `typeField` (`sst_type`), `pauseValue` (`Pause`), `completedField`
 (`sst_worksubtypecompleted`), `subtypeField` (`sst_workordersubtype`).
+- `showSuggestButton` — steuert den **★-Vorschlag-Button** im Aufteilen-Detail.
+  **Standard: ausgeblendet.** Auf `show` (bzw. `true`/`yes`/`ja`/`1`) setzen, um
+  ihn einzublenden. Analog zu `dateField` pro Platzierung im Maker konfigurierbar.
 
 ## Annahmen / Hinweise
 - Die Work-Subtype-Zeilen je Eintrag werden als bereits vorhanden angenommen

@@ -10,6 +10,7 @@ export interface IInputs {
     pauseValue: ComponentFramework.PropertyTypes.StringProperty;
     completedField: ComponentFramework.PropertyTypes.StringProperty;
     subtypeField: ComponentFramework.PropertyTypes.StringProperty;
+    showSuggestButton: ComponentFramework.PropertyTypes.StringProperty;
     entries: ComponentFramework.PropertyTypes.DataSet;
 }
 export interface IOutputs {

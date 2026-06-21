@@ -27,6 +27,8 @@ export interface SplitPanelProps {
     isMobile: boolean;
     /** Offline → read-only: show the entry head + a notice, no editor/save. */
     isOffline: boolean;
+    /** Show the AI suggestion (★) pre-fill button (manifest toggle). */
+    showSuggest: boolean;
     lang: Lang;
     logger: Logger;
     onBack: () => void;
@@ -97,6 +99,7 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
     };
 
     const canSuggest =
+        props.showSuggest &&
         !!entry &&
         !entry.completed &&
         !props.disabled &&

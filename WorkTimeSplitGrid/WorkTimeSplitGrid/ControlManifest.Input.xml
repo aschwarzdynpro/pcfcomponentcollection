@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="WorkTime" constructor="WorkTimeSplitGrid" version="1.18.2" display-name-key="WorkTimeSplitGrid_Display" description-key="WorkTimeSplitGrid_Desc" control-type="standard">
+  <control namespace="WorkTime" constructor="WorkTimeSplitGrid" version="1.18.3" display-name-key="WorkTimeSplitGrid_Display" description-key="WorkTimeSplitGrid_Desc" control-type="standard">
     <!-- Bound dataset: the Rounded Time Entries shown as the master list -->
     <data-set name="entries" display-name-key="entries_Display" description-key="entries_Desc"></data-set>
 
@@ -24,6 +24,10 @@
 
     <!-- Text column on the new split records that stores the subtype name (default: sst_workordersubtype) -->
     <property name="subtypeField" display-name-key="subtypeField_Display" description-key="subtypeField_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- "show" (or true/yes/ja/1/on/ein) → display the AI suggestion (★) button in
+         the split detail. Empty/anything else → hidden. Default: hidden. -->
+    <property name="showSuggestButton" display-name-key="showSuggestButton_Display" description-key="showSuggestButton_Desc" of-type="SingleLine.Text" usage="input" required="false" />
 
     <resources>
       <code path="index.ts" order="1"/>
