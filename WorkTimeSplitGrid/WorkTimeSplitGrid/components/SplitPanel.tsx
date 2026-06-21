@@ -220,14 +220,19 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
                             <span className="wtsg-spinner" aria-hidden="true" />
                         ) : (
                             <svg
-                                width="20"
-                                height="20"
+                                width="22"
+                                height="22"
                                 viewBox="0 0 24 24"
-                                fill="currentColor"
                                 aria-hidden="true"
                             >
-                                <path d="M12 2l1.6 4.9L18.5 8.5 13.6 10 12 15l-1.6-5L5.5 8.5l4.9-1.6z" />
-                                <path d="M18.5 13l.8 2.3 2.3.8-2.3.8-.8 2.3-.8-2.3-2.3-.8 2.3-.8z" />
+                                <path
+                                    d="M9.5 2C9.5 6 6 9.5 2 9.5C6 9.5 9.5 13 9.5 17C9.5 13 13 9.5 17 9.5C13 9.5 9.5 6 9.5 2Z"
+                                    fill="#2d8cf0"
+                                />
+                                <path
+                                    d="M18 13.5C18 15.5 15.5 18 13.5 18C15.5 18 18 20.5 18 22.5C18 20.5 20.5 18 22.5 18C20.5 18 18 15.5 18 13.5Z"
+                                    fill="#7c4dff"
+                                />
                             </svg>
                         )}
                     </button>
