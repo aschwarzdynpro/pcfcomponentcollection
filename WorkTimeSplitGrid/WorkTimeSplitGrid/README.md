@@ -199,20 +199,20 @@ WorkTimeSplitGrid/
 
 ## ⚙️ Properties
 
-The control binds a dataset (`entries`) to a Rounded Time Entries view. All
-other properties are **optional overrides** — the defaults target the SST
-(Schulz Systemtechnik) schema.
+The control binds a dataset (`entries`) to a Rounded Time Entries view. Only
+two properties are exposed in the maker:
 
 | Property            | Default                      | Purpose |
 |---------------------|------------------------------|---------|
 | `entries` (dataset) | —                            | The Rounded Time Entries shown as the master list |
-| `totalField`        | `sst_duration`               | Decimal column with the entry's total duration |
-| `dateField`         | `sst_date`                   | Date column shown in the list |
-| `typeField`         | `sst_type`                   | Text type column (Arbeit/Fahrzeit/Pause) |
-| `pauseValue`        | `Pause`                      | Type value that marks a break (hidden + completed on save) |
-| `completedField`    | `sst_worksubtypecompleted`   | Boolean "already split" flag |
-| `subtypeField`      | `sst_workordersubtype`       | Text column on split records storing the subtype name |
 | `showSuggestButton` | *(empty = hidden)*           | Set to `show` (or true/yes/ja/1) to display the AI suggestion (★) button in the split detail |
+
+The field-mapping overrides (`totalField` `sst_duration`, `dateField`
+`sst_date`, `typeField` `sst_type`, `pauseValue` `Pause`, `completedField`
+`sst_worksubtypecompleted`, `subtypeField` `sst_workordersubtype`) are
+**disabled** — the SST defaults in `schema.ts` apply, so they no longer clutter
+the maker UI. To re-expose any one, uncomment the matching `<property>` in
+`ControlManifest.Input.xml` and its read in `index.ts`.
 
 Fixed schema (in `schema.ts`): parent `sst_roundedtimeentries`, child
 `sst_roundedtimeentryworksubtypes` (`sst_name`, `sst_timevalue`,
@@ -233,6 +233,6 @@ To produce importable solution zips, run the solution
 - The work-subtype rows are expected to exist per entry (created upstream); the
   control edits their values and writes the split records.
 - "Total duration" is read from `sst_duration`. If your environment uses a
-  different total column, override `totalField`.
+  different total column, re-enable the `totalField` override (see Properties).
 - Verified against the SSTCore solution export; sanity-check field names against
   the target environment before enabling the destructive save in production.

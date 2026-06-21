@@ -113,13 +113,16 @@ export class WorkTimeSplitGrid
             isMobile: this.isMobile(),
             isOffline: this.isOffline(),
             showSuggest: this.showSuggest(),
+            // Field-override manifest properties are disabled — the SST defaults
+            // in schema.ts apply. Re-add the matching <property> entries in
+            // ControlManifest.Input.xml and uncomment these to expose overrides.
             fields: resolveFieldConfig({
-                totalField: params.totalField?.raw,
-                dateField: params.dateField?.raw,
-                typeField: params.typeField?.raw,
-                pauseValue: params.pauseValue?.raw,
-                completedField: params.completedField?.raw,
-                subtypeField: params.subtypeField?.raw,
+                // totalField: params.totalField?.raw,
+                // dateField: params.dateField?.raw,
+                // typeField: params.typeField?.raw,
+                // pauseValue: params.pauseValue?.raw,
+                // completedField: params.completedField?.raw,
+                // subtypeField: params.subtypeField?.raw,
             }),
             userId: this._context.userSettings?.userId ?? "",
             disabled: this._context.mode.isControlDisabled,

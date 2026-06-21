@@ -211,13 +211,19 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   (Option C) ist zurückgestellt — siehe [`OfflinePlan.md`](OfflinePlan.md).
 
 ## Konfiguration (Manifest-Properties)
-Alle Felder haben verifizierte SST-Defaults und sind pro Platzierung
-überschreibbar: `totalField` (`sst_duration`), `dateField` (`sst_date`),
-`typeField` (`sst_type`), `pauseValue` (`Pause`), `completedField`
-(`sst_worksubtypecompleted`), `subtypeField` (`sst_workordersubtype`).
+Im Maker sind nur zwei Properties sichtbar: das gebundene Dataset `entries` und
+`showSuggestButton`.
 - `showSuggestButton` — steuert den **★-Vorschlag-Button** im Aufteilen-Detail.
   **Standard: ausgeblendet.** Auf `show` (bzw. `true`/`yes`/`ja`/`1`) setzen, um
-  ihn einzublenden. Analog zu `dateField` pro Platzierung im Maker konfigurierbar.
+  ihn einzublenden.
+
+Die Feld-Mapping-Overrides (`totalField` = `sst_duration`, `dateField` =
+`sst_date`, `typeField` = `sst_type`, `pauseValue` = `Pause`, `completedField` =
+`sst_worksubtypecompleted`, `subtypeField` = `sst_workordersubtype`) sind
+**deaktiviert** — die verifizierten SST-Defaults aus `schema.ts` gelten, damit
+die Maker-Oberfläche aufgeräumt bleibt. Zum Reaktivieren die jeweilige
+`<property>` in `ControlManifest.Input.xml` und ihren Read in `index.ts`
+einkommentieren.
 
 ## Annahmen / Hinweise
 - Die Work-Subtype-Zeilen je Eintrag werden als bereits vorhanden angenommen
