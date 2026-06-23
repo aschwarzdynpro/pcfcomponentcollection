@@ -13,6 +13,11 @@ export interface EntryListProps {
     onToggleCheck?: (id: string) => void;
     /** One-liner shown (with an icon) when there are no rows. */
     emptyMessage?: string;
+    /** Data is still loading (e.g. offline sync) → show a spinner, not the
+     *  "nothing here" empty state, while the list is empty. */
+    loading?: boolean;
+    /** Label shown next to the spinner while `loading` and the list is empty. */
+    loadingLabel?: string;
     /** Active search term — matches are highlighted in the cards. */
     highlight?: string;
     /** Enable pull-to-refresh (mobile). */
@@ -80,6 +85,8 @@ export const EntryList: React.FC<EntryListProps> = ({
     checkedIds,
     onToggleCheck,
     emptyMessage,
+    loading,
+    loadingLabel,
     highlight,
     enablePull,
     refreshing,
@@ -182,10 +189,17 @@ export const EntryList: React.FC<EntryListProps> = ({
         >
             {ptr}
             {rows.length === 0 ? (
-                <div className="wtsg-empty-state" role="status">
-                    <Binoculars />
-                    <span>{emptyMessage ?? strings.noResults}</span>
-                </div>
+                loading ? (
+                    <div className="wtsg-empty-state" role="status">
+                        <span className="wtsg-spinner" aria-hidden="true" />
+                        <span>{loadingLabel ?? strings.loading}</span>
+                    </div>
+                ) : (
+                    <div className="wtsg-empty-state" role="status">
+                        <Binoculars />
+                        <span>{emptyMessage ?? strings.noResults}</span>
+                    </div>
+                )
             ) : (
                 rows.map((r) => {
                     const checked = selectable

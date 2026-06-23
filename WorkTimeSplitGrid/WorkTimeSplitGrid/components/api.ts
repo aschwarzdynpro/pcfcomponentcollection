@@ -8,6 +8,7 @@ import {
     TIMEREPORT,
     WORKORDER_SET,
     PROJECT_TYPE,
+    HOLIDAY,
     normalizeLabel,
     FieldConfig,
     SUBTYPE_ORDER,
@@ -104,6 +105,119 @@ export function formatNumber(n: number): string {
     return String(Math.round(n * 1000) / 1000);
 }
 
+/** Hours that count as a normal workday before overtime kicks in. */
+export const NORMAL_DAY_HOURS = 8;
+
+/** Local calendar date (YYYY-MM-DD) of an ISO timestamp — matches the display. */
+function localDateOnly(iso: string): string {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    const p = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/**
+ * Whether the entry's date is a public holiday, resolved via the chain
+ * entry → bookableresource → sst_site → sst_country, then sst_publicholiday rows
+ * for that country whose [start, end] range covers the date. Best-effort: any
+ * failure (missing link, no read access) returns false → treated as a workday.
+ */
+export async function isHolidayForEntry(
+    webApi: ComponentFramework.WebApi,
+    entryId: string,
+    dateIso: string,
+): Promise<boolean> {
+    const day = localDateOnly(dateIso);
+    if (!day) return false;
+    try {
+        const id = entryId.replace(/[{}]/g, "");
+        const entry: any = await webApi.retrieveRecord(
+            PARENT.logicalName,
+            id,
+            `?$select=${HOLIDAY.entryResourceValue}`,
+        );
+        const resourceId = entry?.[HOLIDAY.entryResourceValue];
+        if (!resourceId) return false;
+        const res: any = await webApi.retrieveRecord(
+            HOLIDAY.resourceTable,
+            String(resourceId),
+            `?$select=${HOLIDAY.resourceSiteValue}`,
+        );
+        const siteId = res?.[HOLIDAY.resourceSiteValue];
+        if (!siteId) return false;
+        const site: any = await webApi.retrieveRecord(
+            HOLIDAY.siteTable,
+            String(siteId),
+            `?$select=${HOLIDAY.siteCountryValue}`,
+        );
+        const countryId = site?.[HOLIDAY.siteCountryValue];
+        if (!countryId) return false;
+        const filter =
+            `${HOLIDAY.countryValue} eq ${countryId}` +
+            ` and ${HOLIDAY.startDate} le ${day}` +
+            ` and ${HOLIDAY.endDate} ge ${day}`;
+        const found = await webApi.retrieveMultipleRecords(
+            HOLIDAY.table,
+            `?$select=${HOLIDAY.table}id&$filter=${filter}`,
+            1,
+        );
+        return (found.entities?.length ?? 0) > 0;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Suggest an initial split distribution from the entry's date + total duration:
+ * - Holiday  → all on Feiertag (caller passes `holiday` from isHolidayForEntry).
+ * - Sunday   → all on Nacht/Sonntag.
+ * - Workday ≤ 8h → all on Normal; > 8h → 8h Normal + the rest on Überstunde.
+ *
+ * Subtype rows are matched by keyword (robust to Überstunde/Überstunden and the
+ * "Nacht / Sonntag" spelling). Returns a NEW array with the values set; rows
+ * without a target (and any target whose row is missing) stay at 0, so the user
+ * can still adjust and the save guard stays honest.
+ */
+export function suggestSplit(
+    dateIso: string,
+    total: number,
+    rows: SubtypeRow[],
+    holiday = false,
+): SubtypeRow[] {
+    if (!(total > 0)) return rows;
+    const lc = (s: string): string => (s ?? "").toLowerCase();
+    const normalRow = rows.find((r) => lc(r.name).includes("normal"));
+    const overtimeRow = rows.find((r) => lc(r.name).includes("überstund"));
+    const sundayRow = rows.find((r) => lc(r.name).includes("sonntag"));
+    const holidayRow = rows.find((r) => lc(r.name).includes("feiertag"));
+
+    const d = dateIso ? new Date(dateIso) : null;
+    const isSunday = !!d && !isNaN(d.getTime()) && d.getDay() === 0;
+
+    const target = new Map<string, number>(); // row.id → hours
+    if (holiday) {
+        if (holidayRow) target.set(holidayRow.id, total);
+    } else if (isSunday) {
+        if (sundayRow) target.set(sundayRow.id, total);
+    } else if (total <= NORMAL_DAY_HOURS) {
+        if (normalRow) target.set(normalRow.id, total);
+    } else {
+        if (normalRow) target.set(normalRow.id, NORMAL_DAY_HOURS);
+        if (overtimeRow) {
+            target.set(
+                overtimeRow.id,
+                Math.round((total - NORMAL_DAY_HOURS) * 1000) / 1000,
+            );
+        }
+    }
+
+    return rows.map((r) => ({
+        ...r,
+        value: formatNumber(target.get(r.id) ?? 0),
+    }));
+}
+
 /**
  * True if the current user holds any of the given (directly-assigned) security
  * roles. Best-effort — returns false on error, which keeps the "My hours"
@@ -148,6 +262,8 @@ export interface LoadedEntry {
     projectId: string;
     resourceName: string;
     timereport: string;
+    /** Booking number (bookableresourcebooking display value, e.g. S-120044). */
+    bookingNumber: string;
 }
 
 export interface LoadEntriesOptions {
@@ -184,6 +300,9 @@ function mapLoadedEntry(e: Record<string, any>): LoadedEntry {
             String(e[`_sst_resource_ref_value${ENTRY_FMT}`] ?? "") ||
             String(e.sst_resource ?? ""),
         timereport: String(e._sst_timereport_value ?? ""),
+        bookingNumber: String(
+            e[`_sst_bookableresourcebooking_value${ENTRY_FMT}`] ?? "",
+        ),
     };
 }
 
@@ -248,7 +367,8 @@ export async function loadEntries(
 
     const query =
         `?$select=sst_roundedtimeentriesid,sst_name,sst_type,sst_date,sst_duration,sst_resource,` +
-        `sst_worksubtypecompleted,_sst_project_id_value,_sst_timereport_value,_sst_resource_ref_value` +
+        `sst_worksubtypecompleted,_sst_project_id_value,_sst_timereport_value,_sst_resource_ref_value,` +
+        `_sst_bookableresourcebooking_value` +
         `&$expand=sst_Project_id($select=sst_projectnumber),sst_resource_ref($select=name)` +
         `&$filter=${filter}&$orderby=sst_date desc`;
 

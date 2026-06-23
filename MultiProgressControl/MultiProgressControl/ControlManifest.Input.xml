@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="Progress" constructor="MultiProgressControl" version="1.0.3" display-name-key="MultiProgressControl_Display" description-key="MultiProgressControl_Desc" control-type="standard">
+    <!--
+      Read-only status control. Renders up to 6 Whole-Number columns as
+      progress indicators (0-100%) laid out in a single horizontal row.
+
+      field1 is the column the control is dropped on (required). field2..field6
+      are optional additional bound columns the maker maps in the form's control
+      configuration pane. labelN overrides the caption shown for fieldN; when a
+      label is left empty the control falls back to the bound column's display
+      name. Each value is normalised to a percentage via maxValue (default 100).
+    -->
+
+    <!-- The host field the control is bound to (slot 1). -->
+    <property name="field1" display-name-key="field1_Display" description-key="field1_Desc" of-type="Whole.None" usage="bound" required="true" />
+    <!-- Optional additional bound columns (slots 2-6). -->
+    <property name="field2" display-name-key="field2_Display" description-key="field2_Desc" of-type="Whole.None" usage="bound" required="false" />
+    <property name="field3" display-name-key="field3_Display" description-key="field3_Desc" of-type="Whole.None" usage="bound" required="false" />
+    <property name="field4" display-name-key="field4_Display" description-key="field4_Desc" of-type="Whole.None" usage="bound" required="false" />
+    <property name="field5" display-name-key="field5_Display" description-key="field5_Desc" of-type="Whole.None" usage="bound" required="false" />
+    <property name="field6" display-name-key="field6_Display" description-key="field6_Desc" of-type="Whole.None" usage="bound" required="false" />
+
+    <!-- Optional caption overrides for each slot. Empty => use the column display name. -->
+    <property name="label1" display-name-key="label1_Display" description-key="label1_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="label2" display-name-key="label2_Display" description-key="label2_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="label3" display-name-key="label3_Display" description-key="label3_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="label4" display-name-key="label4_Display" description-key="label4_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="label5" display-name-key="label5_Display" description-key="label5_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="label6" display-name-key="label6_Display" description-key="label6_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- The value that maps to 100%. Defaults to 100 (columns already store a percentage). -->
+    <property name="maxValue" display-name-key="maxValue_Display" description-key="maxValue_Desc" of-type="Whole.None" usage="input" required="false" default-value="100" />
+
+    <!-- Optional header caption shown above the row. Empty => no header. -->
+    <property name="headerLabel" display-name-key="headerLabel_Display" description-key="headerLabel_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- resources -->
+    <resources>
+      <code path="index.ts" order="1"/>
+      <css path="css/MultiProgressControl.css" order="1" />
+      <resx path="strings/MultiProgressControl.1033.resx" version="1.0.3" />
+      <resx path="strings/MultiProgressControl.1031.resx" version="1.0.3" />
+    </resources>
+  </control>
+</manifest>

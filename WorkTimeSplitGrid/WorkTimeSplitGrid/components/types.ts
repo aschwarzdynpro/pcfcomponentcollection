@@ -19,6 +19,8 @@ export interface EntryRow {
     completed: boolean;
     /** Related project number (sst_project_id.sst_projectnumber), if enriched. */
     project?: string;
+    /** Booking number (bookableresourcebooking display value, e.g. S-120044). */
+    bookingNumber?: string;
     /** Related resource name (sst_resource_ref.name), if enriched. */
     resourceName?: string;
     /** Related resource's user id (sst_resource_ref.userid), normalized lowercase. */

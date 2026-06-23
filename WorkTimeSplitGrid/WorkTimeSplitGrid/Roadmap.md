@@ -29,6 +29,11 @@ anrichten kann.
 ## 3. Produktivität im Alltag
 - ✅ **Zeitraum-Filter** (Alle / Heute / Woche / Monat) + **Sortierung** (Datum,
   Projekt, Ressource, Dauer). — *v1.8.0; clientseitig über die geladene Menge.*
+- ✅ **Intelligente Vorbelegung der Aufteilung** über **★-Button** (Datum +
+  Dauer): Feiertag → Feiertag, Sonntag → Nacht/Sonntag, Arbeitstag ≤8h → Normal,
+  >8h → 8h Normal + Rest Überstunde. Feiertage live über Eintrag → Ressource →
+  `sst_site` → `sst_country` → `sst_publicholiday` (Bereich start/end). —
+  *v1.17.0 Auto-Apply, v1.18.0 Button + Feiertage (verifiziert UAT).*
 - 🔜 **Projekt-/Arbeitsauftrags-Filter** (zusätzliche Chips).
 - 🔜 **„Alle auswählen" / „Alle eines Arbeitsauftrags"** im Zuordnen-Modus +
   **Summenanzeige** (Σ ausgewählte Stunden).

@@ -538,12 +538,54 @@
     color: #909090;
 }
 
+.wtsg-panel-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.wtsg-panel-head-text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 .wtsg-panel-head h3 {
     margin: 0;
     font-size: 18px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* Star / AI pre-fill button */
+.wtsg-magic {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #c8c6c4;
+    border-radius: 8px;
+    background: #fff;
+    color: #7a3ff2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.1s, border-color 0.1s;
+}
+
+.wtsg-magic:hover {
+    background: #f5f0ff;
+    border-color: #7a3ff2;
+}
+
+.wtsg-magic:disabled {
+    color: #c8c6c4;
+    cursor: not-allowed;
+}
+
+.wtsg-mobile .wtsg-magic {
+    width: 44px;
+    height: 44px;
 }
 
 .wtsg-panel-sub {

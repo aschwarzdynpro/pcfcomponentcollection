@@ -73,7 +73,24 @@ deletes the original.
   Teamleitung Addon**, who may toggle it off to see all hours.
 - **Detail split panel** — selecting an entry loads its work-subtype rows
   (`sst_roundedtimeentryworksubtypes`) and lets the user edit the hours per
-  subtype, with a live **Total / Distributed / Remaining** summary.
+  subtype, with a live **Total / Distributed / Remaining** summary. The detail
+  header is shortened to **project number / booking number** (e.g.
+  `P10006786 / S-120044`) — the type and date are already on the sub-line. The
+  booking number is the `bookableresourcebooking` display value.
+- **Smart pre-fill (★ button)** — a small star/AI button in the panel head fills
+  the distribution from the entry's **date + total duration** (on demand; the
+  user can still adjust). **Hidden by default** — enable it with the
+  `showSuggestButton` manifest property (set it to `show`). Rules:
+  - **Holiday** → all on *Feiertag*.
+  - **Sunday** → all on *Nacht / Sonntag*.
+  - **Workday ≤ 8 h** → all on *Normal*; **> 8 h** → 8 h on *Normal*, the rest on
+    *Überstunde*.
+  Holidays are resolved live via the chain **entry → `sst_resource_ref`
+  (bookableresource) → `sst_site_ref` (sst_site) → `sst_country_ref`
+  (sst_country)**, then `sst_publicholiday` rows for that country whose
+  `[sst_startdate_dat, sst_enddate_dat]` range covers the date. Best-effort: if a
+  link is missing or unreadable, the day is treated as a normal workday. Subtype
+  rows are matched by keyword (robust to Überstunde/Überstunden).
 - **"Use remaining" icon** — while time is still unallocated (remaining > 0), a
   small arrow icon appears next to **every** subtype field; clicking it adds the
   remaining amount to that field's current value (one tap to finish the split).
@@ -129,12 +146,24 @@ deletes the original.
     save running against the local cache (a **sync-conflict** minefield). Subtypes
     aren't loaded offline (no `$expand` needed).
   - A slim **offline banner** signals the read-only mode.
+  - **While the cache is still syncing** (`dataset.loading`) the empty list
+    shows a *"Syncing offline data…"* spinner instead of the "nothing here"
+    empty state, and **pull-to-refresh** calls `dataset.refresh()` to re-pull
+    the cache (the online server-reload path doesn't run offline).
+- **Offline-first** (the default Power Apps mobile mode) reports
+  `isOffline() === true` **even when the device is connected** — the app always
+  reads from the local cache. So the control runs its read-only path on mobile
+  regardless of signal; PCF's `context.webAPI` is online-only and can't be used
+  there. To edit/split on a connected device, the maker must enable the
+  **Online-mode** toggle (app setting *"Allow users to work in online mode"*).
 - `WebAPI`/`Utility` are declared **`required="false"`** so the host renders the
   control offline at all (a *required* unavailable feature otherwise blocks it
   with a generic "control can't load" error).
-- ⚠️ Offline needs an **offline profile** (admin) that includes the relevant
-  tables/columns so the dataset is populated. Full **write-enabled** offline
-  (Option C) is deferred — see [`OfflinePlan.md`](OfflinePlan.md).
+- ⚠️ Offline needs an **offline profile** (admin) that includes
+  `sst_roundedtimeentries` **and** the columns/related tables the view + control
+  read, or the cached dataset stays empty (an empty list after sync = the table
+  isn't in the profile). Full **write-enabled** offline (Option C) is deferred —
+  see [`OfflinePlan.md`](OfflinePlan.md).
 
 ### 🔧 Technical
 - **React 17** + TypeScript, no extra runtime libraries.
@@ -182,19 +211,20 @@ WorkTimeSplitGrid/
 
 ## ⚙️ Properties
 
-The control binds a dataset (`entries`) to a Rounded Time Entries view. All
-other properties are **optional overrides** — the defaults target the SST
-(Schulz Systemtechnik) schema.
+The control binds a dataset (`entries`) to a Rounded Time Entries view. Only
+two properties are exposed in the maker:
 
 | Property            | Default                      | Purpose |
 |---------------------|------------------------------|---------|
 | `entries` (dataset) | —                            | The Rounded Time Entries shown as the master list |
-| `totalField`        | `sst_duration`               | Decimal column with the entry's total duration |
-| `dateField`         | `sst_date`                   | Date column shown in the list |
-| `typeField`         | `sst_type`                   | Text type column (Arbeit/Fahrzeit/Pause) |
-| `pauseValue`        | `Pause`                      | Type value that marks a break (hidden + completed on save) |
-| `completedField`    | `sst_worksubtypecompleted`   | Boolean "already split" flag |
-| `subtypeField`      | `sst_workordersubtype`       | Text column on split records storing the subtype name |
+| `showSuggestButton` | *(empty = hidden)*           | Set to `show` (or true/yes/ja/1) to display the AI suggestion (★) button in the split detail |
+
+The field-mapping overrides (`totalField` `sst_duration`, `dateField`
+`sst_date`, `typeField` `sst_type`, `pauseValue` `Pause`, `completedField`
+`sst_worksubtypecompleted`, `subtypeField` `sst_workordersubtype`) are
+**disabled** — the SST defaults in `schema.ts` apply, so they no longer clutter
+the maker UI. To re-expose any one, uncomment the matching `<property>` in
+`ControlManifest.Input.xml` and its read in `index.ts`.
 
 Fixed schema (in `schema.ts`): parent `sst_roundedtimeentries`, child
 `sst_roundedtimeentryworksubtypes` (`sst_name`, `sst_timevalue`,
@@ -215,6 +245,6 @@ To produce importable solution zips, run the solution
 - The work-subtype rows are expected to exist per entry (created upstream); the
   control edits their values and writes the split records.
 - "Total duration" is read from `sst_duration`. If your environment uses a
-  different total column, override `totalField`.
+  different total column, re-enable the `totalField` override (see Properties).
 - Verified against the SSTCore solution export; sanity-check field names against
   the target environment before enabling the destructive save in production.

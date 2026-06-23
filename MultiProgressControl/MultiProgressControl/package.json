@@ -1,14 +1,14 @@
 {
-  "name": "worktime-split-grid",
-  "version": "1.18.5",
-  "description": "WorkTimeSplitGrid PCF dataset control for Dataverse — splits a rounded time entry's total duration across work subtypes (Normal/Overtime/Night-Sunday/Holiday) and writes the split records, with trilingual UI (DE/EN/FR).",
+  "name": "multi-progress-control",
+  "version": "1.0.3",
+  "description": "Read-only PCF control for Dataverse that renders up to 6 configurable Whole-Number columns as progress indicators (0-100%) in a single horizontal row.",
   "keywords": [
     "PCF",
     "Dataverse",
     "PowerApps",
-    "Grid",
-    "TimeEntry",
-    "WorkSubtype",
+    "Progress",
+    "Status",
+    "Indicator",
     "React"
   ],
   "author": "PCF Component Collection",

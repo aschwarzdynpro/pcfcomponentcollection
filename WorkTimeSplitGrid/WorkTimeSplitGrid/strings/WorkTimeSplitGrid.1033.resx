@@ -114,4 +114,12 @@
     <value>Logical name of the text column on the new split records that stores the subtype name. Default: sst_workordersubtype.</value>
     <comment>Description for the subtype target override</comment>
   </data>
+  <data name="showSuggestButton_Display" xml:space="preserve">
+    <value>Show Suggestion Button</value>
+    <comment>Display name for the suggestion-button toggle</comment>
+  </data>
+  <data name="showSuggestButton_Desc" xml:space="preserve">
+    <value>Set to "show" (or true/yes/ja/1/on/ein) to display the AI suggestion (★) button in the split detail. Empty or anything else hides it. Default: hidden.</value>
+    <comment>Description for the suggestion-button toggle</comment>
+  </data>
 </root>

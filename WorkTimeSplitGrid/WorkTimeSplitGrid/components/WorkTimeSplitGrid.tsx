@@ -85,6 +85,8 @@ export interface WorkTimeSplitGridProps {
     isMobile: boolean;
     /** App is offline → the control's live queries can't run; show a notice. */
     isOffline: boolean;
+    /** Show the AI suggestion (★) button in the split detail (manifest toggle). */
+    showSuggest: boolean;
     disabled: boolean;
     lang: Lang;
     logger: Logger;
@@ -105,6 +107,7 @@ function toEntryRow(
         totalFormatted: e.totalFormatted,
         completed: e.completed,
         project: e.project,
+        bookingNumber: e.bookingNumber,
         resourceName: e.resourceName,
         timereport: e.timereport,
         projectPresent: !!e.projectId,
@@ -202,6 +205,7 @@ function buildOfflineEntries(
                 (Number.isFinite(total) ? String(total) : ""),
             completed,
             project,
+            bookingNumber: fmt("sst_bookableresourcebooking"),
             resourceName,
             timereport,
             projectPresent: projectKnown ? get("sst_project_id") != null : false,
@@ -316,8 +320,20 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
 
     const refresh = React.useCallback(() => {
         setRefreshing(true);
+        // Offline-first: the online loadEntries effect early-returns, so a refresh
+        // must re-pull the bound (cached) dataset instead. dataset.refresh() asks
+        // the host to reload/re-sync; updateView then re-renders with the new rows.
+        if (props.isOffline) {
+            try {
+                props.dataset.refresh();
+            } catch {
+                /* host may not support refresh — keep the cached rows */
+            }
+            setRefreshing(false);
+            return;
+        }
         setRefreshKey((k) => k + 1);
-    }, []);
+    }, [props.isOffline, props.dataset]);
 
     // Optimistic update: drop rows that left the current filter (split-saved or
     // assigned to a delivery note) without a full server reload — instant, no
@@ -347,6 +363,15 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
 
     // Online → the server-loaded entries; offline → the dataset-derived ones.
     const sourceEntries = props.isOffline ? offlineEntries : entries;
+
+    // Offline-first reads from the local cache, which the host fills via sync.
+    // While that sync is still running (dataset.loading) and we have no rows yet,
+    // show a "syncing" indicator instead of the "nothing here" empty state — the
+    // two together looked like a broken control during the initial offline sync.
+    const offlineSyncing =
+        props.isOffline &&
+        !!props.dataset.loading &&
+        (offlineEntries?.length ?? 0) === 0;
 
     // Period filter + free-text search (title, type, date, project number,
     // resource name) + sorting — all client-side over the source entries.
@@ -690,6 +715,8 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                         ? t.noResultsSearch
                                         : t.noResults
                                 }
+                                loading={offlineSyncing}
+                                loadingLabel={t.offlineSyncing}
                                 highlight={search.trim()}
                                 enablePull={props.isMobile}
                                 refreshing={refreshing}
@@ -712,6 +739,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 disabled={props.disabled}
                                 isMobile={props.isMobile}
                                 isOffline={props.isOffline}
+                                showSuggest={props.showSuggest}
                                 lang={props.lang}
                                 logger={props.logger}
                                 onBack={() => setSelectedId(null)}
@@ -732,6 +760,8 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                         emptyMessage={
                             search.trim() ? t.noResultsSearch : t.noResults
                         }
+                        loading={offlineSyncing}
+                        loadingLabel={t.offlineSyncing}
                         highlight={search.trim()}
                         enablePull={props.isMobile}
                         refreshing={refreshing}

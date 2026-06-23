@@ -1,37 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ImportExportXml version="9.1.0.643" SolutionPackageVersion="9.1" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <SolutionManifest>
-    <!-- Unique Name of Cds Solution-->
-    <UniqueName>WorkTimeSplitGrid</UniqueName>
+    <UniqueName>MultiProgressControl</UniqueName>
     <LocalizedNames>
-      <!-- Localized Solution Name in language code -->
-      <LocalizedName description="WorkTimeSplitGrid" languagecode="1033" />
+      <LocalizedName description="MultiProgressControl" languagecode="1033" />
     </LocalizedNames>
     <Descriptions>
-      <Description description="PCF dataset control for Rounded Time Entries: distribute the total duration across work subtypes and write the split records. Trilingual UI (DE/EN/FR)." languagecode="1033" />
+      <Description description="Read-only PCF control for Dataverse. Shows up to 6 Whole-Number columns as progress indicators (0-100%) in a single row." languagecode="1033" />
     </Descriptions>
-    <Version>1.18.5.0</Version>
-    <!-- Solution Package Type: Unmanaged(0)/Managed(1)/Both(2)-->
+    <Version>1.0.3.0</Version>
     <Managed>2</Managed>
     <Publisher>
-      <!-- Unique Publisher Name of Cds Solution -->
-      <UniqueName>schulzsystemtechnikgmbh</UniqueName>
+      <UniqueName>HerbertWaldmann</UniqueName>
       <LocalizedNames>
-        <!-- Localized Cds Publisher Name in language code-->
-        <LocalizedName description="Schulz Systemtechnik GmbH" languagecode="1033" />
+        <LocalizedName description="HerbertWaldmann" languagecode="1033" />
       </LocalizedNames>
       <Descriptions>
-        <!-- Description of Cds Publisher in language code -->
-        <Description description="Schulz Systemtechnik GmbH" languagecode="1033" />
+        <Description description="HerbertWaldmann" languagecode="1033" />
       </Descriptions>
       <EMailAddress xsi:nil="true"></EMailAddress>
       <SupportingWebsiteUrl xsi:nil="true"></SupportingWebsiteUrl>
-      <!-- Customization Prefix for the Cds Publisher-->
-      <CustomizationPrefix>sst</CustomizationPrefix>
-      <!-- Derived Option Value Prefix for the Customization Prefix of Cds Publisher -->
-      <CustomizationOptionValuePrefix>86752</CustomizationOptionValuePrefix>
+      <CustomizationPrefix>wal</CustomizationPrefix>
+      <CustomizationOptionValuePrefix>15282</CustomizationOptionValuePrefix>
       <Addresses>
-        <!-- Address of the Publisher-->
         <Address>
           <AddressNumber>1</AddressNumber>
           <AddressTypeCode>1</AddressTypeCode>
@@ -91,7 +82,7 @@
       </Addresses>
     </Publisher>
     <RootComponents>
-      <RootComponent type="66" schemaName="sst_WorkTime.WorkTimeSplitGrid" behavior="0" />
+      <RootComponent type="66" schemaName="wal_Progress.MultiProgressControl" behavior="0" />
     </RootComponents>
     <MissingDependencies />
   </SolutionManifest>

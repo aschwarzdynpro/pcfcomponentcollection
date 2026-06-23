@@ -80,12 +80,30 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 - Statuspunkt je Karte (offen = rot, aufgeteilt = grün).
 
 ### Detail-Aufteilung (rechts)
+- **Detail-Titel gekürzt** auf **Projekt-ID / Booking-Nummer** (z. B.
+  `P10006786 / S-120044`) — Tätigkeitsart und Datum stehen bereits in der
+  Unterzeile. Die Booking-Nummer ist der Anzeigewert der `bookableresourcebooking`.
 - Auswahl eines Eintrags lädt die zugehörigen Work-Subtype-Zeilen
   (`sst_roundedtimeentryworksubtypes`, gefiltert über
   `_sst_roundedtimeentry_value`) und sortiert sie in der kanonischen Reihenfolge
   Normal → Überstunden → Nacht/Sonntag → Feiertag.
 - Pro Subtype ein **editierbares Stundenfeld** (`sst_timevalue`). Eingaben
   akzeptieren Komma und Punkt als Dezimaltrenner.
+- **Intelligente Vorbelegung (★-Button)** — ein kleiner Stern-/KI-Button im
+  Panel-Kopf füllt die Verteilung **auf Klick** aus **Datum + Gesamtdauer** (der
+  Benutzer kann weiterhin anpassen). **Standardmäßig ausgeblendet** — per
+  Manifest-Property `showSuggestButton` einblendbar (Wert `show`). Regeln:
+  - **Feiertag** → alles auf *Feiertag*.
+  - **Sonntag** → alles auf *Nacht / Sonntag*.
+  - **Arbeitstag ≤ 8 h** → alles auf *Normal*; **> 8 h** → 8 h auf *Normal*, Rest
+    auf *Überstunde*.
+  Feiertage werden live über die Kette **Eintrag → `sst_resource_ref`
+  (bookableresource) → `sst_site_ref` (sst_site) → `sst_country_ref`
+  (sst_country)** ermittelt, dann `sst_publicholiday`-Datensätze des Landes, deren
+  Bereich `[sst_startdate_dat, sst_enddate_dat]` das Datum abdeckt. Best-effort:
+  fehlt ein Glied oder fehlt die Leseberechtigung, gilt der Tag als normaler
+  Arbeitstag. Subtype-Zeilen werden per Schlüsselwort gematcht (robust gegen
+  Überstunde/Überstunden).
 - Live-Zusammenfassung **Gesamt / Verteilt / Rest**; „Rest = 0" wird grün
   hervorgehoben.
 - **„Rest übernehmen"-Icon** — solange noch Restzeit unverteilt ist (Rest > 0),
@@ -186,17 +204,39 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
     transaktionale Save nie gegen den lokalen Cache (**Sync-Konflikt-Risiko**
     vermieden). Subtypes werden offline nicht geladen (kein `$expand` nötig).
   - Ein schmales **Offline-Banner** signalisiert den schreibgeschützten Modus.
+  - **Solange der Cache noch synchronisiert** (`dataset.loading`), zeigt die leere
+    Liste einen *„Offline-Daten werden synchronisiert…"*-Spinner statt des
+    „nichts vorhanden"-Leerzustands; **Pull-to-Refresh** ruft offline
+    `dataset.refresh()` auf (der Online-Server-Reload läuft offline nicht).
+- **Offline-First** (der Standardmodus von Power Apps Mobile) meldet
+  `isOffline() === true` **auch bei bestehender Verbindung** — die App liest immer
+  aus dem lokalen Cache. Das Control läuft auf Mobil also unabhängig vom Empfang im
+  schreibgeschützten Modus; PCF-`context.webAPI` ist reine Online-API und offline
+  nicht nutzbar. Zum Bearbeiten/Aufteilen auf einem verbundenen Gerät muss der
+  Maker den **Online-Modus** aktivieren (App-Einstellung *„Benutzern erlauben, im
+  Onlinemodus zu arbeiten"*).
 - `WebAPI`/`Utility` sind **`required="false"`**, damit der Host das Control offline
   überhaupt rendert.
-- ⚠️ Offline braucht ein **Offline-Profil** (Admin) mit den relevanten
-  Tabellen/Spalten, damit das Dataset befüllt ist. Voll **schreibfähiges** Offline
-  (Option C) ist zurückgestellt — siehe [`OfflinePlan.md`](OfflinePlan.md).
+- ⚠️ Offline braucht ein **Offline-Profil** (Admin) mit `sst_roundedtimeentries`
+  **und** den Spalten/verknüpften Tabellen, die View + Control lesen — sonst bleibt
+  das gecachte Dataset leer (leere Liste nach dem Sync = Tabelle nicht im Profil).
+  Voll **schreibfähiges** Offline (Option C) ist zurückgestellt — siehe
+  [`OfflinePlan.md`](OfflinePlan.md).
 
 ## Konfiguration (Manifest-Properties)
-Alle Felder haben verifizierte SST-Defaults und sind pro Platzierung
-überschreibbar: `totalField` (`sst_duration`), `dateField` (`sst_date`),
-`typeField` (`sst_type`), `pauseValue` (`Pause`), `completedField`
-(`sst_worksubtypecompleted`), `subtypeField` (`sst_workordersubtype`).
+Im Maker sind nur zwei Properties sichtbar: das gebundene Dataset `entries` und
+`showSuggestButton`.
+- `showSuggestButton` — steuert den **★-Vorschlag-Button** im Aufteilen-Detail.
+  **Standard: ausgeblendet.** Auf `show` (bzw. `true`/`yes`/`ja`/`1`) setzen, um
+  ihn einzublenden.
+
+Die Feld-Mapping-Overrides (`totalField` = `sst_duration`, `dateField` =
+`sst_date`, `typeField` = `sst_type`, `pauseValue` = `Pause`, `completedField` =
+`sst_worksubtypecompleted`, `subtypeField` = `sst_workordersubtype`) sind
+**deaktiviert** — die verifizierten SST-Defaults aus `schema.ts` gelten, damit
+die Maker-Oberfläche aufgeräumt bleibt. Zum Reaktivieren die jeweilige
+`<property>` in `ControlManifest.Input.xml` und ihren Read in `index.ts`
+einkommentieren.
 
 ## Annahmen / Hinweise
 - Die Work-Subtype-Zeilen je Eintrag werden als bereits vorhanden angenommen

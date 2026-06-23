@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0}
+  </style>
+</helmet>
+
+<div style="width:max-content;min-width:100%;min-height:100vh;box-sizing:border-box;padding:48px;background:#f3f2f1;font-family:'Segoe UI','Segoe UI Web (West European)',-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif">
+
+  <div style="max-width:760px">
+    <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#0f6cbd;font-weight:600;margin-bottom:6px">PCF · Dataverse · Field Binding</div>
+    <h1 style="margin:0 0 8px;font-size:26px;font-weight:600;color:#242424">Flachere Darstellungen — kein Umbruch</h1>
+    <p style="margin:0 0 14px;font-size:14px;line-height:1.55;color:#616161;max-width:640px">Das Umbrechen entsteht, weil das Label <em>unter</em> dem Ring jede Zelle auf ~88 px zwingt (6 × 88 ≈ 530 px Mindestbreite). Lösung: die Breite nicht mehr „mal 6" multiplizieren. Drei platzsparende Optionen — gleiche Status-Farblogik wie Variante C.</p>
+  </div>
+
+  <!-- OPTION 1 -->
+  <div style="margin:30px 0 34px">
+    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+      <span style="font-size:13px;font-weight:600;color:#107c10">★ Empfohlen</span>
+      <span style="font-size:13px;font-weight:600;color:#242424">Option 1 — Balkenliste (Label · Balken · %)</span>
+    </div>
+    <p style="margin:0 0 12px;font-size:12.5px;color:#919191;max-width:560px">Jede Kennzahl ist eine eigene Zeile und nutzt die volle Breite → bricht <strong>nie</strong> um, egal wie schmal das Feld ist. Labels haben vollen Platz. ~26 px pro Zeile, 6 Zeilen ≈ 160 px hoch.</p>
+    <div style="background:#fff;border:1px solid #e1dfdd;border-radius:6px;box-shadow:0 1.6px 3.6px rgba(0,0,0,.06),0 .3px .9px rgba(0,0,0,.05);padding:14px 18px;width:380px">
+      <sc-for list="{{ fields }}" as="f" hint-placeholder-count="6">
+        <div title="{{ f.label }}: {{ f.text }}" style="display:flex;align-items:center;gap:12px;height:28px">
+          <div style="width:128px;flex:none;font-size:12.5px;color:#323130;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.label }}</div>
+          <div style="flex:1;height:8px;border-radius:4px;background:#edebe9;overflow:hidden">
+            <div style="height:100%;border-radius:4px;width:{{ f.pctCss }};background:{{ f.color }}"></div>
+          </div>
+          <div style="width:34px;flex:none;text-align:right;font-size:12.5px;font-weight:600;color:{{ f.color }}">{{ f.text }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- OPTION 2 -->
+  <div style="margin-bottom:34px">
+    <div style="font-size:13px;font-weight:600;color:#242424;margin-bottom:10px">Option 2 — Kompakter Balken-Chart (1 Chart)</div>
+    <p style="margin:0 0 12px;font-size:12.5px;color:#919191;max-width:560px">Alle 6 Werte in einem Diagramm: schmale vertikale Balken, % oben, Label unten. Sehr flach (~110 px). Labels notfalls kürzen/abkürzen.</p>
+    <div style="background:#fff;border:1px solid #e1dfdd;border-radius:6px;box-shadow:0 1.6px 3.6px rgba(0,0,0,.06),0 .3px .9px rgba(0,0,0,.05);padding:16px 20px;width:420px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:14px;height:84px">
+        <sc-for list="{{ fields }}" as="f" hint-placeholder-count="6">
+          <div title="{{ f.label }}: {{ f.text }}" style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%">
+            <div style="font-size:10.5px;font-weight:600;color:{{ f.color }};margin-bottom:3px">{{ f.text }}</div>
+            <div style="flex:1;width:14px;display:flex;align-items:flex-end;background:#f6f6f5;border-radius:3px">
+              <div style="width:100%;border-radius:3px;height:{{ f.pctCss }};background:{{ f.color }}"></div>
+            </div>
+            <div style="font-size:10px;color:#919191;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:58px">{{ f.short }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION 3 -->
+  <div style="margin-bottom:34px">
+    <div style="font-size:13px;font-weight:600;color:#242424;margin-bottom:10px">Option 3 — Mini-Ringe, Label daneben (2 × 3)</div>
+    <p style="margin:0 0 12px;font-size:12.5px;color:#919191;max-width:560px">Wenn du die Ringe behalten willst: kleiner Ring (34 px) mit Label rechts daneben, im 2-Spalten-Raster. Kompakt in Breite <em>und</em> Höhe, lange Labels umbrechen sauber.</p>
+    <div style="background:#fff;border:1px solid #e1dfdd;border-radius:6px;box-shadow:0 1.6px 3.6px rgba(0,0,0,.06),0 .3px .9px rgba(0,0,0,.05);padding:16px 18px;width:420px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 22px">
+        <sc-for list="{{ rings }}" as="r" hint-placeholder-count="6">
+          <div title="{{ r.label }}: {{ r.text }}" style="display:flex;align-items:center;gap:10px">
+            <div style="position:relative;width:34px;height:34px;flex:none">
+              <svg width="34" height="34" viewBox="0 0 34 34">
+                <circle cx="17" cy="17" r="15" fill="none" stroke="#edebe9" stroke-width="3.5"></circle>
+                <circle cx="17" cy="17" r="15" fill="none" stroke="{{ r.color }}" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="94.25" stroke-dashoffset="{{ r.offset }}" transform="rotate(-90 17 17)"></circle>
+              </svg>
+              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:{{ r.color }}">{{ r.num }}</div>
+            </div>
+            <div style="font-size:12px;line-height:1.25;color:#323130">{{ r.label }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div style="display:flex;gap:22px;margin:0 0 40px;padding-left:2px">
+    <div style="display:flex;align-items:center;gap:7px"><span style="width:12px;height:12px;border-radius:50%;background:#c8c6c4"></span><span style="font-size:12px;color:#616161">0 % · offen</span></div>
+    <div style="display:flex;align-items:center;gap:7px"><span style="width:12px;height:12px;border-radius:50%;background:#0f6cbd"></span><span style="font-size:12px;color:#616161">1–99 % · in Arbeit</span></div>
+    <div style="display:flex;align-items:center;gap:7px"><span style="width:12px;height:12px;border-radius:50%;background:#0e700e"></span><span style="font-size:12px;color:#616161">100 % · abgeschlossen</span></div>
+  </div>
+
+  <div style="max-width:760px;border-top:1px solid #e1dfdd;padding-top:22px">
+    <p style="margin:0;font-size:12.5px;line-height:1.6;color:#484644"><span style="color:#0f6cbd;font-weight:600">Empfehlung:</span> <strong>Option 1</strong> ist für ein PCF auf einem Formular-Feld am robustesten — es kann konstruktionsbedingt nicht umbrechen und bleibt bei jeder Spaltenbreite lesbar. Option 2, wenn es wirklich „ein Chart" sein soll; Option 3, wenn die Ringe bleiben sollen.</p>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: { &quot;width&quot;: 860, &quot;height&quot;: 760 },
+  &quot;brandColor&quot;: { &quot;editor&quot;: &quot;color&quot;, &quot;default&quot;: &quot;#0f6cbd&quot;, &quot;tsType&quot;: &quot;string&quot; },
+  &quot;successColor&quot;: { &quot;editor&quot;: &quot;color&quot;, &quot;default&quot;: &quot;#0e700e&quot;, &quot;tsType&quot;: &quot;string&quot; }
+}">
+class Component extends DCLogic {
+  color(v, brand, success) {
+    return v === 0 ? '#c8c6c4' : v === 100 ? success : brand;
+  }
+
+  renderVals() {
+    const brand = this.props.brandColor ?? '#0f6cbd';
+    const success = this.props.successColor ?? '#0e700e';
+
+    const data = [
+      { label: 'Projektaufgaben',    short: 'Aufgaben', value: 66 },
+      { label: 'Musterstellung',     short: 'Muster',   value: 0 },
+      { label: 'Wirtschaftlichkeit', short: 'Wirtsch.', value: 40 },
+      { label: 'Lichtplanung',       short: 'Licht',    value: 100 },
+      { label: 'LTX',                short: 'LTX',      value: 25 },
+      { label: 'Angebot',            short: 'Angebot',  value: 80 },
+    ];
+
+    const circ = 94.25; // 2·π·15
+
+    const fields = data.map(d => {
+      const v = Math.max(0, Math.min(100, d.value));
+      return { label: d.label, short: d.short, text: v + '%', pctCss: v + '%', color: this.color(v, brand, success) };
+    });
+
+    const rings = data.map(d => {
+      const v = Math.max(0, Math.min(100, d.value));
+      return { label: d.label, num: String(v), text: v + '%', offset: (circ * (1 - v / 100)).toFixed(2), color: this.color(v, brand, success) };
+    });
+
+    return { fields, rings };
+  }
+}
+</script>
+</body>
+</html>

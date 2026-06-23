@@ -95,6 +95,14 @@ export class WorkTimeSplitGrid
         }
     }
 
+    /** Suggestion (★) button off by default; shown only when explicitly enabled. */
+    private showSuggest(): boolean {
+        const raw = (this._context.parameters.showSuggestButton?.raw ?? "")
+            .trim()
+            .toLowerCase();
+        return ["show", "true", "yes", "ja", "1", "on", "ein"].indexOf(raw) !== -1;
+    }
+
     private render(): void {
         const params = this._context.parameters;
         const props: WorkTimeSplitGridProps = {
@@ -104,13 +112,17 @@ export class WorkTimeSplitGrid
             navigation: this._context.navigation,
             isMobile: this.isMobile(),
             isOffline: this.isOffline(),
+            showSuggest: this.showSuggest(),
+            // Field-override manifest properties are disabled — the SST defaults
+            // in schema.ts apply. Re-add the matching <property> entries in
+            // ControlManifest.Input.xml and uncomment these to expose overrides.
             fields: resolveFieldConfig({
-                totalField: params.totalField?.raw,
-                dateField: params.dateField?.raw,
-                typeField: params.typeField?.raw,
-                pauseValue: params.pauseValue?.raw,
-                completedField: params.completedField?.raw,
-                subtypeField: params.subtypeField?.raw,
+                // totalField: params.totalField?.raw,
+                // dateField: params.dateField?.raw,
+                // typeField: params.typeField?.raw,
+                // pauseValue: params.pauseValue?.raw,
+                // completedField: params.completedField?.raw,
+                // subtypeField: params.subtypeField?.raw,
             }),
             userId: this._context.userSettings?.userId ?? "",
             disabled: this._context.mode.isControlDisabled,
