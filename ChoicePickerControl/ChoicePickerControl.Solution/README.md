@@ -8,7 +8,7 @@ Dataverse solution that packages the
 | Field                | Value                                  |
 |----------------------|----------------------------------------|
 | Solution name        | `ChoicePickerControl`                  |
-| Version              | `1.0.3.0`                              |
+| Version              | `1.0.2.0`                              |
 | Publisher            | `HerbertWaldmann`                      |
 | Customization prefix | `wal`                                  |
 | Option-value prefix  | `15282`                                |

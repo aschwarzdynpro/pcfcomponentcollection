@@ -31,22 +31,15 @@ type Selection = number | number[] | null;
 // the bound column still carries the PREVIOUS value. Either way an in-instance
 // flag is lost or bypassed and the fresh pick gets clobbered (symptom: the value
 // is wiped and only "sticks" on the second pick). We remember the user's most
-// recent pick per (record × column) at module scope.
-//
-// IMPORTANT — this must NOT affect a normal form load. The cache is honored only
-// when it is BOTH very fresh (a few seconds) AND the incoming bound value still
-// equals the exact value the user picked away from (`prev`) — i.e. the host is
-// literally replaying the stale pre-pick value. On a real load the incoming
-// value is the saved DB value, which won't match `prev`, so the cache is inert.
+// recent pick per (record × column) at module scope and treat a stale incoming
+// value as ignorable until the host echoes the picked value back (or a short
+// window elapses).
 interface RecentPick {
     value: Selection;
-    prev: Selection;
     ts: number;
 }
 const RECENT: Record<string, RecentPick> = {};
-// Short on purpose: long enough to cover the synchronous onChange-script churn /
-// re-init storm, far shorter than any human navigation or form reload.
-const RECENT_WINDOW_MS = 2500;
+const RECENT_WINDOW_MS = 6000;
 
 function now(): number {
     try {
@@ -191,22 +184,18 @@ export class ChoicePickerControl
             ? this.orderByOptions(param, readMulti(param))
             : readSingle(param);
 
-        // Respect a fresh, not-yet-confirmed user pick — but ONLY when the host
-        // is replaying the exact pre-pick value (the stale echo / re-init case).
-        // This keeps the cache inert on a normal form load.
+        // Respect a fresh, not-yet-confirmed user pick.
         const cached = this._cacheKey ? RECENT[this._cacheKey] : undefined;
         if (cached && now() - cached.ts < RECENT_WINDOW_MS) {
             if (sameSelection(incoming, cached.value)) {
-                // Host caught up to the pick — confirmed; drop the entry so
+                // Host caught up — the pick is confirmed; stop protecting so
                 // genuine external changes apply from here on.
                 if (this._cacheKey) delete RECENT[this._cacheKey];
-            } else if (sameSelection(incoming, cached.prev)) {
-                // Host is still showing the stale pre-pick value — restore the
-                // optimistic pick instead of letting it roll back.
+            } else {
+                // Host still carries a stale value — keep the optimistic pick.
                 this.applySelection(cached.value);
                 return;
             }
-            // Any other incoming value is a genuine change → fall through.
         }
 
         this.applySelection(incoming);
@@ -268,16 +257,11 @@ export class ChoicePickerControl
                     : typeof next === "number"
                       ? next
                       : null;
-                // Capture the value we're changing FROM so the guard can tell a
-                // stale pre-pick echo from a genuine external change.
-                const prev: Selection = this._multi
-                    ? [...this._multiValues]
-                    : this._single;
                 this.applySelection(value);
                 // Remember this pick so a stale updateView (or a destroy/re-init
                 // caused by a form onChange script) can't roll it back.
                 if (this._cacheKey) {
-                    RECENT[this._cacheKey] = { value, prev, ts: now() };
+                    RECENT[this._cacheKey] = { value, ts: now() };
                 }
                 this._notifyOutputChanged();
                 // Re-render immediately so the UI reflects the change before the
