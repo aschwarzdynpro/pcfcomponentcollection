@@ -146,12 +146,24 @@ deletes the original.
     save running against the local cache (a **sync-conflict** minefield). Subtypes
     aren't loaded offline (no `$expand` needed).
   - A slim **offline banner** signals the read-only mode.
+  - **While the cache is still syncing** (`dataset.loading`) the empty list
+    shows a *"Syncing offline data…"* spinner instead of the "nothing here"
+    empty state, and **pull-to-refresh** calls `dataset.refresh()` to re-pull
+    the cache (the online server-reload path doesn't run offline).
+- **Offline-first** (the default Power Apps mobile mode) reports
+  `isOffline() === true` **even when the device is connected** — the app always
+  reads from the local cache. So the control runs its read-only path on mobile
+  regardless of signal; PCF's `context.webAPI` is online-only and can't be used
+  there. To edit/split on a connected device, the maker must enable the
+  **Online-mode** toggle (app setting *"Allow users to work in online mode"*).
 - `WebAPI`/`Utility` are declared **`required="false"`** so the host renders the
   control offline at all (a *required* unavailable feature otherwise blocks it
   with a generic "control can't load" error).
-- ⚠️ Offline needs an **offline profile** (admin) that includes the relevant
-  tables/columns so the dataset is populated. Full **write-enabled** offline
-  (Option C) is deferred — see [`OfflinePlan.md`](OfflinePlan.md).
+- ⚠️ Offline needs an **offline profile** (admin) that includes
+  `sst_roundedtimeentries` **and** the columns/related tables the view + control
+  read, or the cached dataset stays empty (an empty list after sync = the table
+  isn't in the profile). Full **write-enabled** offline (Option C) is deferred —
+  see [`OfflinePlan.md`](OfflinePlan.md).
 
 ### 🔧 Technical
 - **React 17** + TypeScript, no extra runtime libraries.

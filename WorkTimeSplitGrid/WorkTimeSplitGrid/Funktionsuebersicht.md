@@ -204,11 +204,24 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
     transaktionale Save nie gegen den lokalen Cache (**Sync-Konflikt-Risiko**
     vermieden). Subtypes werden offline nicht geladen (kein `$expand` nötig).
   - Ein schmales **Offline-Banner** signalisiert den schreibgeschützten Modus.
+  - **Solange der Cache noch synchronisiert** (`dataset.loading`), zeigt die leere
+    Liste einen *„Offline-Daten werden synchronisiert…"*-Spinner statt des
+    „nichts vorhanden"-Leerzustands; **Pull-to-Refresh** ruft offline
+    `dataset.refresh()` auf (der Online-Server-Reload läuft offline nicht).
+- **Offline-First** (der Standardmodus von Power Apps Mobile) meldet
+  `isOffline() === true` **auch bei bestehender Verbindung** — die App liest immer
+  aus dem lokalen Cache. Das Control läuft auf Mobil also unabhängig vom Empfang im
+  schreibgeschützten Modus; PCF-`context.webAPI` ist reine Online-API und offline
+  nicht nutzbar. Zum Bearbeiten/Aufteilen auf einem verbundenen Gerät muss der
+  Maker den **Online-Modus** aktivieren (App-Einstellung *„Benutzern erlauben, im
+  Onlinemodus zu arbeiten"*).
 - `WebAPI`/`Utility` sind **`required="false"`**, damit der Host das Control offline
   überhaupt rendert.
-- ⚠️ Offline braucht ein **Offline-Profil** (Admin) mit den relevanten
-  Tabellen/Spalten, damit das Dataset befüllt ist. Voll **schreibfähiges** Offline
-  (Option C) ist zurückgestellt — siehe [`OfflinePlan.md`](OfflinePlan.md).
+- ⚠️ Offline braucht ein **Offline-Profil** (Admin) mit `sst_roundedtimeentries`
+  **und** den Spalten/verknüpften Tabellen, die View + Control lesen — sonst bleibt
+  das gecachte Dataset leer (leere Liste nach dem Sync = Tabelle nicht im Profil).
+  Voll **schreibfähiges** Offline (Option C) ist zurückgestellt — siehe
+  [`OfflinePlan.md`](OfflinePlan.md).
 
 ## Konfiguration (Manifest-Properties)
 Im Maker sind nur zwei Properties sichtbar: das gebundene Dataset `entries` und
