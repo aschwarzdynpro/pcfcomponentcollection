@@ -115,6 +115,10 @@ export class ChoicePickerControl
     private _single: number | null = null;
     private _multiValues: number[] = [];
     private _cacheKey: string | null = null;
+    // Set true the first time the USER changes the value in this instance. Until
+    // then getOutputs() must not push a value back, or it would overwrite the
+    // value the host just loaded from the database (blank-on-load bug).
+    private _userEdited = false;
 
     public init(
         context: ComponentFramework.Context<IInputs>,
@@ -139,6 +143,13 @@ export class ChoicePickerControl
     }
 
     public getOutputs(): IOutputs {
+        // Do NOT push any value before the user has actually edited this control.
+        // The host polls getOutputs() during form load; returning a concrete
+        // value (or null) here overwrites the just-loaded DB value and blanks the
+        // field. Returning an empty object leaves the bound column untouched.
+        if (!this._userEdited) {
+            return {} as IOutputs;
+        }
         if (this._multi) {
             return { selectedValue: this._multiValues } as IOutputs;
         }
@@ -273,6 +284,8 @@ export class ChoicePickerControl
                 const prev: Selection = this._multi
                     ? [...this._multiValues]
                     : this._single;
+                // The user is now driving the value — getOutputs() may push.
+                this._userEdited = true;
                 this.applySelection(value);
                 // Remember this pick so a stale updateView (or a destroy/re-init
                 // caused by a form onChange script) can't roll it back.
