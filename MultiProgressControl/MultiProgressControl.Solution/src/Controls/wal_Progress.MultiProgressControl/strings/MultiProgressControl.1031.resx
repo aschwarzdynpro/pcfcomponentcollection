@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="MultiProgressControl_Display" xml:space="preserve">
+    <value>Multi-Fortschritt</value>
+    <comment>Anzeigename des Controls</comment>
+  </data>
+  <data name="MultiProgressControl_Desc" xml:space="preserve">
+    <value>Schreibgeschütztes Status-Control. Zeigt bis zu 6 Whole-Number-Spalten als Fortschrittsanzeigen (0-100%) in einer Zeile.</value>
+    <comment>Beschreibung des Controls</comment>
+  </data>
+  <data name="field1_Display" xml:space="preserve">
+    <value>Feld 1</value>
+    <comment>Anzeigename für gebundenen Slot 1 (das Host-Feld)</comment>
+  </data>
+  <data name="field1_Desc" xml:space="preserve">
+    <value>Die Whole-Number-Spalte für die erste Anzeige. Dies ist das Feld, an das das Control gebunden ist.</value>
+    <comment>Beschreibung für gebundenen Slot 1</comment>
+  </data>
+  <data name="field2_Display" xml:space="preserve">
+    <value>Feld 2</value>
+    <comment>Anzeigename für gebundenen Slot 2</comment>
+  </data>
+  <data name="field2_Desc" xml:space="preserve">
+    <value>Optionale Whole-Number-Spalte für die zweite Anzeige.</value>
+    <comment>Beschreibung für gebundenen Slot 2</comment>
+  </data>
+  <data name="field3_Display" xml:space="preserve">
+    <value>Feld 3</value>
+    <comment>Anzeigename für gebundenen Slot 3</comment>
+  </data>
+  <data name="field3_Desc" xml:space="preserve">
+    <value>Optionale Whole-Number-Spalte für die dritte Anzeige.</value>
+    <comment>Beschreibung für gebundenen Slot 3</comment>
+  </data>
+  <data name="field4_Display" xml:space="preserve">
+    <value>Feld 4</value>
+    <comment>Anzeigename für gebundenen Slot 4</comment>
+  </data>
+  <data name="field4_Desc" xml:space="preserve">
+    <value>Optionale Whole-Number-Spalte für die vierte Anzeige.</value>
+    <comment>Beschreibung für gebundenen Slot 4</comment>
+  </data>
+  <data name="field5_Display" xml:space="preserve">
+    <value>Feld 5</value>
+    <comment>Anzeigename für gebundenen Slot 5</comment>
+  </data>
+  <data name="field5_Desc" xml:space="preserve">
+    <value>Optionale Whole-Number-Spalte für die fünfte Anzeige.</value>
+    <comment>Beschreibung für gebundenen Slot 5</comment>
+  </data>
+  <data name="field6_Display" xml:space="preserve">
+    <value>Feld 6</value>
+    <comment>Anzeigename für gebundenen Slot 6</comment>
+  </data>
+  <data name="field6_Desc" xml:space="preserve">
+    <value>Optionale Whole-Number-Spalte für die sechste Anzeige.</value>
+    <comment>Beschreibung für gebundenen Slot 6</comment>
+  </data>
+  <data name="label1_Display" xml:space="preserve">
+    <value>Beschriftung 1</value>
+    <comment>Anzeigename für die Beschriftungs-Überschreibung von Slot 1</comment>
+  </data>
+  <data name="label1_Desc" xml:space="preserve">
+    <value>Beschriftung für Anzeige 1. Leer lassen, um den Anzeigenamen der gebundenen Spalte zu verwenden.</value>
+    <comment>Beschreibung der Beschriftungs-Überschreibung von Slot 1</comment>
+  </data>
+  <data name="label2_Display" xml:space="preserve">
+    <value>Beschriftung 2</value>
+    <comment>Anzeigename für die Beschriftungs-Überschreibung von Slot 2</comment>
+  </data>
+  <data name="label2_Desc" xml:space="preserve">
+    <value>Beschriftung für Anzeige 2. Leer lassen, um den Anzeigenamen der gebundenen Spalte zu verwenden.</value>
+    <comment>Beschreibung der Beschriftungs-Überschreibung von Slot 2</comment>
+  </data>
+  <data name="label3_Display" xml:space="preserve">
+    <value>Beschriftung 3</value>
+    <comment>Anzeigename für die Beschriftungs-Überschreibung von Slot 3</comment>
+  </data>
+  <data name="label3_Desc" xml:space="preserve">
+    <value>Beschriftung für Anzeige 3. Leer lassen, um den Anzeigenamen der gebundenen Spalte zu verwenden.</value>
+    <comment>Beschreibung der Beschriftungs-Überschreibung von Slot 3</comment>
+  </data>
+  <data name="label4_Display" xml:space="preserve">
+    <value>Beschriftung 4</value>
+    <comment>Anzeigename für die Beschriftungs-Überschreibung von Slot 4</comment>
+  </data>
+  <data name="label4_Desc" xml:space="preserve">
+    <value>Beschriftung für Anzeige 4. Leer lassen, um den Anzeigenamen der gebundenen Spalte zu verwenden.</value>
+    <comment>Beschreibung der Beschriftungs-Überschreibung von Slot 4</comment>
+  </data>
+  <data name="label5_Display" xml:space="preserve">
+    <value>Beschriftung 5</value>
+    <comment>Anzeigename für die Beschriftungs-Überschreibung von Slot 5</comment>
+  </data>
+  <data name="label5_Desc" xml:space="preserve">
+    <value>Beschriftung für Anzeige 5. Leer lassen, um den Anzeigenamen der gebundenen Spalte zu verwenden.</value>
+    <comment>Beschreibung der Beschriftungs-Überschreibung von Slot 5</comment>
+  </data>
+  <data name="label6_Display" xml:space="preserve">
+    <value>Beschriftung 6</value>
+    <comment>Anzeigename für die Beschriftungs-Überschreibung von Slot 6</comment>
+  </data>
+  <data name="label6_Desc" xml:space="preserve">
+    <value>Beschriftung für Anzeige 6. Leer lassen, um den Anzeigenamen der gebundenen Spalte zu verwenden.</value>
+    <comment>Beschreibung der Beschriftungs-Überschreibung von Slot 6</comment>
+  </data>
+  <data name="maxValue_Display" xml:space="preserve">
+    <value>Maximalwert (100%)</value>
+    <comment>Anzeigename der maxValue-Eigenschaft</comment>
+  </data>
+  <data name="maxValue_Desc" xml:space="preserve">
+    <value>Der Spaltenwert, der 100% entspricht. Standardwert: 100 (Spalten speichern bereits einen Prozentwert).</value>
+    <comment>Beschreibung der maxValue-Eigenschaft</comment>
+  </data>
+  <data name="headerLabel_Display" xml:space="preserve">
+    <value>Überschrift</value>
+    <comment>Anzeigename der optionalen Überschrift</comment>
+  </data>
+  <data name="headerLabel_Desc" xml:space="preserve">
+    <value>Optionale Überschrift über der Zeile mit Anzeigen. Leer lassen für keine Überschrift.</value>
+    <comment>Beschreibung der optionalen Überschrift</comment>
+  </data>
+</root>
