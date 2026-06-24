@@ -5,16 +5,19 @@ import { CoolDropdown, ChoiceOption } from "./components/CoolDropdown";
 import { lcidToLang } from "./components/lang";
 
 // The bound property is declared with a `type-group` (OptionSet +
-// MultiSelectOptionSet), so the generated type is a union and `raw` differs in
-// shape (number vs number[]). We read it through this loose view so the runtime
-// code is decoupled from whichever concrete type pcf-scripts emits.
+// MultiSelectOptionSet), so the generated type is a union AND — crucially — the
+// host serializes the value richly: instead of a plain number it hands us the
+// internal OptionSet value object `{ _val, _label, _color, ... }` (a single one
+// for a single Choice, an array of them for a multi Choice). We read everything
+// through this loose view + `coerceVal()` so the numeric value is recovered
+// whatever shape the host uses.
 interface OptionMeta {
     Label: string;
     Value: number;
     Color: string;
 }
 interface ChoiceParam {
-    raw: number | number[] | null;
+    raw: unknown;
     type?: string;
     attributes?: {
         Options?: OptionMeta[];
@@ -56,6 +59,22 @@ function now(): number {
     }
 }
 
+/**
+ * Recover the numeric option value from whatever shape the host delivers: a
+ * plain number, or the rich OptionSet value object (`{ _val }` — also seen as
+ * `value` / `Value` across hosts).
+ */
+function coerceVal(v: unknown): number | null {
+    if (typeof v === "number") return v;
+    if (v && typeof v === "object") {
+        const o = v as Record<string, unknown>;
+        if (typeof o._val === "number") return o._val;
+        if (typeof o.value === "number") return o.value;
+        if (typeof o.Value === "number") return o.Value;
+    }
+    return null;
+}
+
 function resolveMulti(
     param: ChoiceParam,
     mode: "auto" | "single" | "multiple" | undefined,
@@ -76,18 +95,24 @@ function readOptions(param: ChoiceParam): ChoiceOption[] {
     }));
 }
 
+/** Normalize the bound value to a single option value (number | null). */
 function readSingle(param: ChoiceParam): number | null {
-    if (typeof param.raw === "number") return param.raw;
-    if (Array.isArray(param.raw) && param.raw.length) return param.raw[0];
-    return null;
+    const r = param.raw;
+    if (Array.isArray(r)) return r.length ? coerceVal(r[0]) : null;
+    return coerceVal(r);
 }
 
+/** Normalize the bound value to an array of option values. */
 function readMulti(param: ChoiceParam): number[] {
-    if (Array.isArray(param.raw)) return [...param.raw];
-    if (typeof param.raw === "number") return [param.raw];
-    return [];
+    const r = param.raw;
+    if (Array.isArray(r)) {
+        return r.map(coerceVal).filter((v): v is number => v !== null);
+    }
+    const single = coerceVal(r);
+    return single !== null ? [single] : [];
 }
 
+/** Set-equality for value arrays (order-independent). */
 function sameSelection(a: Selection, b: Selection): boolean {
     if (Array.isArray(a) || Array.isArray(b)) {
         const aa = Array.isArray(a) ? a : a === null ? [] : [a];

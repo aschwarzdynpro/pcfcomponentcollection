@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="ChoicePicker" constructor="ChoicePickerControl" version="1.0.4" display-name-key="ChoicePickerControl_Display" description-key="ChoicePickerControl_Desc" control-type="standard">
+  <control namespace="ChoicePicker" constructor="ChoicePickerControl" version="1.0.6" display-name-key="ChoicePickerControl_Display" description-key="ChoicePickerControl_Desc" control-type="standard">
     <!-- The bound Choice column. The type-group below lets the SAME control bind
          to a single Choice (OptionSet) AND a multi-select Choices
          (MultiSelectOptionSet). The control sniffs which one at runtime; the
@@ -49,7 +49,7 @@
     <resources>
       <code path="index.ts" order="1"/>
       <css path="css/ChoicePickerControl.css" order="1" />
-      <resx path="strings/ChoicePickerControl.1033.resx" version="1.0.4" />
+      <resx path="strings/ChoicePickerControl.1033.resx" version="1.0.6" />
     </resources>
   </control>
 </manifest>
