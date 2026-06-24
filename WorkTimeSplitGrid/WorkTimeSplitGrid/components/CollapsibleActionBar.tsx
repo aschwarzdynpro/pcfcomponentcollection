@@ -78,6 +78,10 @@ export const CollapsibleActionBar: React.FC<Props> = ({
     const [expanded, setExpanded] = React.useState(true);
     const innerRef = React.useRef<HTMLDivElement>(null);
     const [maxH, setMaxH] = React.useState<number | undefined>(undefined);
+    // `overflow: hidden` is needed to clip the height animation, but it also clips
+    // the absolutely-positioned sort dropdown menu (it pops out below the bar).
+    // So clip only while collapsed/animating; once expanded + settled, let it show.
+    const [clip, setClip] = React.useState(false);
 
     // Measure the real content height so the collapse animates to the exact size
     // (the bar wraps differently per width, so a fixed value would clip or gap).
@@ -85,6 +89,17 @@ export const CollapsibleActionBar: React.FC<Props> = ({
         const h = innerRef.current?.scrollHeight;
         if (h != null) setMaxH((prev) => (prev === h ? prev : h));
     });
+
+    // Collapsed/animating → clip. Expanded → reveal overflow after the transition
+    // (also covers prefers-reduced-motion, where transitionend may not fire).
+    React.useEffect(() => {
+        if (!expanded) {
+            setClip(true);
+            return;
+        }
+        const id = window.setTimeout(() => setClip(false), 420);
+        return () => window.clearTimeout(id);
+    }, [expanded]);
 
     // Keep the collapsed bar out of the tab order / a11y tree (it stays mounted
     // so the search value + measured height survive). `inert` is ignored on hosts
@@ -107,6 +122,7 @@ export const CollapsibleActionBar: React.FC<Props> = ({
                 style={{
                     maxHeight: expanded ? maxH ?? 600 : 0,
                     opacity: expanded ? 1 : 0,
+                    overflow: clip ? "hidden" : "visible",
                 }}
             >
                 <div ref={innerRef} id="wtsg-actionbar-full">
@@ -120,7 +136,10 @@ export const CollapsibleActionBar: React.FC<Props> = ({
                     className="wtsg-ab-trigger"
                     aria-expanded={true}
                     aria-controls="wtsg-actionbar-full"
-                    onClick={() => setExpanded(false)}
+                    onClick={() => {
+                        setClip(true);
+                        setExpanded(false);
+                    }}
                 >
                     {collapseLabel}
                     <Chevron dir="up" color="#605e5c" />

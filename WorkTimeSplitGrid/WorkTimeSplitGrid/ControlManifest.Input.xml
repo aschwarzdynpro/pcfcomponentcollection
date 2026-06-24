@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="WorkTime" constructor="WorkTimeSplitGrid" version="1.18.6" display-name-key="WorkTimeSplitGrid_Display" description-key="WorkTimeSplitGrid_Desc" control-type="standard">
+  <control namespace="WorkTime" constructor="WorkTimeSplitGrid" version="1.18.7" display-name-key="WorkTimeSplitGrid_Display" description-key="WorkTimeSplitGrid_Desc" control-type="standard">
     <!-- Bound dataset: the Rounded Time Entries shown as the master list -->
     <data-set name="entries" display-name-key="entries_Display" description-key="entries_Desc"></data-set>
 
