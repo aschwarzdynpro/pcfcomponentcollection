@@ -2,6 +2,7 @@ import * as React from "react";
 import { EntryList } from "./EntryList";
 import { SplitPanel } from "./SplitPanel";
 import { Dropdown } from "./Dropdown";
+import { CollapsibleActionBar } from "./CollapsibleActionBar";
 import { EntryRow, Lang, SubtypeRow } from "./types";
 import { STRINGS } from "./i18n";
 import { FieldConfig, ADMIN_ROLES, TIMEREPORT } from "./schema";
@@ -396,6 +397,30 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         return sortRows(filtered, sortBy);
     }, [sourceEntries, search, period, sortBy]);
 
+    // Compact one-liner of the active filters for the collapsed mobile bar:
+    // "<search> · <mode> · <period> · <sort>" (search part only when set).
+    const summaryText = React.useMemo(() => {
+        const modeLabel = mode === "split" ? t.modeSplit : t.modeAssign;
+        const periodLabel =
+            period === "today"
+                ? t.periodToday
+                : period === "week"
+                  ? t.periodWeek
+                  : period === "month"
+                    ? t.periodMonth
+                    : t.periodAll;
+        const sortLabels: Record<SortKey, string> = {
+            dateDesc: t.sortDateDesc,
+            dateAsc: t.sortDateAsc,
+            project: t.sortProject,
+            resource: t.sortResource,
+            durationDesc: t.sortDuration,
+        };
+        const core = [modeLabel, periodLabel, sortLabels[sortBy]].join(" · ");
+        const q = search.trim();
+        return q ? `„${q}" · ${core}` : core;
+    }, [mode, period, sortBy, search, t]);
+
     const selected = React.useMemo(
         () => displayRows.find((r) => r.id === selectedId) ?? null,
         [displayRows, selectedId],
@@ -559,6 +584,14 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             }`}
         >
             {!detailOpen && (
+            <CollapsibleActionBar
+                enabled={props.isMobile}
+                summary={summaryText}
+                recordCount={displayRows.length}
+                hasSearch={!!search.trim()}
+                collapseLabel={t.filterCollapse}
+                expandLabel={t.filterExpand}
+            >
             <div className="wtsg-toolbar">
                 <input
                     type="search"
@@ -612,9 +645,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                     {loadingEntries ? ` · ${t.loadingMore}` : ""}
                 </span>
             </div>
-            )}
 
-            {!detailOpen && (
                 <div className="wtsg-subbar">
                     <div
                         className="wtsg-toggle wtsg-period"
@@ -663,6 +694,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                         />
                     </div>
                 </div>
+            </CollapsibleActionBar>
             )}
 
             {props.isOffline && (

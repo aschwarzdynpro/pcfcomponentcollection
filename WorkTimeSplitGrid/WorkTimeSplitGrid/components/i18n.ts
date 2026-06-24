@@ -31,6 +31,9 @@ export interface Strings {
     sortProject: string;
     sortResource: string;
     sortDuration: string;
+    /** Collapsible action bar (mobile): "hide filters" trigger + "show" aria. */
+    filterCollapse: string;
+    filterExpand: string;
     selectHint: string;
     /** Empty-state line when the (unfiltered) list has no entries. */
     noResults: string;
@@ -103,6 +106,8 @@ export const STRINGS: Record<Lang, Strings> = {
         sortProject: "Project",
         sortResource: "Resource",
         sortDuration: "Duration",
+        filterCollapse: "Hide filters",
+        filterExpand: "Show filters",
         selectHint: "Select an entry to distribute its hours.",
         noResults: "No entries here — nothing to show.",
         noResultsSearch: "No entries match your search.",
@@ -174,6 +179,8 @@ export const STRINGS: Record<Lang, Strings> = {
         sortProject: "Projekt",
         sortResource: "Ressource",
         sortDuration: "Dauer",
+        filterCollapse: "Filter ausblenden",
+        filterExpand: "Filter einblenden",
         selectHint: "Eintrag wählen, um die Stunden aufzuteilen.",
         noResults: "Keine Einträge vorhanden — hier gibt es nichts zu sehen.",
         noResultsSearch: "Keine Einträge passen zu deiner Suche.",
@@ -245,6 +252,8 @@ export const STRINGS: Record<Lang, Strings> = {
         sortProject: "Projet",
         sortResource: "Ressource",
         sortDuration: "Durée",
+        filterCollapse: "Masquer les filtres",
+        filterExpand: "Afficher les filtres",
         selectHint: "Sélectionnez une entrée pour répartir ses heures.",
         noResults: "Aucune entrée ici — rien à afficher.",
         noResultsSearch: "Aucune entrée ne correspond à votre recherche.",

@@ -124,6 +124,12 @@ deletes the original.
     button. Each subtype row is a single compact line — **label + a +/− stepper
     + a narrow number field** (±0.25 h, floored at 0) — so all subtypes are
     visible at a glance; tap the steppers or type directly.
+- **Collapsible filter bar (phone)** — the search + mode + period + sort bar
+  collapses (animated) to a **one-line summary** (`🔍 Zuordnen · Alle · Datum
+  (newest) · 8 ⌄`) via a *"Hide filters"* trigger, maximizing the visible list;
+  tap the summary to expand it again. The summary reflects the active filters
+  live and shows the current count + a search-active dot. Desktop is unaffected
+  (bar always full). Respects `prefers-reduced-motion`.
 - Assign the same control to **Web + Tablet + Phone** when adding it to the
   view; no separate mobile build to maintain.
 

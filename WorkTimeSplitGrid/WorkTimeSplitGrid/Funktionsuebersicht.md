@@ -169,6 +169,13 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
     **Label + +/−-Stepper + schmales Zahlenfeld** (±0,25 h, nicht unter 0) —, damit
     alle Subtypes auf einen Blick sichtbar sind; per Stepper tippen oder direkt
     eingeben.
+- **Einklappbare Filterleiste (Phone)** — die Leiste aus Suche + Modus +
+  Zeitraum + Sortierung klappt (animiert) auf eine **einzeilige Zusammenfassung**
+  zusammen (`🔍 Zuordnen · Alle · Datum (neueste) · 8 ⌄`), per *„Filter
+  ausblenden"*-Zeile — so bleibt die Liste maximal sichtbar; Antippen der
+  Zusammenfassung klappt sie wieder aus. Die Zusammenfassung spiegelt die aktiven
+  Filter live wider und zeigt Trefferzahl + Such-Punkt. Desktop unverändert
+  (Leiste immer voll). Respektiert `prefers-reduced-motion`.
 - Beim Hinzufügen zur View dasselbe Control **Web + Tablet + Phone** zuweisen —
   kein separater Mobil-Build zu pflegen.
 
