@@ -197,8 +197,12 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 
 ### Offline (read-only)
 - **Online** → Live-Server-Abfragen + `$batch`-Save (wie oben).
-- **Offline** (`context.client.isOffline()`) → das Control schaltet auf einen
-  **schreibgeschützten** Dataset-Pfad um:
+- **Offline** → das Control schaltet auf einen **schreibgeschützten**
+  Dataset-Pfad um. Es vertraut `isOffline()` **nicht** blind (der Wert meldet beim
+  Kaltstart teils fälschlich „offline"): es **probiert die Live-Web-API** und
+  fällt nur dann auf read-only zurück, wenn dieser Call wirklich fehlschlägt
+  (mit ~7 s Timeout). Bei Erfolg schaltet es automatisch auf online — **ohne**
+  manuelles Offline→Online-Toggle.
   - **Lesen:** Die Liste wird aus dem gebundenen **(offline-gecachten) Dataset**
     gebaut und clientseitig gefiltert (Pausen raus; Aufteilen→nicht completed;
     Zuordnen→completed & kein Lieferschein; Projekt erforderlich, wenn die
@@ -215,13 +219,15 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
     Liste einen *„Offline-Daten werden synchronisiert…"*-Spinner statt des
     „nichts vorhanden"-Leerzustands; **Pull-to-Refresh** ruft offline
     `dataset.refresh()` auf (der Online-Server-Reload läuft offline nicht).
-- **Offline-First** (der Standardmodus von Power Apps Mobile) meldet
-  `isOffline() === true` **auch bei bestehender Verbindung** — die App liest immer
-  aus dem lokalen Cache. Das Control läuft auf Mobil also unabhängig vom Empfang im
-  schreibgeschützten Modus; PCF-`context.webAPI` ist reine Online-API und offline
-  nicht nutzbar. Zum Bearbeiten/Aufteilen auf einem verbundenen Gerät muss der
-  Maker den **Online-Modus** aktivieren (App-Einstellung *„Benutzern erlauben, im
-  Onlinemodus zu arbeiten"*).
+- **Offline-First-Kaltstart:** Auf manchen Geräten meldet die App nach dem Start
+  eine Weile `isOffline() === true` (bis zu einem kompletten Offline→Online-Wechsel),
+  obwohl verbunden. Weil das Control die Live-Web-API **probiert** statt dem Flag
+  zu glauben, zeigt es sofort die gecachte Liste und **erholt sich automatisch auf
+  online**, sobald der Server antwortet — kein Airplane-Toggle mehr nötig. Ist die
+  Web-API wirklich nicht erreichbar (echtes Offline oder `context.webAPI` nicht
+  verfügbar), bleibt es read-only; um auf einem verbundenen Gerät echtes Online zu
+  erzwingen, kann der Maker den **Online-Modus** aktivieren (*„Benutzern erlauben,
+  im Onlinemodus zu arbeiten"*).
 - `WebAPI`/`Utility` sind **`required="false"`**, damit der Host das Control offline
   überhaupt rendert.
 - ⚠️ Offline braucht ein **Offline-Profil** (Admin) mit `sst_roundedtimeentries`

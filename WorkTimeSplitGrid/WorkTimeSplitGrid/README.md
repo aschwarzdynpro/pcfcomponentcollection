@@ -139,8 +139,11 @@ deletes the original.
 
 ### 📴 Offline (read-only)
 - **Online** → the live server-side queries + `$batch` save (as above).
-- **Offline** (`context.client.isOffline()`) → the control switches to a
-  **read-only** dataset-based path:
+- **Offline** → the control switches to a **read-only** dataset-based path. It
+  does **not** blindly trust `isOffline()` (which can falsely report offline on a
+  cold start): it **probes the live Web API** and only falls back to read-only if
+  that call actually fails (bounded by a ~7 s timeout). On success it
+  auto-upgrades to the online path — no manual offline→online toggle needed.
   - **Read:** the list is built from the bound **(offline-cached) dataset** and
     filtered client-side (pauses excluded; split→not completed; assign→completed
     & no delivery note; project required when the project column is in the view).
@@ -156,12 +159,15 @@ deletes the original.
     shows a *"Syncing offline data…"* spinner instead of the "nothing here"
     empty state, and **pull-to-refresh** calls `dataset.refresh()` to re-pull
     the cache (the online server-reload path doesn't run offline).
-- **Offline-first** (the default Power Apps mobile mode) reports
-  `isOffline() === true` **even when the device is connected** — the app always
-  reads from the local cache. So the control runs its read-only path on mobile
-  regardless of signal; PCF's `context.webAPI` is online-only and can't be used
-  there. To edit/split on a connected device, the maker must enable the
-  **Online-mode** toggle (app setting *"Allow users to work in online mode"*).
+- **Offline-first cold start:** on some devices the app reports
+  `isOffline() === true` for a while after launch (until a full offline→online
+  cycle) even when connected. Because the control probes the live Web API rather
+  than trusting that flag, it shows the cached list instantly and then
+  **auto-recovers to online** as soon as the server answers — users no longer
+  have to toggle airplane mode. If the Web API genuinely can't be reached (true
+  offline, or `context.webAPI` unavailable), it stays read-only; to force full
+  online on a connected device the maker can enable the **Online-mode** toggle
+  (*"Allow users to work in online mode"*).
 - `WebAPI`/`Utility` are declared **`required="false"`** so the host renders the
   control offline at all (a *required* unavailable feature otherwise blocks it
   with a generic "control can't load" error).
