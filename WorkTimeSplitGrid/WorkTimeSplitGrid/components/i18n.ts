@@ -18,6 +18,10 @@ export interface Strings {
     modeAssign: string;
     myHours: string;
     myHoursLocked: string;
+    /** Scope switch ON label (admins): show everyone's hours, not just mine. */
+    allHours: string;
+    /** aria-label for the my-hours / all-hours scope switch. */
+    scopeToggle: string;
     /** Period filter (segmented). */
     periodLabel: string;
     periodAll: string;
@@ -97,6 +101,8 @@ export const STRINGS: Record<Lang, Strings> = {
         modeAssign: "Assign",
         myHours: "My hours",
         myHoursLocked: "Locked — you only see your own hours.",
+        allHours: "All hours",
+        scopeToggle: "Hours scope — off: my hours, on: all hours",
         periodLabel: "Period",
         periodAll: "All",
         periodToday: "Today",
@@ -170,6 +176,8 @@ export const STRINGS: Record<Lang, Strings> = {
         modeAssign: "Zuordnen",
         myHours: "Meine Stunden",
         myHoursLocked: "Gesperrt — du siehst nur deine eigenen Stunden.",
+        allHours: "Alle Stunden",
+        scopeToggle: "Stundenbereich — Aus: meine Stunden, An: alle Stunden",
         periodLabel: "Zeitraum",
         periodAll: "Alle",
         periodToday: "Heute",
@@ -243,6 +251,8 @@ export const STRINGS: Record<Lang, Strings> = {
         modeAssign: "Affecter",
         myHours: "Mes heures",
         myHoursLocked: "Verrouillé — vous ne voyez que vos propres heures.",
+        allHours: "Toutes les heures",
+        scopeToggle: "Portée des heures — désactivé : mes heures, activé : toutes les heures",
         periodLabel: "Période",
         periodAll: "Toutes",
         periodToday: "Aujourd'hui",

@@ -61,29 +61,72 @@
     color: #fff;
 }
 
-/* "My hours" filter chip */
-.wtsg-chip-filter {
-    height: 32px;
-    padding: 0 14px;
-    border-radius: 16px;
-    border: 1px solid #c8c6c4;
-    background: #fff;
-    color: #424242;
-    font-size: 13px;
-    cursor: pointer;
+/* "My hours" scope switch — off: my hours, on: all hours */
+.wtsg-scope {
     display: inline-flex;
     align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    border: none;
+    background: none;
+    color: #424242;
+    font-family: inherit;
+    font-size: 13px;
     white-space: nowrap;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.wtsg-chip-filter.active {
+.wtsg-switch {
+    position: relative;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 18px;
+    border-radius: 9px;
+    background: #c8c6c4;
+    transition: background-color 0.15s ease;
+}
+
+.wtsg-switch-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    transition: transform 0.15s ease;
+}
+
+.wtsg-scope.on .wtsg-switch {
     background: #0f6cbd;
-    border-color: #0f6cbd;
-    color: #fff;
 }
 
-.wtsg-chip-filter:disabled {
+.wtsg-scope.on .wtsg-switch-knob {
+    transform: translateX(16px);
+}
+
+.wtsg-scope-label {
+    line-height: 1;
+}
+
+.wtsg-scope:focus-visible {
+    outline: 2px solid #0f6cbd;
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+.wtsg-scope.locked {
     cursor: not-allowed;
+    opacity: 0.7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wtsg-switch,
+    .wtsg-switch-knob {
+        transition: none;
+    }
 }
 
 .wtsg-count {
@@ -1104,9 +1147,24 @@
     font-size: 14px;
 }
 
-.wtsg-mobile .wtsg-chip-filter {
-    height: 40px;
+.wtsg-mobile .wtsg-scope {
+    min-height: 40px;
     font-size: 14px;
+}
+
+.wtsg-mobile .wtsg-switch {
+    width: 40px;
+    height: 22px;
+    border-radius: 11px;
+}
+
+.wtsg-mobile .wtsg-switch-knob {
+    width: 18px;
+    height: 18px;
+}
+
+.wtsg-mobile .wtsg-scope.on .wtsg-switch-knob {
+    transform: translateX(18px);
 }
 
 .wtsg-mobile .wtsg-count {
@@ -1334,8 +1392,8 @@
     font-size: 13px;
 }
 
-.wtsg-mobile.wtsg-landscape .wtsg-chip-filter {
-    height: 34px;
+.wtsg-mobile.wtsg-landscape .wtsg-scope {
+    min-height: 34px;
     font-size: 13px;
 }
 

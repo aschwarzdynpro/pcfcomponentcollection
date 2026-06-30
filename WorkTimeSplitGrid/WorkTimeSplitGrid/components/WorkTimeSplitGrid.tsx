@@ -673,18 +673,27 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 </div>
                 <button
                     type="button"
-                    className={`wtsg-chip-filter ${myHoursActive ? "active" : ""}`}
+                    role="switch"
+                    aria-checked={!myHoursActive}
+                    aria-label={t.scopeToggle}
                     disabled={!isAdmin}
-                    aria-pressed={myHoursActive}
-                    title={!isAdmin ? t.myHoursLocked : t.myHours}
+                    title={!isAdmin ? t.myHoursLocked : t.scopeToggle}
+                    className={`wtsg-scope ${!myHoursActive ? "on" : ""} ${
+                        !isAdmin ? "locked" : ""
+                    }`}
                     onClick={() => {
                         if (!isAdmin) return;
                         setMyHoursOnly((v) => !v);
                         setSelectedId(null);
                     }}
                 >
-                    {!isAdmin && <span aria-hidden="true">🔒 </span>}
-                    {t.myHours}
+                    <span className="wtsg-switch" aria-hidden="true">
+                        <span className="wtsg-switch-knob" />
+                    </span>
+                    <span className="wtsg-scope-label">
+                        {!isAdmin && <span aria-hidden="true">🔒 </span>}
+                        {myHoursActive ? t.myHours : t.allHours}
+                    </span>
                 </button>
                 <span className="wtsg-count">
                     {t.entries(displayRows.length)}

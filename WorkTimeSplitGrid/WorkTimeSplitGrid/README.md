@@ -66,12 +66,13 @@ deletes the original.
   threshold to reload from the server (a damped pull indicator + spinner).
 - **Empty state** — when no entries qualify (or a search has no matches) the list
   shows a binoculars icon and a short one-liner instead of a blank pane.
-- **"My hours" chip** (preselected) — filters to entries whose resource's user is
-  the current user. The user's `bookableresource`(s) are resolved via
-  `_userid_value`, and the list query is restricted to those via
-  `_sst_resource_ref_value` (a server-side filter). It is **locked on** for
-  everyone except holders of **System Administrator** or **SST | Dispo
-  Teamleitung Addon**, who may toggle it off to see all hours.
+- **Scope switch** (*My hours ↔ All hours*, defaults to **My hours**) — a compact
+  toggle: **off = my hours**, **on = all hours**. My-hours filters to entries
+  whose resource's user is the current user — the user's `bookableresource`(s)
+  are resolved via `_userid_value`, and the list query is restricted to those via
+  `_sst_resource_ref_value` (a server-side filter). The switch is **locked off**
+  (my hours) for everyone except holders of **System Administrator** or **SST |
+  Dispo Teamleitung Addon**, who may turn it on to see all hours.
 - **Detail split panel** — selecting an entry loads its work-subtype rows
   (`sst_roundedtimeentryworksubtypes`) and lets the user edit the hours per
   subtype, with a live **Total / Distributed / Remaining** summary. The detail

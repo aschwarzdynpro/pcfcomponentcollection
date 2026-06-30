@@ -71,13 +71,15 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 - **Leerzustand** — wenn keine Einträge passen (oder eine Suche keine Treffer
   liefert), zeigt die Liste ein Fernglas-Symbol und einen kurzen 1-Zeiler statt
   einer leeren Fläche.
-- **Chip „Meine Stunden"** (vorausgewählt) — filtert auf Einträge, deren Ressource
-  dem aktuellen Benutzer gehört. Die `bookableresource`(s) des Benutzers werden
-  über `_userid_value` ermittelt, und die Listen-Abfrage wird serverseitig über
-  `_sst_resource_ref_value` darauf eingeschränkt. Der Chip ist **gesperrt + aktiv**
-  für alle Benutzer; nur Inhaber der Rolle **System Administrator** oder
-  **SST | Dispo Teamleitung Addon** können ihn abschalten (alle Stunden sehen).
-  Rollenprüfung über `systemuserroles_association` (direkt zugewiesene Rollen).
+- **Schalter „Meine Stunden ↔ Alle Stunden"** (Default **Meine Stunden**) — ein
+  kompakter Umschalter: **Aus = meine Stunden**, **An = alle Stunden**. „Meine
+  Stunden" filtert auf Einträge, deren Ressource dem aktuellen Benutzer gehört —
+  die `bookableresource`(s) des Benutzers werden über `_userid_value` ermittelt,
+  und die Listen-Abfrage wird serverseitig über `_sst_resource_ref_value` darauf
+  eingeschränkt. Der Schalter ist **gesperrt auf „Aus" (meine Stunden)** für alle
+  Benutzer; nur Inhaber der Rolle **System Administrator** oder **SST | Dispo
+  Teamleitung Addon** können ihn einschalten (alle Stunden sehen). Rollenprüfung
+  über `systemuserroles_association` (direkt zugewiesene Rollen).
 - Statuspunkt je Karte (offen = rot, aufgeteilt = grün).
 
 ### Detail-Aufteilung (rechts)
