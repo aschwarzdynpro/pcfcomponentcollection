@@ -116,15 +116,23 @@ deletes the original.
 - **Confirmation dialog** before the destructive save/delete.
 
 ### 📱 Adaptive (desktop + mobile)
-- **One control, two layouts**, chosen at runtime from
-  `context.client.getFormFactor()` (with an allocated-width fallback):
+- **One control, three layouts**, chosen at runtime from
+  `context.client.getFormFactor()` (with an allocated-width fallback) and the
+  live container size:
   - **Desktop / Tablet** → the two-pane master/detail layout (unchanged).
-  - **Phone** → a single-pane, touch-first flow: full-width list → tap an entry
-    → full-screen split editor with a **‹ Back** header → save returns to the
-    list. Larger tap targets, big numeric inputs, and a bottom-pinned save
-    button. Each subtype row is a single compact line — **label + a +/− stepper
-    + a narrow number field** (±0.25 h, floored at 0) — so all subtypes are
-    visible at a glance; tap the steppers or type directly.
+  - **Phone (portrait)** → a single-pane, touch-first flow: full-width list →
+    tap an entry → full-screen split editor with a **‹ Back** header → save
+    returns to the list. Larger tap targets, big numeric inputs, and a
+    bottom-pinned save button. Each subtype row is a single compact line —
+    **label + a +/− stepper + a narrow number field** (±0.25 h, floored at 0) —
+    so all subtypes are visible at a glance; tap the steppers or type directly.
+  - **Phone (landscape)** → the two-pane **cockpit**: list + split editor side
+    by side under a compact, single-row command bar — the wide-but-short
+    viewport is no longer wasted by stacked toolbars over a hidden list. Keeps
+    the phone touch ergonomics (pull-to-refresh, big steppers); no **‹ Back**
+    needed since both panes are visible. Rotating the device switches between
+    portrait single-pane and landscape cockpit live (driven by the allocated
+    width/height; needs ≥ 640px width, so small phones stay single-pane).
 - **Collapsible filter bar (phone)** — the search + mode + period + sort bar
   collapses (animated) to a **one-line summary** (`🔍 Zuordnen · Alle · Datum
   (newest) · 8 ⌄`) via a *"Hide filters"* trigger, maximizing the visible list;

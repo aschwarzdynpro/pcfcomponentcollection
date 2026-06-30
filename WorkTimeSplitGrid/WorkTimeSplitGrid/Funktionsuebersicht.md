@@ -160,16 +160,25 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   unabhängig von der Ziel-Tabelle.
 
 ### Adaptiv (Desktop + Mobil)
-- **Ein Control, zwei Layouts** — zur Laufzeit über
-  `context.client.getFormFactor()` (mit Breiten-Fallback) gewählt:
+- **Ein Control, drei Layouts** — zur Laufzeit über
+  `context.client.getFormFactor()` (mit Breiten-Fallback) und die aktuelle
+  Container-Größe gewählt:
   - **Desktop / Tablet** → zweispaltiges Master/Detail-Layout (unverändert).
-  - **Handy** → einspaltiger, touch-first Flow: Liste in voller Breite → Eintrag
-    antippen → Vollbild-Split-Editor mit **‹ Zurück**-Header → nach dem Speichern
-    zurück zur Liste. Größere Tap-Targets, große Zahlenfelder, am unteren Rand
-    fixierter Speichern-Button. Jede Subtype-Zeile ist **eine kompakte Zeile** —
-    **Label + +/−-Stepper + schmales Zahlenfeld** (±0,25 h, nicht unter 0) —, damit
-    alle Subtypes auf einen Blick sichtbar sind; per Stepper tippen oder direkt
-    eingeben.
+  - **Handy (Hochformat)** → einspaltiger, touch-first Flow: Liste in voller
+    Breite → Eintrag antippen → Vollbild-Split-Editor mit **‹ Zurück**-Header →
+    nach dem Speichern zurück zur Liste. Größere Tap-Targets, große Zahlenfelder,
+    am unteren Rand fixierter Speichern-Button. Jede Subtype-Zeile ist **eine
+    kompakte Zeile** — **Label + +/−-Stepper + schmales Zahlenfeld** (±0,25 h,
+    nicht unter 0) —, damit alle Subtypes auf einen Blick sichtbar sind; per
+    Stepper tippen oder direkt eingeben.
+  - **Handy (Querformat)** → das zweispaltige **Cockpit**: Liste + Split-Editor
+    nebeneinander unter einer kompakten, einzeiligen Befehlsleiste — das breite,
+    aber niedrige Querformat wird nicht mehr durch gestapelte Toolbars über einer
+    verborgenen Liste verschwendet. Behält die Touch-Ergonomie (Pull-to-Refresh,
+    große Stepper); kein **‹ Zurück** nötig, da beide Spalten sichtbar sind. Beim
+    Drehen wechselt das Control live zwischen Hochformat-Einspalter und
+    Querformat-Cockpit (anhand der zugewiesenen Breite/Höhe; ab ≥ 640px Breite,
+    kleine Phones bleiben einspaltig).
 - **Einklappbare Filterleiste (Phone)** — die Leiste aus Suche + Modus +
   Zeitraum + Sortierung klappt (animiert) auf eine **einzeilige Zusammenfassung**
   zusammen (`🔍 Zuordnen · Alle · Datum (neueste) · 8 ⌄`), per *„Filter

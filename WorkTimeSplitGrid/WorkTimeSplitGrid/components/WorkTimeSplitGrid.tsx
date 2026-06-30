@@ -82,8 +82,13 @@ export interface WorkTimeSplitGridProps {
     fields: FieldConfig;
     /** Current user's systemuserid (for the "My hours" filter + role check). */
     userId: string;
-    /** Phone form factor → single-pane, touch-first layout. */
+    /** Phone form factor → touch-first styling (bigger targets, steppers, PTR). */
     isMobile: boolean;
+    /**
+     * Single-column layout (list OR detail). True for portrait phones; false for
+     * desktop/tablet and for phones in landscape (the two-pane "cockpit").
+     */
+    singlePane: boolean;
     /** App is offline → the control's live queries can't run; show a notice. */
     isOffline: boolean;
     /** Show the AI suggestion (★) button in the split detail (manifest toggle). */
@@ -613,17 +618,20 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         );
     }
 
-    const detailOpen = props.isMobile && mode === "split" && !!selected;
+    const detailOpen = props.singlePane && mode === "split" && !!selected;
+    // Phone in landscape → two-pane "cockpit": touch styling, but list + detail
+    // side by side and a compact (non-collapsing) command bar.
+    const landscape = props.isMobile && !props.singlePane;
 
     return (
         <div
             className={`wtsg-root ${props.isMobile ? "wtsg-mobile" : ""} ${
-                mode === "assign" ? "wtsg-assign" : ""
-            }`}
+                landscape ? "wtsg-landscape" : ""
+            } ${mode === "assign" ? "wtsg-assign" : ""}`}
         >
             {!detailOpen && (
             <CollapsibleActionBar
-                enabled={props.isMobile}
+                enabled={props.singlePane}
                 summary={summaryText}
                 recordCount={displayRows.length}
                 hasSearch={!!search.trim()}
@@ -785,7 +793,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             >
                 {mode === "split" ? (
                     <>
-                        {(!props.isMobile || !selected) && (
+                        {(!props.singlePane || !selected) && (
                             <EntryList
                                 rows={displayRows}
                                 selectedId={selectedId}
@@ -804,7 +812,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 strings={t}
                             />
                         )}
-                        {(!props.isMobile || !!selected) && (
+                        {(!props.singlePane || !!selected) && (
                             <SplitPanel
                                 entry={selected}
                                 subtypes={subtypesMatched ? subtypes : null}
@@ -818,6 +826,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 utils={props.utils}
                                 disabled={props.disabled}
                                 isMobile={props.isMobile}
+                                singlePane={props.singlePane}
                                 isOffline={effectiveOffline}
                                 showSuggest={props.showSuggest}
                                 lang={props.lang}

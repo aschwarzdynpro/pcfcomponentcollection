@@ -81,6 +81,22 @@ export class WorkTimeSplitGrid
     }
 
     /**
+     * Single-pane (list OR detail) vs two-pane (list + detail side by side).
+     * Phones stay single-pane in portrait, but in landscape the width is ample
+     * and stacking the toolbars over a hidden list wastes it — so we switch to
+     * the two-pane "cockpit" (the same layout desktop/tablet already use). The
+     * touch styling (`isMobile`) is kept; only the column count changes. Needs a
+     * minimum width so a small phone in landscape doesn't get two cramped panes.
+     */
+    private isSinglePane(mobile: boolean): boolean {
+        if (!mobile) return false;
+        const w = this._context.mode.allocatedWidth ?? 0;
+        const h = this._context.mode.allocatedHeight ?? 0;
+        const landscape = w > 0 && h > 0 && w > h;
+        return !(landscape && w >= 640);
+    }
+
+    /**
      * Offline → read-only. The list is read from the bound (offline-cached)
      * dataset, but the write actions (split save, delivery-note creation) are
      * disabled because they need live server queries + a transactional $batch.
@@ -105,12 +121,14 @@ export class WorkTimeSplitGrid
 
     private render(): void {
         const params = this._context.parameters;
+        const mobile = this.isMobile();
         const props: WorkTimeSplitGridProps = {
             dataset: params.entries,
             webApi: this._context.webAPI,
             utils: this._context.utils,
             navigation: this._context.navigation,
-            isMobile: this.isMobile(),
+            isMobile: mobile,
+            singlePane: this.isSinglePane(mobile),
             isOffline: this.isOffline(),
             showSuggest: this.showSuggest(),
             // Field-override manifest properties are disabled — the SST defaults

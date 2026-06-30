@@ -1301,3 +1301,87 @@
 .wtsg-mobile .wtsg-modal-card {
     margin: 0 16px;
 }
+
+/* ============================================================
+   Landscape "cockpit" (.wtsg-mobile.wtsg-landscape): a phone in landscape.
+   Keep the touch styling, but lay the list + detail out side by side (the
+   two-pane layout) under a compact, non-collapsing command bar — the
+   wide-but-short viewport is otherwise wasted by stacked toolbars over a
+   hidden list.
+   ============================================================ */
+
+/* Compact command bar — flow controls onto as few thin rows as possible. */
+.wtsg-mobile.wtsg-landscape .wtsg-toolbar,
+.wtsg-mobile.wtsg-landscape .wtsg-subbar {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-search {
+    flex: 1 1 220px;
+    height: 34px;
+    font-size: 14px;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-toggle {
+    flex: 0 0 auto;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-toggle button {
+    flex: 0 0 auto;
+    padding: 6px 14px;
+    font-size: 13px;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-chip-filter {
+    height: 34px;
+    font-size: 13px;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-period {
+    flex: 0 0 auto;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-period button {
+    flex: 0 0 auto;
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-sort {
+    flex: 0 0 auto;
+    margin-left: auto;
+    justify-content: flex-end;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-dd {
+    flex: 0 0 auto;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-dd-trigger {
+    width: auto;
+    height: 34px;
+    font-size: 13px;
+}
+
+/* Two-pane body: list + detail side by side (override the mobile column). */
+.wtsg-mobile.wtsg-landscape .wtsg-body {
+    flex-direction: row;
+    padding: 8px;
+    gap: 8px;
+}
+
+/* Split mode: constrain the list so the detail panel gets the rest.
+   Assign mode has no panel → leave the list full-width. */
+.wtsg-mobile.wtsg-landscape:not(.wtsg-assign) .wtsg-list {
+    flex: 0 0 40%;
+    max-width: 460px;
+    padding: 8px;
+    padding-right: 6px;
+}
+
+/* Re-add a separator between the two panes (mobile drops the panel border). */
+.wtsg-mobile.wtsg-landscape .wtsg-panel {
+    border-left: 1px solid #e1dfdd;
+}
