@@ -84,8 +84,8 @@ export interface Strings {
     takeRemaining: string;
     /** Tooltip/aria for the star/AI pre-fill button. */
     suggest: string;
-    /** Composed list/detail title: "<type> am <date> auf Projekt <project>". */
-    title: (type: string, date: string, project: string) => string;
+    /** Composed list/detail title: "<type> am <date>". */
+    title: (type: string, date: string) => string;
 }
 
 export const STRINGS: Record<Lang, Strings> = {
@@ -156,10 +156,9 @@ export const STRINGS: Record<Lang, Strings> = {
         back: "Back",
         takeRemaining: "Use remaining",
         suggest: "Suggest distribution (date + duration)",
-        title: (type, date, project) => {
+        title: (type, date) => {
             let s = type || "—";
             if (date) s += ` on ${date}`;
-            if (project) s += ` on project ${project}`;
             return s;
         },
     },
@@ -230,10 +229,9 @@ export const STRINGS: Record<Lang, Strings> = {
         back: "Zurück",
         takeRemaining: "Rest übernehmen",
         suggest: "Verteilung vorschlagen (Datum + Dauer)",
-        title: (type, date, project) => {
+        title: (type, date) => {
             let s = type || "—";
             if (date) s += ` am ${date}`;
-            if (project) s += ` auf Projekt ${project}`;
             return s;
         },
     },
@@ -304,10 +302,9 @@ export const STRINGS: Record<Lang, Strings> = {
         back: "Retour",
         takeRemaining: "Reporter le reste",
         suggest: "Proposer la répartition (date + durée)",
-        title: (type, date, project) => {
+        title: (type, date) => {
             let s = type || "—";
             if (date) s += ` le ${date}`;
-            if (project) s += ` sur le projet ${project}`;
             return s;
         },
     },

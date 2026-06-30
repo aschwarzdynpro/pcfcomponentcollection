@@ -266,14 +266,12 @@ export const EntryList: React.FC<EntryListProps> = ({
                                         {hl(r.resourceName)}
                                     </span>
                                 )}
-                                {r.type && (
-                                    <span className="wtsg-chip" title={r.type}>
-                                        {hl(r.type)}
-                                    </span>
-                                )}
-                                {r.date && (
-                                    <span className="wtsg-chip" title={r.date}>
-                                        {hl(r.date)}
+                                {r.project && (
+                                    <span
+                                        className="wtsg-chip"
+                                        title={r.project}
+                                    >
+                                        {hl(r.project)}
                                     </span>
                                 )}
                             </div>

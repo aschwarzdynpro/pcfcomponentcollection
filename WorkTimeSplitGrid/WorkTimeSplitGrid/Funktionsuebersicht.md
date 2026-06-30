@@ -12,15 +12,16 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 
 ### Master-Liste (links)
 - Zeigt die Rounded Time Entries als Karten. Jede Karte zeigt den
-  zusammengesetzten Titel, eine **Chip-Reihe ohne Label** (**Ressource → Typ →
-  Datum**) und die Gesamtdauer. Die Ressource ist `sst_resource_ref.name`
-  (Fallback auf das Textfeld `sst_resource`).
-- **Zusammengesetzter Titel** (Liste + Detail): `<sst_type> am <sst_date> auf
-  Projekt <sst_projectnumber>` (z. B. „Arbeit am 07.08.2024 auf Projekt
-  P10002233"). `sst_date` und die Projektnummer des verknüpften Projekts
-  (`sst_project_id.sst_projectnumber` auf `msdyn_project`) werden je Seite über
-  EINEN WebAPI-`$expand`-Aufruf nachgeladen — der Titel funktioniert also auch,
-  wenn diese Spalten nicht in der View liegen. Fehlende Teile werden weggelassen.
+  zusammengesetzten Titel, eine **Chip-Reihe ohne Label** (**Ressource →
+  Projekt**) und die Gesamtdauer. Die Ressource ist `sst_resource_ref.name`
+  (Fallback auf das Textfeld `sst_resource`); der Projekt-Chip ist die
+  Projektnummer (`sst_project_id.sst_projectnumber`).
+- **Zusammengesetzter Titel** (Liste + Detail): `<sst_type> am <sst_date>`
+  (z. B. „Arbeit am 07.08.2024"). `sst_date` und die Projektnummer des
+  verknüpften Projekts (`sst_project_id.sst_projectnumber` auf `msdyn_project`)
+  werden je Seite über EINEN WebAPI-`$expand`-Aufruf nachgeladen — Titel und
+  Projekt-Chip funktionieren also auch, wenn diese Spalten nicht in der View
+  liegen. Fehlende Teile werden weggelassen.
 - **Freitext-Suche** über Name, Typ, Datum und sichtbare View-Spalten.
 - **Zwei Modi** (Toolbar-Umschalter). Beide setzen voraus, dass der Eintrag ein
   **Projekt** hat (`sst_project_id` gesetzt):

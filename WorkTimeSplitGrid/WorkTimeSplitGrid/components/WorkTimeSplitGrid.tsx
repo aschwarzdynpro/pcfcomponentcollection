@@ -96,11 +96,11 @@ export interface WorkTimeSplitGridProps {
 /** Map a server-loaded entry to a master-list row with the composed title. */
 function toEntryRow(
     e: LoadedEntry,
-    title: (type: string, date: string, project: string) => string,
+    title: (type: string, date: string) => string,
 ): EntryRow {
     return {
         id: e.id,
-        name: title(e.type, e.date, e.project),
+        name: title(e.type, e.date),
         date: e.date,
         dateValue: e.dateValue,
         type: e.type,
@@ -142,7 +142,7 @@ function toIso(v: unknown): string {
 function buildOfflineEntries(
     dataset: ComponentFramework.PropertyTypes.DataSet,
     fields: FieldConfig,
-    title: (type: string, date: string, project: string) => string,
+    title: (type: string, date: string) => string,
     mode: Mode,
 ): EntryRow[] {
     const cols = new Set((dataset.columns ?? []).map((c) => c.name));
@@ -196,7 +196,7 @@ function buildOfflineEntries(
 
         out.push({
             id: String(rawId).replace(/[{}]/g, ""),
-            name: title(type, date, project),
+            name: title(type, date),
             date,
             dateValue: toIso(get(fields.date)),
             type,
