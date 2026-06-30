@@ -64,8 +64,8 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   kompaktes **Sortier-Icon** in der oberen Zeile neben dem Suchfeld und öffnet ein
   eigenes, bibliotheksfreies Dropdown (schließt per Klick-außerhalb / Esc,
   Tastatur-Navigation). Beide wirken clientseitig auf die geladene Menge — also
-  sofort. (Keine Datensatz-Anzahl mehr — ein dezenter *„lädt mehr…"*-Hinweis
-  erscheint nur, solange weitere Seiten nachgeladen werden.)
+  sofort. Die Befehlsleiste zeigt **keine Datensatz-Anzahl** (sie verursachte
+  beim Filterwechsel einen Layout-Sprung und wird nicht benötigt).
 - **Treffer-Hervorhebung** — passende Teilstrings werden beim Tippen im
   Karten-Titel und in den Chips hervorgehoben.
 - **Pull-to-Refresh (Mobil)** — auf dem Handy die Liste über die Schwelle nach
@@ -185,10 +185,10 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
     kleine Phones bleiben einspaltig).
 - **Einklappbare Filterleiste (Phone)** — die Leiste aus Suche + Modus +
   Zeitraum + Sortierung klappt (animiert) auf eine **einzeilige Zusammenfassung**
-  zusammen (`🔍 Zuordnen · Alle · Datum (neueste) · 8 ⌄`), per *„Filter
+  zusammen (`🔍 Zuordnen · Alle · Datum (neueste) ⌄`), per *„Filter
   ausblenden"*-Zeile — so bleibt die Liste maximal sichtbar; Antippen der
   Zusammenfassung klappt sie wieder aus. Die Zusammenfassung spiegelt die aktiven
-  Filter live wider und zeigt Trefferzahl + Such-Punkt. Desktop unverändert
+  Filter live wider und zeigt einen Such-Punkt. Desktop unverändert
   (Leiste immer voll). Respektiert `prefers-reduced-motion`.
 - Beim Hinzufügen zur View dasselbe Control **Web + Tablet + Phone** zuweisen —
   kein separater Mobil-Build zu pflegen.

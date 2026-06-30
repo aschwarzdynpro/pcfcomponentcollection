@@ -633,7 +633,6 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             <CollapsibleActionBar
                 enabled={props.singlePane}
                 summary={summaryText}
-                recordCount={displayRows.length}
                 hasSearch={!!search.trim()}
                 collapseLabel={t.filterCollapse}
                 expandLabel={t.filterExpand}
@@ -756,11 +755,6 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                             </button>
                         ))}
                     </div>
-                    {loadingEntries && (
-                        <span className="wtsg-loadingmore">
-                            {t.loadingMore}
-                        </span>
-                    )}
                 </div>
             </CollapsibleActionBar>
             )}
