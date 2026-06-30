@@ -897,9 +897,22 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                             onClick={() => handleCreateReports(true)}
                         >
                             {t.createReportsOpen}
-                            <span className="wtsg-btn-ext" aria-hidden="true">
-                                {" ↗"}
-                            </span>
+                            <svg
+                                className="wtsg-btn-ext"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                            >
+                                <path d="M15 3h6v6" />
+                                <path d="M10 14 21 3" />
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -946,12 +959,22 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                             </span>
                                         )}
                                     </span>
-                                    <span
+                                    <svg
                                         className="wtsg-report-open"
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
                                         aria-hidden="true"
                                     >
-                                        ↗
-                                    </span>
+                                        <path d="M15 3h6v6" />
+                                        <path d="M10 14 21 3" />
+                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                    </svg>
                                 </button>
                             ))}
                         </div>

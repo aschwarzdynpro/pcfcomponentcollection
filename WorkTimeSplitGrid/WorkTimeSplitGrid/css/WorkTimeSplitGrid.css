@@ -532,7 +532,8 @@
 }
 
 .wtsg-btn-ext {
-    font-weight: 400;
+    flex: 0 0 auto;
+    margin-left: 7px;
 }
 
 .wtsg-mobile .wtsg-actionbar {
@@ -1028,8 +1029,9 @@
 
 .wtsg-report-open {
     flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
     color: #0f6cbd;
-    font-weight: 600;
 }
 
 .wtsg-btn-primary,
