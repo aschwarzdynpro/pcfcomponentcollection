@@ -58,6 +58,8 @@ export interface Strings {
     offlineReadOnly: string;
     /** Empty-list line while the offline dataset is still syncing from the cache. */
     offlineSyncing: string;
+    /** Neutral banner while probing the live Web API before deciding offline. */
+    offlineConnecting: string;
     loading: string;
     loadingSubtypes: string;
     errorPrefix: string;
@@ -129,6 +131,7 @@ export const STRINGS: Record<Lang, Strings> = {
             "Offline — read-only view from the local cache. Editing is available online.",
         offlineReadOnly: "Offline — editing is only available online.",
         offlineSyncing: "Syncing offline data…",
+        offlineConnecting: "Connecting…",
         loading: "Loading entries…",
         loadingSubtypes: "Loading subtypes…",
         errorPrefix: "Could not load the grid",
@@ -202,6 +205,7 @@ export const STRINGS: Record<Lang, Strings> = {
             "Offline — schreibgeschützte Ansicht aus dem lokalen Cache. Bearbeiten ist nur online möglich.",
         offlineReadOnly: "Offline — Bearbeiten ist nur online möglich.",
         offlineSyncing: "Offline-Daten werden synchronisiert…",
+        offlineConnecting: "Verbinde…",
         loading: "Einträge werden geladen…",
         loadingSubtypes: "Subtypes werden geladen…",
         errorPrefix: "Grid konnte nicht geladen werden",
@@ -275,6 +279,7 @@ export const STRINGS: Record<Lang, Strings> = {
             "Hors connexion — vue en lecture seule du cache local. La modification est possible en ligne.",
         offlineReadOnly: "Hors connexion — la modification n'est possible qu'en ligne.",
         offlineSyncing: "Synchronisation des données hors connexion…",
+        offlineConnecting: "Connexion…",
         loading: "Chargement des entrées…",
         loadingSubtypes: "Chargement des sous-types…",
         errorPrefix: "Impossible de charger la grille",

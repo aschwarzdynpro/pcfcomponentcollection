@@ -144,6 +144,8 @@ deletes the original.
   cold start): it **probes the live Web API** and only falls back to read-only if
   that call actually fails (bounded by a ~7 s timeout). On success it
   auto-upgrades to the online path — no manual offline→online toggle needed.
+  While the probe runs, a neutral **"Connecting…"** banner shows; the read-only
+  offline banner appears only once the probe has actually failed.
   - **Read:** the list is built from the bound **(offline-cached) dataset** and
     filtered client-side (pauses excluded; split→not completed; assign→completed
     & no delivery note; project required when the project column is in the view).

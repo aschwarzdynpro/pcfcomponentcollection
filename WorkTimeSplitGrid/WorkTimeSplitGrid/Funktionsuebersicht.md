@@ -202,7 +202,9 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   Kaltstart teils fälschlich „offline"): es **probiert die Live-Web-API** und
   fällt nur dann auf read-only zurück, wenn dieser Call wirklich fehlschlägt
   (mit ~7 s Timeout). Bei Erfolg schaltet es automatisch auf online — **ohne**
-  manuelles Offline→Online-Toggle.
+  manuelles Offline→Online-Toggle. Während der Probe zeigt es ein neutrales
+  **„Verbinde…"**-Banner; das schreibgeschützte Offline-Banner erscheint erst,
+  wenn die Probe wirklich gescheitert ist.
   - **Lesen:** Die Liste wird aus dem gebundenen **(offline-gecachten) Dataset**
     gebaut und clientseitig gefiltert (Pausen raus; Aufteilen→nicht completed;
     Zuordnen→completed & kein Lieferschein; Projekt erforderlich, wenn die

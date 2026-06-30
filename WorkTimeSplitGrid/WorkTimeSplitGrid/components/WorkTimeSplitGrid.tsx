@@ -254,6 +254,10 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const [effectiveOffline, setEffectiveOffline] = React.useState(
         props.isOffline,
     );
+    // True while the live-query probe is in flight (offline hint set, deciding).
+    // During this window show a neutral "connecting…" banner instead of the
+    // read-only offline banner — the latter appears only if the probe fails.
+    const [probing, setProbing] = React.useState(props.isOffline);
     // Manual/pull refresh: bumping the key re-runs the server load.
     const [refreshKey, setRefreshKey] = React.useState(0);
     const [refreshing, setRefreshing] = React.useState(false);
@@ -289,6 +293,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         let cancelled = false;
         setLoadingEntries(true);
         setEntriesError(null);
+        setProbing(props.isOffline);
         const runLoad = () =>
             loadEntries(props.webApi, {
                 mode,
@@ -318,11 +323,13 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 if (cancelled) return;
                 setEntries(loaded.map((e) => toEntryRow(e, t.title)));
                 setEffectiveOffline(false); // the live query worked → online
+                setProbing(false);
                 setLoadingEntries(false);
                 setRefreshing(false);
             },
             (err) => {
                 if (cancelled) return;
+                setProbing(false);
                 if (props.isOffline) {
                     // genuinely offline (or Web API unavailable) → cached dataset
                     setEffectiveOffline(true);
@@ -728,7 +735,17 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             </CollapsibleActionBar>
             )}
 
-            {effectiveOffline && (
+            {effectiveOffline && probing && (
+                <div
+                    className="wtsg-offline-bar wtsg-connecting-bar"
+                    role="status"
+                >
+                    <span className="wtsg-spinner" aria-hidden="true" />
+                    <span>{t.offlineConnecting}</span>
+                </div>
+            )}
+
+            {effectiveOffline && !probing && (
                 <div className="wtsg-offline-bar" role="status">
                     <svg
                         width="16"
