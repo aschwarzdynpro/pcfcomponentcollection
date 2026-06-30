@@ -639,14 +639,44 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 expandLabel={t.filterExpand}
             >
             <div className="wtsg-toolbar">
-                <input
-                    type="search"
-                    className="wtsg-search"
-                    placeholder={t.searchPlaceholder}
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    aria-label={t.searchPlaceholder}
-                />
+                <div className="wtsg-searchrow">
+                    <input
+                        type="search"
+                        className="wtsg-search"
+                        placeholder={t.searchPlaceholder}
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        aria-label={t.searchPlaceholder}
+                    />
+                    <Dropdown
+                        className="wtsg-sortdd"
+                        value={sortBy}
+                        ariaLabel={t.sortLabel}
+                        onChange={(v) => setSortBy(v as SortKey)}
+                        icon={
+                            <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                            >
+                                <path d="M4 6h16M7 12h10M10 18h4" />
+                            </svg>
+                        }
+                        options={[
+                            { value: "dateDesc", label: t.sortDateDesc },
+                            { value: "dateAsc", label: t.sortDateAsc },
+                            { value: "project", label: t.sortProject },
+                            { value: "resource", label: t.sortResource },
+                            { value: "durationDesc", label: t.sortDuration },
+                        ]}
+                    />
+                </div>
                 <div
                     className="wtsg-toggle"
                     role="tablist"
@@ -695,10 +725,6 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                         {myHoursActive ? t.myHours : t.allHours}
                     </span>
                 </button>
-                <span className="wtsg-count">
-                    {t.entries(displayRows.length)}
-                    {loadingEntries ? ` · ${t.loadingMore}` : ""}
-                </span>
             </div>
 
                 <div className="wtsg-subbar">
@@ -730,24 +756,11 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                             </button>
                         ))}
                     </div>
-                    <div className="wtsg-sort">
-                        <span>{t.sortLabel}</span>
-                        <Dropdown
-                            value={sortBy}
-                            ariaLabel={t.sortLabel}
-                            onChange={(v) => setSortBy(v as SortKey)}
-                            options={[
-                                { value: "dateDesc", label: t.sortDateDesc },
-                                { value: "dateAsc", label: t.sortDateAsc },
-                                { value: "project", label: t.sortProject },
-                                { value: "resource", label: t.sortResource },
-                                {
-                                    value: "durationDesc",
-                                    label: t.sortDuration,
-                                },
-                            ]}
-                        />
-                    </div>
+                    {loadingEntries && (
+                        <span className="wtsg-loadingmore">
+                            {t.loadingMore}
+                        </span>
+                    )}
                 </div>
             </CollapsibleActionBar>
             )}

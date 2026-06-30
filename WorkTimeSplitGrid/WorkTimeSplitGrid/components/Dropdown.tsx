@@ -12,6 +12,8 @@ export interface DropdownProps {
     ariaLabel?: string;
     /** Extra class on the root (for layout). */
     className?: string;
+    /** When set, the trigger renders just this icon (compact, no value/chevron). */
+    icon?: React.ReactNode;
 }
 
 /**
@@ -25,6 +27,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
     onChange,
     ariaLabel,
     className,
+    icon,
 }) => {
     const [open, setOpen] = React.useState(false);
     const rootRef = React.useRef<HTMLDivElement>(null);
@@ -83,29 +86,38 @@ export const Dropdown: React.FC<DropdownProps> = ({
         >
             <button
                 type="button"
-                className={`wtsg-dd-trigger ${open ? "open" : ""}`}
+                className={`wtsg-dd-trigger ${
+                    icon ? "wtsg-dd-iconbtn" : ""
+                } ${open ? "open" : ""}`}
                 aria-haspopup="listbox"
                 aria-expanded={open}
                 aria-label={ariaLabel}
+                title={icon ? ariaLabel : undefined}
                 onClick={() => setOpen((v) => !v)}
             >
-                <span className="wtsg-dd-value">{selected?.label ?? ""}</span>
-                <svg
-                    className="wtsg-dd-chevron"
-                    width="12"
-                    height="12"
-                    viewBox="0 0 16 16"
-                    aria-hidden="true"
-                >
-                    <path
-                        d="M4 6l4 4 4-4"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    />
-                </svg>
+                {icon ?? (
+                    <>
+                        <span className="wtsg-dd-value">
+                            {selected?.label ?? ""}
+                        </span>
+                        <svg
+                            className="wtsg-dd-chevron"
+                            width="12"
+                            height="12"
+                            viewBox="0 0 16 16"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M4 6l4 4 4-4"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                        </svg>
+                    </>
+                )}
             </button>
             {open && (
                 <div

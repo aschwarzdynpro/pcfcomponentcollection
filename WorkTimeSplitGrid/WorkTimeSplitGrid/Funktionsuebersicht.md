@@ -58,12 +58,14 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 - **Freitext-Suche** über Titel, Typ, Datum, **Projektnummer** und
   **Ressourcenname** (`sst_resource_ref.name`) — über die **gesamte**
   serverseitig gefilterte Ergebnismenge (nicht nur eine Seite).
-- **Zeitraum-Filter & Sortierung** — eine Unter-Toolbar bietet einen
-  Zeitraum-Filter (**Alle / Heute / Diese Woche / Dieser Monat**, nach `sst_date`)
-  und ein Sortier-Dropdown (**Datum neueste/älteste, Projekt, Ressource, Dauer**)
-  als eigenes, bibliotheksfreies React-Dropdown (schließt per Klick-außerhalb /
-  Esc, Tastatur-Navigation). Beide wirken clientseitig auf die geladene Menge —
-  also sofort.
+- **Zeitraum-Filter & Sortierung** — der Zeitraum-Filter (**Alle / Heute / Diese
+  Woche / Dieser Monat**, nach `sst_date`) sitzt in einer Unter-Toolbar; die
+  Sortierung (**Datum neueste/älteste, Projekt, Ressource, Dauer**) ist ein
+  kompaktes **Sortier-Icon** in der oberen Zeile neben dem Suchfeld und öffnet ein
+  eigenes, bibliotheksfreies Dropdown (schließt per Klick-außerhalb / Esc,
+  Tastatur-Navigation). Beide wirken clientseitig auf die geladene Menge — also
+  sofort. (Keine Datensatz-Anzahl mehr — ein dezenter *„lädt mehr…"*-Hinweis
+  erscheint nur, solange weitere Seiten nachgeladen werden.)
 - **Treffer-Hervorhebung** — passende Teilstrings werden beim Tippen im
   Karten-Titel und in den Chips hervorgehoben.
 - **Pull-to-Refresh (Mobil)** — auf dem Handy die Liste über die Schwelle nach

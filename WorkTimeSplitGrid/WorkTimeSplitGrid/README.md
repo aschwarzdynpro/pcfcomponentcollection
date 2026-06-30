@@ -55,11 +55,13 @@ deletes the original.
 - **Live search** across the title, type, date, **project number**, and
   **resource name** (`sst_resource_ref.name`) — over the full server-filtered
   result set (not just one page).
-- **Period filter & sorting** — a sub-toolbar offers a period filter
-  (**All / Today / This week / This month**, by `sst_date`) and a sort dropdown
-  (**date newest/oldest, project, resource, duration**) as a custom, dependency-
-  free React dropdown (click-outside / Escape close, keyboard navigation). Both
-  apply client-side over the loaded set, so they're instant.
+- **Period filter & sorting** — a period filter (**All / Today / This week /
+  This month**, by `sst_date`) sits in a sub-toolbar; sorting (**date
+  newest/oldest, project, resource, duration**) is a compact **sort icon** in the
+  top row next to the search box, opening a custom, dependency-free dropdown
+  (click-outside / Escape close, keyboard navigation). Both apply client-side
+  over the loaded set, so they're instant. (No record-count label — a discreet
+  *"loading more…"* hint appears only while more pages are streaming in.)
 - **Search-match highlight** — matching substrings are highlighted in the card
   title and chips as you type.
 - **Pull-to-refresh (mobile)** — on a phone, pull the list down past the
