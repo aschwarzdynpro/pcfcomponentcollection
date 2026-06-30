@@ -82,8 +82,13 @@ export interface WorkTimeSplitGridProps {
     fields: FieldConfig;
     /** Current user's systemuserid (for the "My hours" filter + role check). */
     userId: string;
-    /** Phone form factor → single-pane, touch-first layout. */
+    /** Phone form factor → touch-first styling (bigger targets, steppers, PTR). */
     isMobile: boolean;
+    /**
+     * Single-column layout (list OR detail). True for portrait phones; false for
+     * desktop/tablet and for phones in landscape (the two-pane "cockpit").
+     */
+    singlePane: boolean;
     /** App is offline → the control's live queries can't run; show a notice. */
     isOffline: boolean;
     /** Show the AI suggestion (★) button in the split detail (manifest toggle). */
@@ -613,17 +618,20 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         );
     }
 
-    const detailOpen = props.isMobile && mode === "split" && !!selected;
+    const detailOpen = props.singlePane && mode === "split" && !!selected;
+    // Phone in landscape → two-pane "cockpit": touch styling, but list + detail
+    // side by side and a compact (non-collapsing) command bar.
+    const landscape = props.isMobile && !props.singlePane;
 
     return (
         <div
             className={`wtsg-root ${props.isMobile ? "wtsg-mobile" : ""} ${
-                mode === "assign" ? "wtsg-assign" : ""
-            }`}
+                landscape ? "wtsg-landscape" : ""
+            } ${mode === "assign" ? "wtsg-assign" : ""}`}
         >
             {!detailOpen && (
             <CollapsibleActionBar
-                enabled={props.isMobile}
+                enabled={props.singlePane}
                 summary={summaryText}
                 recordCount={displayRows.length}
                 hasSearch={!!search.trim()}
@@ -631,14 +639,44 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 expandLabel={t.filterExpand}
             >
             <div className="wtsg-toolbar">
-                <input
-                    type="search"
-                    className="wtsg-search"
-                    placeholder={t.searchPlaceholder}
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    aria-label={t.searchPlaceholder}
-                />
+                <div className="wtsg-searchrow">
+                    <input
+                        type="search"
+                        className="wtsg-search"
+                        placeholder={t.searchPlaceholder}
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        aria-label={t.searchPlaceholder}
+                    />
+                    <Dropdown
+                        className="wtsg-sortdd"
+                        value={sortBy}
+                        ariaLabel={t.sortLabel}
+                        onChange={(v) => setSortBy(v as SortKey)}
+                        icon={
+                            <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                            >
+                                <path d="M4 6h16M7 12h10M10 18h4" />
+                            </svg>
+                        }
+                        options={[
+                            { value: "dateDesc", label: t.sortDateDesc },
+                            { value: "dateAsc", label: t.sortDateAsc },
+                            { value: "project", label: t.sortProject },
+                            { value: "resource", label: t.sortResource },
+                            { value: "durationDesc", label: t.sortDuration },
+                        ]}
+                    />
+                </div>
                 <div
                     className="wtsg-toggle"
                     role="tablist"
@@ -665,23 +703,28 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 </div>
                 <button
                     type="button"
-                    className={`wtsg-chip-filter ${myHoursActive ? "active" : ""}`}
+                    role="switch"
+                    aria-checked={!myHoursActive}
+                    aria-label={t.scopeToggle}
                     disabled={!isAdmin}
-                    aria-pressed={myHoursActive}
-                    title={!isAdmin ? t.myHoursLocked : t.myHours}
+                    title={!isAdmin ? t.myHoursLocked : t.scopeToggle}
+                    className={`wtsg-scope ${!myHoursActive ? "on" : ""} ${
+                        !isAdmin ? "locked" : ""
+                    }`}
                     onClick={() => {
                         if (!isAdmin) return;
                         setMyHoursOnly((v) => !v);
                         setSelectedId(null);
                     }}
                 >
-                    {!isAdmin && <span aria-hidden="true">🔒 </span>}
-                    {t.myHours}
+                    <span className="wtsg-switch" aria-hidden="true">
+                        <span className="wtsg-switch-knob" />
+                    </span>
+                    <span className="wtsg-scope-label">
+                        {!isAdmin && <span aria-hidden="true">🔒 </span>}
+                        {myHoursActive ? t.myHours : t.allHours}
+                    </span>
                 </button>
-                <span className="wtsg-count">
-                    {t.entries(displayRows.length)}
-                    {loadingEntries ? ` · ${t.loadingMore}` : ""}
-                </span>
             </div>
 
                 <div className="wtsg-subbar">
@@ -713,24 +756,11 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                             </button>
                         ))}
                     </div>
-                    <div className="wtsg-sort">
-                        <span>{t.sortLabel}</span>
-                        <Dropdown
-                            value={sortBy}
-                            ariaLabel={t.sortLabel}
-                            onChange={(v) => setSortBy(v as SortKey)}
-                            options={[
-                                { value: "dateDesc", label: t.sortDateDesc },
-                                { value: "dateAsc", label: t.sortDateAsc },
-                                { value: "project", label: t.sortProject },
-                                { value: "resource", label: t.sortResource },
-                                {
-                                    value: "durationDesc",
-                                    label: t.sortDuration,
-                                },
-                            ]}
-                        />
-                    </div>
+                    {loadingEntries && (
+                        <span className="wtsg-loadingmore">
+                            {t.loadingMore}
+                        </span>
+                    )}
                 </div>
             </CollapsibleActionBar>
             )}
@@ -785,7 +815,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             >
                 {mode === "split" ? (
                     <>
-                        {(!props.isMobile || !selected) && (
+                        {(!props.singlePane || !selected) && (
                             <EntryList
                                 rows={displayRows}
                                 selectedId={selectedId}
@@ -804,7 +834,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 strings={t}
                             />
                         )}
-                        {(!props.isMobile || !!selected) && (
+                        {(!props.singlePane || !!selected) && (
                             <SplitPanel
                                 entry={selected}
                                 subtypes={subtypesMatched ? subtypes : null}
@@ -818,6 +848,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 utils={props.utils}
                                 disabled={props.disabled}
                                 isMobile={props.isMobile}
+                                singlePane={props.singlePane}
                                 isOffline={effectiveOffline}
                                 showSuggest={props.showSuggest}
                                 lang={props.lang}

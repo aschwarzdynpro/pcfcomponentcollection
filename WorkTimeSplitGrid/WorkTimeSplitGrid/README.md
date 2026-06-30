@@ -55,23 +55,26 @@ deletes the original.
 - **Live search** across the title, type, date, **project number**, and
   **resource name** (`sst_resource_ref.name`) — over the full server-filtered
   result set (not just one page).
-- **Period filter & sorting** — a sub-toolbar offers a period filter
-  (**All / Today / This week / This month**, by `sst_date`) and a sort dropdown
-  (**date newest/oldest, project, resource, duration**) as a custom, dependency-
-  free React dropdown (click-outside / Escape close, keyboard navigation). Both
-  apply client-side over the loaded set, so they're instant.
+- **Period filter & sorting** — a period filter (**All / Today / This week /
+  This month**, by `sst_date`) sits in a sub-toolbar; sorting (**date
+  newest/oldest, project, resource, duration**) is a compact **sort icon** in the
+  top row next to the search box, opening a custom, dependency-free dropdown
+  (click-outside / Escape close, keyboard navigation). Both apply client-side
+  over the loaded set, so they're instant. (No record-count label — a discreet
+  *"loading more…"* hint appears only while more pages are streaming in.)
 - **Search-match highlight** — matching substrings are highlighted in the card
   title and chips as you type.
 - **Pull-to-refresh (mobile)** — on a phone, pull the list down past the
   threshold to reload from the server (a damped pull indicator + spinner).
 - **Empty state** — when no entries qualify (or a search has no matches) the list
   shows a binoculars icon and a short one-liner instead of a blank pane.
-- **"My hours" chip** (preselected) — filters to entries whose resource's user is
-  the current user. The user's `bookableresource`(s) are resolved via
-  `_userid_value`, and the list query is restricted to those via
-  `_sst_resource_ref_value` (a server-side filter). It is **locked on** for
-  everyone except holders of **System Administrator** or **SST | Dispo
-  Teamleitung Addon**, who may toggle it off to see all hours.
+- **Scope switch** (*My hours ↔ All hours*, defaults to **My hours**) — a compact
+  toggle: **off = my hours**, **on = all hours**. My-hours filters to entries
+  whose resource's user is the current user — the user's `bookableresource`(s)
+  are resolved via `_userid_value`, and the list query is restricted to those via
+  `_sst_resource_ref_value` (a server-side filter). The switch is **locked off**
+  (my hours) for everyone except holders of **System Administrator** or **SST |
+  Dispo Teamleitung Addon**, who may turn it on to see all hours.
 - **Detail split panel** — selecting an entry loads its work-subtype rows
   (`sst_roundedtimeentryworksubtypes`) and lets the user edit the hours per
   subtype, with a live **Total / Distributed / Remaining** summary. The detail
@@ -116,15 +119,23 @@ deletes the original.
 - **Confirmation dialog** before the destructive save/delete.
 
 ### 📱 Adaptive (desktop + mobile)
-- **One control, two layouts**, chosen at runtime from
-  `context.client.getFormFactor()` (with an allocated-width fallback):
+- **One control, three layouts**, chosen at runtime from
+  `context.client.getFormFactor()` (with an allocated-width fallback) and the
+  live container size:
   - **Desktop / Tablet** → the two-pane master/detail layout (unchanged).
-  - **Phone** → a single-pane, touch-first flow: full-width list → tap an entry
-    → full-screen split editor with a **‹ Back** header → save returns to the
-    list. Larger tap targets, big numeric inputs, and a bottom-pinned save
-    button. Each subtype row is a single compact line — **label + a +/− stepper
-    + a narrow number field** (±0.25 h, floored at 0) — so all subtypes are
-    visible at a glance; tap the steppers or type directly.
+  - **Phone (portrait)** → a single-pane, touch-first flow: full-width list →
+    tap an entry → full-screen split editor with a **‹ Back** header → save
+    returns to the list. Larger tap targets, big numeric inputs, and a
+    bottom-pinned save button. Each subtype row is a single compact line —
+    **label + a +/− stepper + a narrow number field** (±0.25 h, floored at 0) —
+    so all subtypes are visible at a glance; tap the steppers or type directly.
+  - **Phone (landscape)** → the two-pane **cockpit**: list + split editor side
+    by side under a compact, single-row command bar — the wide-but-short
+    viewport is no longer wasted by stacked toolbars over a hidden list. Keeps
+    the phone touch ergonomics (pull-to-refresh, big steppers); no **‹ Back**
+    needed since both panes are visible. Rotating the device switches between
+    portrait single-pane and landscape cockpit live (driven by the allocated
+    width/height; needs ≥ 640px width, so small phones stay single-pane).
 - **Collapsible filter bar (phone)** — the search + mode + period + sort bar
   collapses (animated) to a **one-line summary** (`🔍 Zuordnen · Alle · Datum
   (newest) · 8 ⌄`) via a *"Hide filters"* trigger, maximizing the visible list;

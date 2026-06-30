@@ -25,6 +25,8 @@ export interface SplitPanelProps {
     utils: ComponentFramework.Utility;
     disabled: boolean;
     isMobile: boolean;
+    /** Single-pane layout → show a "back to list" header (hidden in two-pane). */
+    singlePane: boolean;
     /** Offline → read-only: show the entry head + a notice, no editor/save. */
     isOffline: boolean;
     /** Show the AI suggestion (★) pre-fill button (manifest toggle). */
@@ -165,7 +167,7 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
     if (props.isOffline) {
         return (
             <div className="wtsg-panel">
-                {props.isMobile && (
+                {props.singlePane && (
                     <div className="wtsg-mobile-head">
                         <button
                             type="button"
@@ -198,7 +200,7 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
 
     return (
         <div className="wtsg-panel">
-            {props.isMobile && (
+            {props.singlePane && (
                 <div className="wtsg-mobile-head">
                     <button
                         type="button"

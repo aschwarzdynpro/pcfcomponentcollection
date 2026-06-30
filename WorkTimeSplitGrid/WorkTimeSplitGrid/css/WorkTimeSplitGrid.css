@@ -61,38 +61,95 @@
     color: #fff;
 }
 
-/* "My hours" filter chip */
-.wtsg-chip-filter {
-    height: 32px;
-    padding: 0 14px;
-    border-radius: 16px;
-    border: 1px solid #c8c6c4;
-    background: #fff;
-    color: #424242;
-    font-size: 13px;
-    cursor: pointer;
+/* "My hours" scope switch — off: my hours, on: all hours */
+.wtsg-scope {
     display: inline-flex;
     align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    border: none;
+    background: none;
+    color: #424242;
+    font-family: inherit;
+    font-size: 13px;
     white-space: nowrap;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.wtsg-chip-filter.active {
+.wtsg-switch {
+    position: relative;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 18px;
+    border-radius: 9px;
+    background: #c8c6c4;
+    transition: background-color 0.15s ease;
+}
+
+.wtsg-switch-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    transition: transform 0.15s ease;
+}
+
+.wtsg-scope.on .wtsg-switch {
     background: #0f6cbd;
-    border-color: #0f6cbd;
-    color: #fff;
 }
 
-.wtsg-chip-filter:disabled {
+.wtsg-scope.on .wtsg-switch-knob {
+    transform: translateX(16px);
+}
+
+.wtsg-scope-label {
+    line-height: 1;
+}
+
+.wtsg-scope:focus-visible {
+    outline: 2px solid #0f6cbd;
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+.wtsg-scope.locked {
     cursor: not-allowed;
+    opacity: 0.7;
 }
 
-.wtsg-count {
-    margin-left: auto;
-    font-size: 12px;
-    color: #616161;
+@media (prefers-reduced-motion: reduce) {
+    .wtsg-switch,
+    .wtsg-switch-knob {
+        transition: none;
+    }
 }
 
-/* ---- Sub-toolbar: period filter + sort ---- */
+/* Search + sort-icon share the top toolbar row. */
+.wtsg-searchrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* Sort: an icon-only dropdown trigger (square button) next to the search. */
+.wtsg-dd-trigger.wtsg-dd-iconbtn {
+    flex: 0 0 auto;
+    min-width: 0;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    justify-content: center;
+    color: #424242;
+}
+
+/* ---- Sub-toolbar: period filter ---- */
 .wtsg-subbar {
     display: flex;
     flex-wrap: wrap;
@@ -108,10 +165,8 @@
     padding: 5px 10px;
 }
 
-.wtsg-sort {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+/* "loading more…" hint (replaces the old always-on record count). */
+.wtsg-loadingmore {
     margin-left: auto;
     font-size: 12px;
     color: #616161;
@@ -1087,11 +1142,20 @@
     gap: 8px;
 }
 
-.wtsg-mobile .wtsg-search {
+.wtsg-mobile .wtsg-searchrow {
     flex: 1 1 100%;
+}
+
+.wtsg-mobile .wtsg-search {
+    flex: 1 1 auto;
     max-width: none;
     height: 40px;
     font-size: 16px;
+}
+
+.wtsg-mobile .wtsg-dd-trigger.wtsg-dd-iconbtn {
+    width: 44px;
+    height: 40px;
 }
 
 .wtsg-mobile .wtsg-toggle {
@@ -1104,13 +1168,24 @@
     font-size: 14px;
 }
 
-.wtsg-mobile .wtsg-chip-filter {
-    height: 40px;
+.wtsg-mobile .wtsg-scope {
+    min-height: 40px;
     font-size: 14px;
 }
 
-.wtsg-mobile .wtsg-count {
-    margin-left: 0;
+.wtsg-mobile .wtsg-switch {
+    width: 40px;
+    height: 22px;
+    border-radius: 11px;
+}
+
+.wtsg-mobile .wtsg-switch-knob {
+    width: 18px;
+    height: 18px;
+}
+
+.wtsg-mobile .wtsg-scope.on .wtsg-switch-knob {
+    transform: translateX(18px);
 }
 
 .wtsg-mobile .wtsg-subbar {
@@ -1125,22 +1200,6 @@
     flex: 1 1 0;
     padding: 8px 6px;
     font-size: 13px;
-}
-
-.wtsg-mobile .wtsg-sort {
-    flex: 1 1 100%;
-    margin-left: 0;
-    justify-content: space-between;
-}
-
-.wtsg-mobile .wtsg-dd {
-    flex: 1 1 auto;
-}
-
-.wtsg-mobile .wtsg-dd-trigger {
-    width: 100%;
-    height: 38px;
-    font-size: 14px;
 }
 
 .wtsg-mobile .wtsg-dd-item {
@@ -1300,4 +1359,80 @@
 
 .wtsg-mobile .wtsg-modal-card {
     margin: 0 16px;
+}
+
+/* ============================================================
+   Landscape "cockpit" (.wtsg-mobile.wtsg-landscape): a phone in landscape.
+   Keep the touch styling, but lay the list + detail out side by side (the
+   two-pane layout) under a compact, non-collapsing command bar — the
+   wide-but-short viewport is otherwise wasted by stacked toolbars over a
+   hidden list.
+   ============================================================ */
+
+/* Compact command bar — flow controls onto as few thin rows as possible. */
+.wtsg-mobile.wtsg-landscape .wtsg-toolbar,
+.wtsg-mobile.wtsg-landscape .wtsg-subbar {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-searchrow {
+    flex: 1 1 220px;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-search {
+    height: 34px;
+    font-size: 14px;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-toggle {
+    flex: 0 0 auto;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-toggle button {
+    flex: 0 0 auto;
+    padding: 6px 14px;
+    font-size: 13px;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-scope {
+    min-height: 34px;
+    font-size: 13px;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-period {
+    flex: 0 0 auto;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-period button {
+    flex: 0 0 auto;
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-dd-trigger.wtsg-dd-iconbtn {
+    width: 34px;
+    height: 34px;
+}
+
+/* Two-pane body: list + detail side by side (override the mobile column). */
+.wtsg-mobile.wtsg-landscape .wtsg-body {
+    flex-direction: row;
+    padding: 8px;
+    gap: 8px;
+}
+
+/* Split mode: constrain the list so the detail panel gets the rest.
+   Assign mode has no panel → leave the list full-width. */
+.wtsg-mobile.wtsg-landscape:not(.wtsg-assign) .wtsg-list {
+    flex: 0 0 40%;
+    max-width: 460px;
+    padding: 8px;
+    padding-right: 6px;
+}
+
+/* Re-add a separator between the two panes (mobile drops the panel border). */
+.wtsg-mobile.wtsg-landscape .wtsg-panel {
+    border-left: 1px solid #e1dfdd;
 }

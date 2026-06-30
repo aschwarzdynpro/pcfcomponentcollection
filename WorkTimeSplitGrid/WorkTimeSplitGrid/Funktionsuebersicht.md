@@ -58,12 +58,14 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 - **Freitext-Suche** über Titel, Typ, Datum, **Projektnummer** und
   **Ressourcenname** (`sst_resource_ref.name`) — über die **gesamte**
   serverseitig gefilterte Ergebnismenge (nicht nur eine Seite).
-- **Zeitraum-Filter & Sortierung** — eine Unter-Toolbar bietet einen
-  Zeitraum-Filter (**Alle / Heute / Diese Woche / Dieser Monat**, nach `sst_date`)
-  und ein Sortier-Dropdown (**Datum neueste/älteste, Projekt, Ressource, Dauer**)
-  als eigenes, bibliotheksfreies React-Dropdown (schließt per Klick-außerhalb /
-  Esc, Tastatur-Navigation). Beide wirken clientseitig auf die geladene Menge —
-  also sofort.
+- **Zeitraum-Filter & Sortierung** — der Zeitraum-Filter (**Alle / Heute / Diese
+  Woche / Dieser Monat**, nach `sst_date`) sitzt in einer Unter-Toolbar; die
+  Sortierung (**Datum neueste/älteste, Projekt, Ressource, Dauer**) ist ein
+  kompaktes **Sortier-Icon** in der oberen Zeile neben dem Suchfeld und öffnet ein
+  eigenes, bibliotheksfreies Dropdown (schließt per Klick-außerhalb / Esc,
+  Tastatur-Navigation). Beide wirken clientseitig auf die geladene Menge — also
+  sofort. (Keine Datensatz-Anzahl mehr — ein dezenter *„lädt mehr…"*-Hinweis
+  erscheint nur, solange weitere Seiten nachgeladen werden.)
 - **Treffer-Hervorhebung** — passende Teilstrings werden beim Tippen im
   Karten-Titel und in den Chips hervorgehoben.
 - **Pull-to-Refresh (Mobil)** — auf dem Handy die Liste über die Schwelle nach
@@ -71,13 +73,15 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 - **Leerzustand** — wenn keine Einträge passen (oder eine Suche keine Treffer
   liefert), zeigt die Liste ein Fernglas-Symbol und einen kurzen 1-Zeiler statt
   einer leeren Fläche.
-- **Chip „Meine Stunden"** (vorausgewählt) — filtert auf Einträge, deren Ressource
-  dem aktuellen Benutzer gehört. Die `bookableresource`(s) des Benutzers werden
-  über `_userid_value` ermittelt, und die Listen-Abfrage wird serverseitig über
-  `_sst_resource_ref_value` darauf eingeschränkt. Der Chip ist **gesperrt + aktiv**
-  für alle Benutzer; nur Inhaber der Rolle **System Administrator** oder
-  **SST | Dispo Teamleitung Addon** können ihn abschalten (alle Stunden sehen).
-  Rollenprüfung über `systemuserroles_association` (direkt zugewiesene Rollen).
+- **Schalter „Meine Stunden ↔ Alle Stunden"** (Default **Meine Stunden**) — ein
+  kompakter Umschalter: **Aus = meine Stunden**, **An = alle Stunden**. „Meine
+  Stunden" filtert auf Einträge, deren Ressource dem aktuellen Benutzer gehört —
+  die `bookableresource`(s) des Benutzers werden über `_userid_value` ermittelt,
+  und die Listen-Abfrage wird serverseitig über `_sst_resource_ref_value` darauf
+  eingeschränkt. Der Schalter ist **gesperrt auf „Aus" (meine Stunden)** für alle
+  Benutzer; nur Inhaber der Rolle **System Administrator** oder **SST | Dispo
+  Teamleitung Addon** können ihn einschalten (alle Stunden sehen). Rollenprüfung
+  über `systemuserroles_association` (direkt zugewiesene Rollen).
 - Statuspunkt je Karte (offen = rot, aufgeteilt = grün).
 
 ### Detail-Aufteilung (rechts)
@@ -160,16 +164,25 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   unabhängig von der Ziel-Tabelle.
 
 ### Adaptiv (Desktop + Mobil)
-- **Ein Control, zwei Layouts** — zur Laufzeit über
-  `context.client.getFormFactor()` (mit Breiten-Fallback) gewählt:
+- **Ein Control, drei Layouts** — zur Laufzeit über
+  `context.client.getFormFactor()` (mit Breiten-Fallback) und die aktuelle
+  Container-Größe gewählt:
   - **Desktop / Tablet** → zweispaltiges Master/Detail-Layout (unverändert).
-  - **Handy** → einspaltiger, touch-first Flow: Liste in voller Breite → Eintrag
-    antippen → Vollbild-Split-Editor mit **‹ Zurück**-Header → nach dem Speichern
-    zurück zur Liste. Größere Tap-Targets, große Zahlenfelder, am unteren Rand
-    fixierter Speichern-Button. Jede Subtype-Zeile ist **eine kompakte Zeile** —
-    **Label + +/−-Stepper + schmales Zahlenfeld** (±0,25 h, nicht unter 0) —, damit
-    alle Subtypes auf einen Blick sichtbar sind; per Stepper tippen oder direkt
-    eingeben.
+  - **Handy (Hochformat)** → einspaltiger, touch-first Flow: Liste in voller
+    Breite → Eintrag antippen → Vollbild-Split-Editor mit **‹ Zurück**-Header →
+    nach dem Speichern zurück zur Liste. Größere Tap-Targets, große Zahlenfelder,
+    am unteren Rand fixierter Speichern-Button. Jede Subtype-Zeile ist **eine
+    kompakte Zeile** — **Label + +/−-Stepper + schmales Zahlenfeld** (±0,25 h,
+    nicht unter 0) —, damit alle Subtypes auf einen Blick sichtbar sind; per
+    Stepper tippen oder direkt eingeben.
+  - **Handy (Querformat)** → das zweispaltige **Cockpit**: Liste + Split-Editor
+    nebeneinander unter einer kompakten, einzeiligen Befehlsleiste — das breite,
+    aber niedrige Querformat wird nicht mehr durch gestapelte Toolbars über einer
+    verborgenen Liste verschwendet. Behält die Touch-Ergonomie (Pull-to-Refresh,
+    große Stepper); kein **‹ Zurück** nötig, da beide Spalten sichtbar sind. Beim
+    Drehen wechselt das Control live zwischen Hochformat-Einspalter und
+    Querformat-Cockpit (anhand der zugewiesenen Breite/Höhe; ab ≥ 640px Breite,
+    kleine Phones bleiben einspaltig).
 - **Einklappbare Filterleiste (Phone)** — die Leiste aus Suche + Modus +
   Zeitraum + Sortierung klappt (animiert) auf eine **einzeilige Zusammenfassung**
   zusammen (`🔍 Zuordnen · Alle · Datum (neueste) · 8 ⌄`), per *„Filter
