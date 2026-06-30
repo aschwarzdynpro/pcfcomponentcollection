@@ -60,8 +60,8 @@ deletes the original.
   newest/oldest, project, resource, duration**) is a compact **sort icon** in the
   top row next to the search box, opening a custom, dependency-free dropdown
   (click-outside / Escape close, keyboard navigation). Both apply client-side
-  over the loaded set, so they're instant. (No record-count label — a discreet
-  *"loading more…"* hint appears only while more pages are streaming in.)
+  over the loaded set, so they're instant. The command bar shows **no record
+  count** (it caused a layout shift on filter changes and isn't needed).
 - **Search-match highlight** — matching substrings are highlighted in the card
   title and chips as you type.
 - **Pull-to-refresh (mobile)** — on a phone, pull the list down past the
@@ -138,10 +138,10 @@ deletes the original.
     width/height; needs ≥ 640px width, so small phones stay single-pane).
 - **Collapsible filter bar (phone)** — the search + mode + period + sort bar
   collapses (animated) to a **one-line summary** (`🔍 Zuordnen · Alle · Datum
-  (newest) · 8 ⌄`) via a *"Hide filters"* trigger, maximizing the visible list;
+  (newest) ⌄`) via a *"Hide filters"* trigger, maximizing the visible list;
   tap the summary to expand it again. The summary reflects the active filters
-  live and shows the current count + a search-active dot. Desktop is unaffected
-  (bar always full). Respects `prefers-reduced-motion`.
+  live and shows a search-active dot. Desktop is unaffected (bar always full).
+  Respects `prefers-reduced-motion`.
 - Assign the same control to **Web + Tablet + Phone** when adding it to the
   view; no separate mobile build to maintain.
 

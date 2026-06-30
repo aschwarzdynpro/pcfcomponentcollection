@@ -17,8 +17,6 @@ interface Props {
     enabled: boolean;
     /** Short form of the active filters, e.g. "Zuordnen · Alle · Datum (neueste)". */
     summary: string;
-    /** Currently displayed record count (shown right of the summary). */
-    recordCount: number;
     /** A search term is active → show the search-dot indicator in the summary. */
     hasSearch: boolean;
     /** Label for the "hide filters" trigger row (expanded state). */
@@ -69,7 +67,6 @@ const SearchIcon: React.FC = () => (
 export const CollapsibleActionBar: React.FC<Props> = ({
     enabled,
     summary,
-    recordCount,
     hasSearch,
     collapseLabel,
     expandLabel,
@@ -160,7 +157,6 @@ export const CollapsibleActionBar: React.FC<Props> = ({
                         <SearchIcon />
                     </span>
                     <span className="wtsg-ab-summary-text">{summary}</span>
-                    <span className="wtsg-ab-summary-count">{recordCount}</span>
                     <Chevron dir="down" color="#0f6cbd" />
                 </button>
             )}
