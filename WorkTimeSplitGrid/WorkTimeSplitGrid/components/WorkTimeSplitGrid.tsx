@@ -246,6 +246,18 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const [entries, setEntries] = React.useState<EntryRow[] | null>(null);
     const [loadingEntries, setLoadingEntries] = React.useState(true);
     const [entriesError, setEntriesError] = React.useState<string | null>(null);
+    // What the UI actually treats as offline. Starts from the host's isOffline()
+    // hint, but the live-query probe below CORRECTS it — a cold-start false
+    // "offline" (seen on some devices: isOffline() stays true until a full
+    // offline→online cycle) is overridden the moment the real Web API call
+    // succeeds, so the control recovers on its own instead of staying read-only.
+    const [effectiveOffline, setEffectiveOffline] = React.useState(
+        props.isOffline,
+    );
+    // True while the live-query probe is in flight (offline hint set, deciding).
+    // During this window show a neutral "connecting…" banner instead of the
+    // read-only offline banner — the latter appears only if the probe fails.
+    const [probing, setProbing] = React.useState(props.isOffline);
     // Manual/pull refresh: bumping the key re-runs the server load.
     const [refreshKey, setRefreshKey] = React.useState(0);
     const [refreshing, setRefreshing] = React.useState(false);
@@ -260,7 +272,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     // Admins (System Administrator / SST Dispo Teamleitung Addon) may toggle the
     // "My hours" filter off; everyone else stays locked to their own hours.
     React.useEffect(() => {
-        if (!currentUserId || props.isOffline) return;
+        if (!currentUserId || effectiveOffline) return;
         let cancelled = false;
         userHasAnyRole(props.webApi, currentUserId, ADMIN_ROLES).then((admin) => {
             if (!cancelled) setIsAdmin(admin);
@@ -268,7 +280,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         return () => {
             cancelled = true;
         };
-    }, [currentUserId, props.webApi, props.isOffline]);
+    }, [currentUserId, props.webApi, effectiveOffline]);
 
     // Non-admins are locked to their own hours; admins may toggle it off.
     const myHoursActive = !isAdmin || myHoursOnly;
@@ -278,31 +290,58 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     // & no delivery note; "My hours"→the user's resource). This replaces pulling
     // every dataset page + enriching, which breaks past the 5000-record cap.
     React.useEffect(() => {
-        if (props.isOffline) {
-            setLoadingEntries(false);
-            return;
-        }
         let cancelled = false;
         setLoadingEntries(true);
         setEntriesError(null);
-        loadEntries(props.webApi, {
-            mode,
-            resourceUserId: myHoursActive ? currentUserId || null : null,
-            pauseValue: fields.pauseValue,
-        }).then(
+        setProbing(props.isOffline);
+        const runLoad = () =>
+            loadEntries(props.webApi, {
+                mode,
+                resourceUserId: myHoursActive ? currentUserId || null : null,
+                pauseValue: fields.pauseValue,
+            });
+        // Don't trust isOffline() as a hard gate — it can report a false
+        // "offline" on a cold start even when the device is online. Attempt the
+        // live query anyway; only fall back to the cached dataset if it actually
+        // fails. When the hint says offline, bound the attempt with a timeout so
+        // a genuinely offline device doesn't hang on the spinner (the cached
+        // list is already shown because effectiveOffline starts true).
+        const OFFLINE_PROBE_MS = 7000;
+        const attempt = props.isOffline
+            ? Promise.race([
+                  runLoad(),
+                  new Promise<never>((_, reject) =>
+                      window.setTimeout(
+                          () => reject(new Error("offline-probe-timeout")),
+                          OFFLINE_PROBE_MS,
+                      ),
+                  ),
+              ])
+            : runLoad();
+        attempt.then(
             (loaded) => {
                 if (cancelled) return;
                 setEntries(loaded.map((e) => toEntryRow(e, t.title)));
+                setEffectiveOffline(false); // the live query worked → online
+                setProbing(false);
                 setLoadingEntries(false);
                 setRefreshing(false);
             },
             (err) => {
                 if (cancelled) return;
-                props.logger.error("loadEntries", err, { mode });
-                setEntries([]);
-                setEntriesError(t.errorPrefix);
-                setLoadingEntries(false);
-                setRefreshing(false);
+                setProbing(false);
+                if (props.isOffline) {
+                    // genuinely offline (or Web API unavailable) → cached dataset
+                    setEffectiveOffline(true);
+                    setLoadingEntries(false);
+                    setRefreshing(false);
+                } else {
+                    props.logger.error("loadEntries", err, { mode });
+                    setEntries([]);
+                    setEntriesError(t.errorPrefix);
+                    setLoadingEntries(false);
+                    setRefreshing(false);
+                }
             },
         );
         return () => {
@@ -321,20 +360,19 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
 
     const refresh = React.useCallback(() => {
         setRefreshing(true);
-        // Offline-first: the online loadEntries effect early-returns, so a refresh
-        // must re-pull the bound (cached) dataset instead. dataset.refresh() asks
-        // the host to reload/re-sync; updateView then re-renders with the new rows.
-        if (props.isOffline) {
+        // Offline → also re-sync the bound (cached) dataset. Always bump the key
+        // so the live-query probe re-runs too — that's the manual "try to
+        // reconnect" path: a pull-to-refresh re-attempts the server and upgrades
+        // to online if it now answers.
+        if (effectiveOffline) {
             try {
                 props.dataset.refresh();
             } catch {
                 /* host may not support refresh — keep the cached rows */
             }
-            setRefreshing(false);
-            return;
         }
         setRefreshKey((k) => k + 1);
-    }, [props.isOffline, props.dataset]);
+    }, [effectiveOffline, props.dataset]);
 
     // Optimistic update: drop rows that left the current filter (split-saved or
     // assigned to a delivery note) without a full server reload — instant, no
@@ -350,27 +388,27 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     // Offline: derive the list synchronously from the bound (offline-cached)
     // dataset instead of the server query. Keyed on the record set + mode so it
     // recomputes only when those change (not every render).
-    const offlineKey = props.isOffline
+    const offlineKey = effectiveOffline
         ? `${mode}:${(props.dataset.sortedRecordIds ?? []).join(",")}`
         : "";
     const offlineEntries = React.useMemo(
         () =>
-            props.isOffline
+            effectiveOffline
                 ? buildOfflineEntries(props.dataset, fields, t.title, mode)
                 : null,
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [props.isOffline, offlineKey],
+        [effectiveOffline, offlineKey],
     );
 
     // Online → the server-loaded entries; offline → the dataset-derived ones.
-    const sourceEntries = props.isOffline ? offlineEntries : entries;
+    const sourceEntries = effectiveOffline ? offlineEntries : entries;
 
     // Offline-first reads from the local cache, which the host fills via sync.
     // While that sync is still running (dataset.loading) and we have no rows yet,
     // show a "syncing" indicator instead of the "nothing here" empty state — the
     // two together looked like a broken control during the initial offline sync.
     const offlineSyncing =
-        props.isOffline &&
+        effectiveOffline &&
         !!props.dataset.loading &&
         (offlineEntries?.length ?? 0) === 0;
 
@@ -430,7 +468,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     React.useEffect(() => {
         // Offline is read-only — the split editor isn't shown, so don't load the
         // subtypes (the live $expand query can't run from the local cache anyway).
-        if (!selectedId || props.isOffline) {
+        if (!selectedId || effectiveOffline) {
             setSubtypes(null);
             setSubtypeError(null);
             setSubtypesEntryId(null);
@@ -458,7 +496,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         return () => {
             cancelled = true;
         };
-    }, [selectedId, props.isOffline, props.webApi, t.errLoadSubtypes]);
+    }, [selectedId, effectiveOffline, props.webApi, t.errLoadSubtypes]);
 
     // The held subtypes are only valid for the SplitPanel once they belong to the
     // selected entry; until then the panel shows a progress indicator (no flicker).
@@ -566,7 +604,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
 
     // First load (entries still null) → full-panel spinner. Offline reads the
     // dataset synchronously, so it never shows this.
-    if (!props.isOffline && entries === null && loadingEntries) {
+    if (!effectiveOffline && entries === null && loadingEntries) {
         return (
             <div className="wtsg-empty">
                 <span className="wtsg-spinner" aria-hidden="true" />
@@ -697,7 +735,17 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             </CollapsibleActionBar>
             )}
 
-            {props.isOffline && (
+            {effectiveOffline && probing && (
+                <div
+                    className="wtsg-offline-bar wtsg-connecting-bar"
+                    role="status"
+                >
+                    <span className="wtsg-spinner" aria-hidden="true" />
+                    <span>{t.offlineConnecting}</span>
+                </div>
+            )}
+
+            {effectiveOffline && !probing && (
                 <div className="wtsg-offline-bar" role="status">
                     <svg
                         width="16"
@@ -770,7 +818,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 utils={props.utils}
                                 disabled={props.disabled}
                                 isMobile={props.isMobile}
-                                isOffline={props.isOffline}
+                                isOffline={effectiveOffline}
                                 showSuggest={props.showSuggest}
                                 lang={props.lang}
                                 logger={props.logger}
@@ -786,7 +834,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                         rows={displayRows}
                         selectedId={null}
                         onSelect={() => undefined}
-                        selectable={!props.isOffline}
+                        selectable={!effectiveOffline}
                         checkedIds={checkedIds}
                         onToggleCheck={toggleCheck}
                         emptyMessage={
@@ -803,7 +851,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 )}
             </div>
 
-            {mode === "assign" && !props.isOffline && checkedIds.size > 0 && (
+            {mode === "assign" && !effectiveOffline && checkedIds.size > 0 && (
                 <div className="wtsg-actionbar">
                     <span className="wtsg-actionbar-count">
                         {t.selectedCount(checkedIds.size)}

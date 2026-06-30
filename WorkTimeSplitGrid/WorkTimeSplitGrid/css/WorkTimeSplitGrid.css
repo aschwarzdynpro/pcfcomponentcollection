@@ -1043,6 +1043,13 @@
     color: #c79a00;
 }
 
+/* Neutral "connecting…" variant shown while probing the live Web API. */
+.wtsg-connecting-bar {
+    background: #eef6fc;
+    border-color: #cfe2f3;
+    color: #0b5394;
+}
+
 .wtsg-spinner {
     width: 16px;
     height: 16px;
