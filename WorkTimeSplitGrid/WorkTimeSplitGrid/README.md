@@ -149,47 +149,27 @@ deletes the original.
 - **Trilingual UI** (German / English / French), chosen automatically from the
   user's Dataverse language (`context.userSettings.languageId`).
 
-### 📴 Offline (read-only)
+### 📴 Offline (blocked — connection required)
 - **Online** → the live server-side queries + `$batch` save (as above).
-- **Offline** → the control switches to a **read-only** dataset-based path. It
-  does **not** blindly trust `isOffline()` (which can falsely report offline on a
-  cold start): it **probes the live Web API** and only falls back to read-only if
-  that call actually fails (bounded by a ~7 s timeout). On success it
-  auto-upgrades to the online path — no manual offline→online toggle needed.
-  While the probe runs, a neutral **"Connecting…"** banner shows; the read-only
-  offline banner appears only once the probe has actually failed.
-  - **Read:** the list is built from the bound **(offline-cached) dataset** and
-    filtered client-side (pauses excluded; split→not completed; assign→completed
-    & no delivery note; project required when the project column is in the view).
-    The **Festpreis** and **My hours** filters are skipped offline (the project
-    type and resource→user mapping aren't reliably in the local cache).
-  - **Write disabled:** the split save and delivery-note creation are **turned
-    off offline** — the split panel shows the entry read-only with a notice, and
-    the assign list isn't selectable. This avoids the destructive, transactional
-    save running against the local cache (a **sync-conflict** minefield). Subtypes
-    aren't loaded offline (no `$expand` needed).
-  - A slim **offline banner** signals the read-only mode.
-  - **While the cache is still syncing** (`dataset.loading`) the empty list
-    shows a *"Syncing offline data…"* spinner instead of the "nothing here"
-    empty state, and **pull-to-refresh** calls `dataset.refresh()` to re-pull
-    the cache (the online server-reload path doesn't run offline).
-- **Offline-first cold start:** on some devices the app reports
-  `isOffline() === true` for a while after launch (until a full offline→online
-  cycle) even when connected. Because the control probes the live Web API rather
-  than trusting that flag, it shows the cached list instantly and then
-  **auto-recovers to online** as soon as the server answers — users no longer
-  have to toggle airplane mode. If the Web API genuinely can't be reached (true
-  offline, or `context.webAPI` unavailable), it stays read-only; to force full
-  online on a connected device the maker can enable the **Online-mode** toggle
-  (*"Allow users to work in online mode"*).
-- `WebAPI`/`Utility` are declared **`required="false"`** so the host renders the
-  control offline at all (a *required* unavailable feature otherwise blocks it
-  with a generic "control can't load" error).
-- ⚠️ Offline needs an **offline profile** (admin) that includes
-  `sst_roundedtimeentries` **and** the columns/related tables the view + control
-  read, or the cached dataset stays empty (an empty list after sync = the table
-  isn't in the profile). Full **write-enabled** offline (Option C) is deferred —
-  see [`OfflinePlan.md`](OfflinePlan.md).
+- **Offline** → the control **blocks** with a clear *"Connection required"* state
+  and a **Retry** button — it does **not** show a cached list. Rationale: this
+  control needs the live Web API for **both** the mode-filtered list **and** the
+  transactional split/assign save, so an offline read-only cache could only ever
+  show **stale, wrong-status rows** (e.g. an already-split entry showing under
+  *Split*). Blocking is honest and avoids that confusion.
+- It does **not** blindly trust `isOffline()` (which can falsely report offline on
+  a cold start): it **probes the live Web API** and only shows the blocking state
+  if that call actually fails (bounded by a ~7 s timeout). While the probe runs it
+  shows a neutral **"Connecting…"** state; on success it goes straight to the
+  normal online list/editor — no manual offline→online toggle needed. **Retry**
+  re-runs the probe, so a device that just reconnected recovers with one tap.
+- `WebAPI`/`Utility` are declared **`required="false"`** so the host still renders
+  the control (and thus the "connection required" state) instead of failing with a
+  generic "control can't load" error.
+- **Recommended:** since the control can't work offline anyway, exclude this app /
+  the `sst_roundedtimeentries` table from the **mobile offline profile** (or turn
+  off offline for the app) so it always runs online. Full **write-enabled** offline
+  (Option C) is deferred — see [`OfflinePlan.md`](OfflinePlan.md).
 
 ### 🔧 Technical
 - **React 17** + TypeScript, no extra runtime libraries.

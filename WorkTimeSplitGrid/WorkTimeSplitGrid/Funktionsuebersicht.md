@@ -209,47 +209,28 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 - **Dreisprachige Oberfläche** (Deutsch / Englisch / Französisch), automatisch
   nach `context.userSettings.languageId`.
 
-### Offline (read-only)
+### Offline (gesperrt — Verbindung erforderlich)
 - **Online** → Live-Server-Abfragen + `$batch`-Save (wie oben).
-- **Offline** → das Control schaltet auf einen **schreibgeschützten**
-  Dataset-Pfad um. Es vertraut `isOffline()` **nicht** blind (der Wert meldet beim
-  Kaltstart teils fälschlich „offline"): es **probiert die Live-Web-API** und
-  fällt nur dann auf read-only zurück, wenn dieser Call wirklich fehlschlägt
-  (mit ~7 s Timeout). Bei Erfolg schaltet es automatisch auf online — **ohne**
-  manuelles Offline→Online-Toggle. Während der Probe zeigt es ein neutrales
-  **„Verbinde…"**-Banner; das schreibgeschützte Offline-Banner erscheint erst,
-  wenn die Probe wirklich gescheitert ist.
-  - **Lesen:** Die Liste wird aus dem gebundenen **(offline-gecachten) Dataset**
-    gebaut und clientseitig gefiltert (Pausen raus; Aufteilen→nicht completed;
-    Zuordnen→completed & kein Lieferschein; Projekt erforderlich, wenn die
-    Projekt-Spalte im View liegt). **Festpreis-** und **„Meine Stunden"**-Filter
-    entfallen offline (Projekttyp bzw. Ressource→User sind im lokalen Cache nicht
-    verlässlich verfügbar).
-  - **Schreiben deaktiviert:** Aufteilen-Save und Lieferschein-Erstellung sind
-    offline **gesperrt** — das Split-Panel zeigt den Eintrag schreibgeschützt mit
-    Hinweis, die Zuordnen-Liste ist nicht auswählbar. So läuft der destruktive,
-    transaktionale Save nie gegen den lokalen Cache (**Sync-Konflikt-Risiko**
-    vermieden). Subtypes werden offline nicht geladen (kein `$expand` nötig).
-  - Ein schmales **Offline-Banner** signalisiert den schreibgeschützten Modus.
-  - **Solange der Cache noch synchronisiert** (`dataset.loading`), zeigt die leere
-    Liste einen *„Offline-Daten werden synchronisiert…"*-Spinner statt des
-    „nichts vorhanden"-Leerzustands; **Pull-to-Refresh** ruft offline
-    `dataset.refresh()` auf (der Online-Server-Reload läuft offline nicht).
-- **Offline-First-Kaltstart:** Auf manchen Geräten meldet die App nach dem Start
-  eine Weile `isOffline() === true` (bis zu einem kompletten Offline→Online-Wechsel),
-  obwohl verbunden. Weil das Control die Live-Web-API **probiert** statt dem Flag
-  zu glauben, zeigt es sofort die gecachte Liste und **erholt sich automatisch auf
-  online**, sobald der Server antwortet — kein Airplane-Toggle mehr nötig. Ist die
-  Web-API wirklich nicht erreichbar (echtes Offline oder `context.webAPI` nicht
-  verfügbar), bleibt es read-only; um auf einem verbundenen Gerät echtes Online zu
-  erzwingen, kann der Maker den **Online-Modus** aktivieren (*„Benutzern erlauben,
-  im Onlinemodus zu arbeiten"*).
-- `WebAPI`/`Utility` sind **`required="false"`**, damit der Host das Control offline
-  überhaupt rendert.
-- ⚠️ Offline braucht ein **Offline-Profil** (Admin) mit `sst_roundedtimeentries`
-  **und** den Spalten/verknüpften Tabellen, die View + Control lesen — sonst bleibt
-  das gecachte Dataset leer (leere Liste nach dem Sync = Tabelle nicht im Profil).
-  Voll **schreibfähiges** Offline (Option C) ist zurückgestellt — siehe
+- **Offline** → das Control **sperrt** und zeigt eine klare
+  **„Verbindung erforderlich"**-Ansicht mit **„Erneut versuchen"**-Button — **keine**
+  gecachte Liste. Grund: Das Control braucht die Live-Web-API für **beides** — die
+  modusgefilterte Liste **und** den transaktionalen Aufteilen-/Zuordnen-Save. Eine
+  schreibgeschützte Offline-Ansicht könnte nur **veraltete, statusfalsche Zeilen**
+  zeigen (z. B. einen bereits aufgeteilten Eintrag unter *Aufteilen*). Sperren ist
+  ehrlich und vermeidet diese Verwirrung.
+- Es vertraut `isOffline()` **nicht** blind (der Wert meldet beim Kaltstart teils
+  fälschlich „offline"): es **probiert die Live-Web-API** und zeigt die Sperr-Ansicht
+  nur, wenn dieser Call wirklich fehlschlägt (mit ~7 s Timeout). Während der Probe
+  zeigt es **„Verbinde…"**; bei Erfolg geht es direkt in die normale Online-Ansicht —
+  **ohne** manuelles Offline→Online-Toggle. **„Erneut versuchen"** stößt die Probe
+  neu an, sodass ein gerade wieder verbundenes Gerät mit einem Tipp weiterarbeitet.
+- `WebAPI`/`Utility` sind **`required="false"`**, damit der Host das Control (und
+  damit die „Verbindung erforderlich"-Ansicht) überhaupt rendert, statt mit einem
+  generischen „Control kann nicht geladen werden" zu scheitern.
+- **Empfehlung:** Da das Control offline ohnehin nicht arbeiten kann, die App bzw.
+  die Tabelle `sst_roundedtimeentries` aus dem **mobilen Offline-Profil** nehmen
+  (oder Offline für die App deaktivieren), damit sie immer online läuft. Voll
+  **schreibfähiges** Offline (Option C) ist zurückgestellt — siehe
   [`OfflinePlan.md`](OfflinePlan.md).
 
 ## Konfiguration (Manifest-Properties)

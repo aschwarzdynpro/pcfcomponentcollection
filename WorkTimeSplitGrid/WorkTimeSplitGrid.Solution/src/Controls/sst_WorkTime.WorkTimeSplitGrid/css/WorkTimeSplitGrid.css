@@ -1068,29 +1068,52 @@
 }
 
 /* ---- Offline banner ---- */
-.wtsg-offline-bar {
+/* ---- Offline block: full-panel "connection required" / "connecting" state ---- */
+.wtsg-offline-block {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
-    margin: 8px 10px 0;
-    padding: 6px 12px;
-    background: #fff8e6;
-    border: 1px solid #f0c000;
-    border-radius: 4px;
-    font-size: 12px;
-    color: #8a6d00;
+    justify-content: center;
+    gap: 12px;
+    height: 100%;
+    padding: 24px;
+    text-align: center;
+    color: #616161;
 }
 
-.wtsg-offline-bar svg {
-    flex: 0 0 auto;
+.wtsg-offline-block-icon {
     color: #c79a00;
 }
 
-/* Neutral "connecting…" variant shown while probing the live Web API. */
-.wtsg-connecting-bar {
-    background: #eef6fc;
-    border-color: #cfe2f3;
-    color: #0b5394;
+.wtsg-offline-block-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: #242424;
+}
+
+.wtsg-offline-block-text {
+    margin: 0;
+    max-width: 340px;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.wtsg-offline-retry {
+    margin-top: 4px;
+    height: 40px;
+    padding: 0 22px;
+    border: none;
+    border-radius: 4px;
+    background: #0f6cbd;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.wtsg-offline-retry:hover {
+    background: #115ea3;
 }
 
 .wtsg-spinner {
