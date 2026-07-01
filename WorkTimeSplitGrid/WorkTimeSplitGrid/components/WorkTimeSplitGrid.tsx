@@ -365,6 +365,19 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         t,
     ]);
 
+    // The moment the host reports offline, show the block (in its "Connecting…"
+    // state) *before paint* — otherwise, on a live online→offline switch, the
+    // normal (empty) list would flash for a frame until the probe above fails.
+    // A successful probe still flips effectiveOffline back to false (online), and
+    // in offline-first this only runs once (props.isOffline doesn't change), so it
+    // never fights the probe.
+    React.useLayoutEffect(() => {
+        if (props.isOffline) {
+            setEffectiveOffline(true);
+            setProbing(true);
+        }
+    }, [props.isOffline]);
+
     const refresh = React.useCallback(() => {
         setRefreshing(true);
         // Offline → also re-sync the bound (cached) dataset. Always bump the key
