@@ -158,18 +158,18 @@ deletes the original.
   show **stale, wrong-status rows** (e.g. an already-split entry showing under
   *Split*). Blocking is honest and avoids that confusion.
 - It does **not** blindly trust `isOffline()` (which can falsely report offline on
-  a cold start): it **probes the live Web API** and shows the blocking state if
-  that call **fails** (bounded by a ~7 s timeout) **or returns empty while the host
-  hints offline** — because in offline mode the Web API returns an *empty result as
-  a success*, which must not be mistaken for "online with no entries". It only goes
-  online if the server actually returns rows (or the host doesn't hint offline).
-  While the probe runs it shows a neutral **"Connecting…"** state; on success it
-  goes straight to the normal online list/editor — no manual offline→online toggle
+  a cold start): it **probes the live Web API** (bounded by a ~7 s timeout) and
+  shows the blocking state if that call **fails**. Offline mode, though, returns an
+  *empty result as a success* — so an empty list while the host hints offline is
+  ambiguous (offline vs. a genuinely empty online list). To resolve it the control
+  fires a **real connectivity check**: since `context.webAPI` has no WhoAmI, it
+  reads the **current user's own security roles** — online returns ≥1 role, offline
+  the call fails or the roles aren't cached. So an empty list only blocks when that
+  check confirms offline; a genuinely-empty **online** list shows normally. While
+  the probe runs it shows a neutral **"Connecting…"** state; on success it goes
+  straight to the normal online list/editor — no manual offline→online toggle
   needed. **Retry** re-runs the probe, so a device that just reconnected recovers
   with one tap.
-  - *Trade-off:* a user who is genuinely online **with zero entries** while
-    `isOffline()` still (falsely) reports offline is also shown the block — rare,
-    and the admin fix below removes it entirely.
 - `WebAPI`/`Utility` are declared **`required="false"`** so the host still renders
   the control (and thus the "connection required" state) instead of failing with a
   generic "control can't load" error.

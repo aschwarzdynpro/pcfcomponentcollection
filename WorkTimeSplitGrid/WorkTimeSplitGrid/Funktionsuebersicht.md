@@ -219,18 +219,18 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   zeigen (z. B. einen bereits aufgeteilten Eintrag unter *Aufteilen*). Sperren ist
   ehrlich und vermeidet diese Verwirrung.
 - Es vertraut `isOffline()` **nicht** blind (der Wert meldet beim Kaltstart teils
-  fälschlich „offline"): es **probiert die Live-Web-API** und zeigt die Sperr-Ansicht,
-  wenn dieser Call **fehlschlägt** (mit ~7 s Timeout) **oder leer zurückkommt, während
-  der Host offline meldet** — denn im Offline-Modus liefert die Web-API ein *leeres
-  Ergebnis als Erfolg*, das nicht mit „online, keine Einträge" verwechselt werden darf.
-  Auf online schaltet es nur, wenn der Server tatsächlich Zeilen liefert (oder der Host
-  gar nicht offline meldet). Während der Probe zeigt es **„Verbinde…"**; bei Erfolg geht
-  es direkt in die normale Online-Ansicht — **ohne** manuelles Offline→Online-Toggle.
-  **„Erneut versuchen"** stößt die Probe neu an, sodass ein gerade wieder verbundenes
-  Gerät mit einem Tipp weiterarbeitet.
-  - *Kompromiss:* Ein User, der wirklich online ist, aber **null Einträge** hat, während
-    `isOffline()` noch (fälschlich) offline meldet, sieht ebenfalls den Block — selten,
-    und die Admin-Empfehlung unten beseitigt das komplett.
+  fälschlich „offline"): es **probiert die Live-Web-API** (mit ~7 s Timeout) und zeigt
+  die Sperr-Ansicht, wenn dieser Call **fehlschlägt**. Im Offline-Modus liefert die
+  Web-API allerdings ein *leeres Ergebnis als Erfolg* — eine leere Liste bei Offline-
+  Hinweis ist also mehrdeutig (offline vs. echt leere Online-Liste). Zur Auflösung
+  feuert das Control einen **echten Online-Check**: da `context.webAPI` kein WhoAmI hat,
+  liest es die **eigenen Sicherheitsrollen** des Users — online kommt ≥1 Rolle zurück,
+  offline schlägt der Call fehl bzw. die Rollen sind nicht im Cache. So blockt eine leere
+  Liste nur, wenn dieser Check offline bestätigt; eine echt leere **Online**-Liste wird
+  normal angezeigt. Während der Probe zeigt es **„Verbinde…"**; bei Erfolg geht es direkt
+  in die normale Online-Ansicht — **ohne** manuelles Offline→Online-Toggle. **„Erneut
+  versuchen"** stößt die Probe neu an, sodass ein gerade wieder verbundenes Gerät mit
+  einem Tipp weiterarbeitet.
 - `WebAPI`/`Utility` sind **`required="false"`**, damit der Host das Control (und
   damit die „Verbindung erforderlich"-Ansicht) überhaupt rendert, statt mit einem
   generischen „Control kann nicht geladen werden" zu scheitern.

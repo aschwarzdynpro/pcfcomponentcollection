@@ -1,6 +1,6 @@
 {
   "name": "worktime-split-grid",
-  "version": "1.20.2",
+  "version": "1.20.3",
   "description": "WorkTimeSplitGrid PCF dataset control for Dataverse — splits a rounded time entry's total duration across work subtypes (Normal/Overtime/Night-Sunday/Holiday) and writes the split records, with trilingual UI (DE/EN/FR).",
   "keywords": [
     "PCF",

@@ -9,6 +9,7 @@ import { FieldConfig, ADMIN_ROLES, TIMEREPORT } from "./schema";
 import {
     loadSubtypes,
     userHasAnyRole,
+    probeOnline,
     createTimeReports,
     loadEntries,
     LoadedEntry,
@@ -326,19 +327,24 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
               ])
             : runLoad();
         attempt.then(
-            (loaded) => {
+            async (loaded) => {
                 if (cancelled) return;
+                // In offline mode the Web API returns an EMPTY result as a
+                // *success* (not an error) — so an empty list while the host hints
+                // offline is ambiguous: offline, or a genuinely empty online list.
+                // Disambiguate with a REAL connectivity check (the user's own
+                // security roles: online returns ≥1, offline the call fails / isn't
+                // cached) instead of guessing from the empty result.
+                let online = true;
+                if (props.isOffline && loaded.length === 0) {
+                    online = await probeOnline(props.webApi, currentUserId);
+                    if (cancelled) return;
+                }
                 setProbing(false);
                 setLoadingEntries(false);
                 setRefreshing(false);
-                // In offline mode the Web API returns an EMPTY result as a
-                // *success* (not an error). Don't mistake that for "online with no
-                // entries": when the host hints offline, only treat the probe as
-                // proof of connectivity if the server actually returned rows —
-                // otherwise stay blocked ("connection required"). A genuinely
-                // online device returns the user's rows and upgrades normally.
-                if (props.isOffline && loaded.length === 0) {
-                    setEffectiveOffline(true);
+                if (!online) {
+                    setEffectiveOffline(true); // confirmed offline → block
                     return;
                 }
                 setEntries(loaded.map((e) => toEntryRow(e, t.title)));
