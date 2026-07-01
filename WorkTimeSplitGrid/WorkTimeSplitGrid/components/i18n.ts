@@ -64,6 +64,12 @@ export interface Strings {
     offlineSyncing: string;
     /** Neutral banner while probing the live Web API before deciding offline. */
     offlineConnecting: string;
+    /** Offline block: title of the "connection required" full-panel state. */
+    offlineRequiredTitle: string;
+    /** Offline block: body text explaining a connection is needed. */
+    offlineRequiredBody: string;
+    /** Retry button in the offline block. */
+    retry: string;
     loading: string;
     loadingSubtypes: string;
     errorPrefix: string;
@@ -138,6 +144,10 @@ export const STRINGS: Record<Lang, Strings> = {
         offlineReadOnly: "Offline — editing is only available online.",
         offlineSyncing: "Syncing offline data…",
         offlineConnecting: "Connecting…",
+        offlineRequiredTitle: "Connection required",
+        offlineRequiredBody:
+            "Splitting work times needs an online connection. Please go online and try again.",
+        retry: "Retry",
         loading: "Loading entries…",
         loadingSubtypes: "Loading subtypes…",
         errorPrefix: "Could not load the grid",
@@ -213,6 +223,10 @@ export const STRINGS: Record<Lang, Strings> = {
         offlineReadOnly: "Offline — Bearbeiten ist nur online möglich.",
         offlineSyncing: "Offline-Daten werden synchronisiert…",
         offlineConnecting: "Verbinde…",
+        offlineRequiredTitle: "Verbindung erforderlich",
+        offlineRequiredBody:
+            "Das Aufteilen der Arbeitszeiten benötigt eine Online-Verbindung. Bitte online gehen und erneut versuchen.",
+        retry: "Erneut versuchen",
         loading: "Einträge werden geladen…",
         loadingSubtypes: "Subtypes werden geladen…",
         errorPrefix: "Grid konnte nicht geladen werden",
@@ -288,6 +302,10 @@ export const STRINGS: Record<Lang, Strings> = {
         offlineReadOnly: "Hors connexion — la modification n'est possible qu'en ligne.",
         offlineSyncing: "Synchronisation des données hors connexion…",
         offlineConnecting: "Connexion…",
+        offlineRequiredTitle: "Connexion requise",
+        offlineRequiredBody:
+            "La répartition des temps de travail nécessite une connexion en ligne. Veuillez vous reconnecter et réessayer.",
+        retry: "Réessayer",
         loading: "Chargement des entrées…",
         loadingSubtypes: "Chargement des sous-types…",
         errorPrefix: "Impossible de charger la grille",

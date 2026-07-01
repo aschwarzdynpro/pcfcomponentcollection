@@ -246,6 +246,33 @@ export async function userHasAnyRole(
     }
 }
 
+/**
+ * Real connectivity check, independent of the entries list. `context.webAPI` has
+ * no WhoAmI, so we read the current user's own security roles: **online** returns
+ * ≥1 role; **offline** the call fails (or the roles association isn't in the local
+ * cache, so it comes back empty). Used to disambiguate an *empty* entries result —
+ * offline mode returns "no rows" as a SUCCESS, which must not be read as "online,
+ * no entries". Returns `true` (assume online, don't over-block) if there's no user
+ * id to check against.
+ */
+export async function probeOnline(
+    webApi: ComponentFramework.WebApi,
+    userId: string,
+): Promise<boolean> {
+    const id = userId.replace(/[{}]/g, "");
+    if (!id) return true;
+    try {
+        const u: any = await webApi.retrieveRecord(
+            "systemuser",
+            id,
+            "?$select=systemuserid&$expand=systemuserroles_association($select=roleid)",
+        );
+        return (u?.systemuserroles_association?.length ?? 0) > 0;
+    } catch {
+        return false;
+    }
+}
+
 /** A Rounded Time Entry as loaded by the server-side mode query. */
 export interface LoadedEntry {
     id: string;

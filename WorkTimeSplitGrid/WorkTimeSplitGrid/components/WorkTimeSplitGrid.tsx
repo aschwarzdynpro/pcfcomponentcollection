@@ -9,6 +9,7 @@ import { FieldConfig, ADMIN_ROLES, TIMEREPORT } from "./schema";
 import {
     loadSubtypes,
     userHasAnyRole,
+    probeOnline,
     createTimeReports,
     loadEntries,
     LoadedEntry,
@@ -298,7 +299,9 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         let cancelled = false;
         setLoadingEntries(true);
         setEntriesError(null);
-        setProbing(props.isOffline);
+        // "probing" gates the offline block's "Connecting…" vs "Connection
+        // required" states; mark it while any load/probe is in flight.
+        setProbing(true);
         const runLoad = () =>
             loadEntries(props.webApi, {
                 mode,
@@ -324,13 +327,28 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
               ])
             : runLoad();
         attempt.then(
-            (loaded) => {
+            async (loaded) => {
                 if (cancelled) return;
-                setEntries(loaded.map((e) => toEntryRow(e, t.title)));
-                setEffectiveOffline(false); // the live query worked → online
+                // In offline mode the Web API returns an EMPTY result as a
+                // *success* (not an error) — so an empty list while the host hints
+                // offline is ambiguous: offline, or a genuinely empty online list.
+                // Disambiguate with a REAL connectivity check (the user's own
+                // security roles: online returns ≥1, offline the call fails / isn't
+                // cached) instead of guessing from the empty result.
+                let online = true;
+                if (props.isOffline && loaded.length === 0) {
+                    online = await probeOnline(props.webApi, currentUserId);
+                    if (cancelled) return;
+                }
                 setProbing(false);
                 setLoadingEntries(false);
                 setRefreshing(false);
+                if (!online) {
+                    setEffectiveOffline(true); // confirmed offline → block
+                    return;
+                }
+                setEntries(loaded.map((e) => toEntryRow(e, t.title)));
+                setEffectiveOffline(false); // the live query answered → online
             },
             (err) => {
                 if (cancelled) return;
@@ -363,6 +381,19 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         t,
     ]);
 
+    // The moment the host reports offline, show the block (in its "Connecting…"
+    // state) *before paint* — otherwise, on a live online→offline switch, the
+    // normal (empty) list would flash for a frame until the probe above fails.
+    // A successful probe still flips effectiveOffline back to false (online), and
+    // in offline-first this only runs once (props.isOffline doesn't change), so it
+    // never fights the probe.
+    React.useLayoutEffect(() => {
+        if (props.isOffline) {
+            setEffectiveOffline(true);
+            setProbing(true);
+        }
+    }, [props.isOffline]);
+
     const refresh = React.useCallback(() => {
         setRefreshing(true);
         // Offline → also re-sync the bound (cached) dataset. Always bump the key
@@ -378,6 +409,14 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         }
         setRefreshKey((k) => k + 1);
     }, [effectiveOffline, props.dataset]);
+
+    // Offline block "retry": re-attempt the live Web API. Show the connecting
+    // state immediately, then re-run the load effect (which upgrades to online
+    // if the server now answers).
+    const retryConnection = React.useCallback(() => {
+        setProbing(true);
+        setRefreshKey((k) => k + 1);
+    }, []);
 
     // Optimistic update: drop rows that left the current filter (split-saved or
     // assigned to a delivery note) without a full server reload — instant, no
@@ -618,6 +657,62 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         );
     }
 
+    // Offline → block the control. This control needs the live Web API for both
+    // the filtered list and the transactional split/assign save; offline it could
+    // only ever show a stale, read-only cache (which caused confusing wrong-status
+    // rows). So instead of a cached list we show a clear "connection required"
+    // state with a retry, or "Connecting…" while the live probe is still running.
+    if (effectiveOffline) {
+        return (
+            <div
+                className={`wtsg-root ${props.isMobile ? "wtsg-mobile" : ""}`}
+            >
+                <div className="wtsg-offline-block" role="status">
+                    {probing ? (
+                        <>
+                            <span className="wtsg-spinner" aria-hidden="true" />
+                            <span className="wtsg-offline-block-title">
+                                {t.offlineConnecting}
+                            </span>
+                        </>
+                    ) : (
+                        <>
+                            <svg
+                                className="wtsg-offline-block-icon"
+                                width="44"
+                                height="44"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.6"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                            >
+                                <path d="M17.5 19H7a4 4 0 0 1-.8-7.9 5 5 0 0 1 8-3" />
+                                <path d="M19.5 15.5A3.5 3.5 0 0 0 18 9" />
+                                <path d="M3 3l18 18" />
+                            </svg>
+                            <h3 className="wtsg-offline-block-title">
+                                {t.offlineRequiredTitle}
+                            </h3>
+                            <p className="wtsg-offline-block-text">
+                                {t.offlineRequiredBody}
+                            </p>
+                            <button
+                                type="button"
+                                className="wtsg-offline-retry"
+                                onClick={retryConnection}
+                            >
+                                {t.retry}
+                            </button>
+                        </>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     const detailOpen = props.singlePane && mode === "split" && !!selected;
     // Phone in landscape → two-pane "cockpit": touch styling, but list + detail
     // side by side and a compact (non-collapsing) command bar.
@@ -759,37 +854,6 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             </CollapsibleActionBar>
             )}
 
-            {effectiveOffline && probing && (
-                <div
-                    className="wtsg-offline-bar wtsg-connecting-bar"
-                    role="status"
-                >
-                    <span className="wtsg-spinner" aria-hidden="true" />
-                    <span>{t.offlineConnecting}</span>
-                </div>
-            )}
-
-            {effectiveOffline && !probing && (
-                <div className="wtsg-offline-bar" role="status">
-                    <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                    >
-                        <path d="M17.5 19H7a4 4 0 0 1-.8-7.9 5 5 0 0 1 8-3" />
-                        <path d="M19.5 15.5A3.5 3.5 0 0 0 18 9" />
-                        <path d="M3 3l18 18" />
-                    </svg>
-                    <span>{t.offlineBanner}</span>
-                </div>
-            )}
-
             {toast && (
                 <div className="wtsg-toast" role="status">
                     {toast}
@@ -897,9 +961,22 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                             onClick={() => handleCreateReports(true)}
                         >
                             {t.createReportsOpen}
-                            <span className="wtsg-btn-ext" aria-hidden="true">
-                                {" ↗"}
-                            </span>
+                            <svg
+                                className="wtsg-btn-ext"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                            >
+                                <path d="M15 3h6v6" />
+                                <path d="M10 14 21 3" />
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -946,12 +1023,22 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                             </span>
                                         )}
                                     </span>
-                                    <span
+                                    <svg
                                         className="wtsg-report-open"
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
                                         aria-hidden="true"
                                     >
-                                        ↗
-                                    </span>
+                                        <path d="M15 3h6v6" />
+                                        <path d="M10 14 21 3" />
+                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                    </svg>
                                 </button>
                             ))}
                         </div>
