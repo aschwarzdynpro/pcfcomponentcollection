@@ -328,11 +328,21 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         attempt.then(
             (loaded) => {
                 if (cancelled) return;
-                setEntries(loaded.map((e) => toEntryRow(e, t.title)));
-                setEffectiveOffline(false); // the live query worked → online
                 setProbing(false);
                 setLoadingEntries(false);
                 setRefreshing(false);
+                // In offline mode the Web API returns an EMPTY result as a
+                // *success* (not an error). Don't mistake that for "online with no
+                // entries": when the host hints offline, only treat the probe as
+                // proof of connectivity if the server actually returned rows —
+                // otherwise stay blocked ("connection required"). A genuinely
+                // online device returns the user's rows and upgrades normally.
+                if (props.isOffline && loaded.length === 0) {
+                    setEffectiveOffline(true);
+                    return;
+                }
+                setEntries(loaded.map((e) => toEntryRow(e, t.title)));
+                setEffectiveOffline(false); // the live query answered → online
             },
             (err) => {
                 if (cancelled) return;
