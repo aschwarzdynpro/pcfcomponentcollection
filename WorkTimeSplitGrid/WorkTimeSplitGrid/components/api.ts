@@ -506,6 +506,7 @@ async function prepareSplit(
     fields: FieldConfig,
     id: string,
     subtypes: SplitInput[],
+    logger: Logger,
 ): Promise<SplitPrep> {
     const lookupSelects = PARENT_LOOKUPS.map((l) => l.value).join(",");
     const selects = [
@@ -574,13 +575,34 @@ async function prepareSplit(
             s.paytype != null
                 ? s.paytype
                 : worktypes.payLabel.get(normalizeLabel(s.name)) ?? null;
-        if (paytypeValue != null && timetypeValue != null) {
-            const wt = worktypes.byKey.get(`${paytypeValue}|${timetypeValue}`);
-            if (wt) {
-                payload[`${WORKTYPE.navProp}@odata.bind`] =
-                    `/${WORKTYPE.entitySet}(${wt.id})`;
-                payload[WORKTYPE.titleStr] = wt.title;
-            }
+        const wt =
+            paytypeValue != null && timetypeValue != null
+                ? worktypes.byKey.get(`${paytypeValue}|${timetypeValue}`)
+                : undefined;
+        if (wt) {
+            // Set the work-type lookup + its denormalized title
+            // (sst_worktype_title_str ← the worktype's sst_title_str).
+            payload[`${WORKTYPE.navProp}@odata.bind`] =
+                `/${WORKTYPE.entitySet}(${wt.id})`;
+            payload[WORKTYPE.titleStr] = wt.title;
+        } else {
+            // Telemetry: the split is created WITHOUT a work type. Surface which
+            // (paytype, timetype) couldn't be resolved so gaps in the sst_worktype
+            // table / option data are visible in the trace instead of silent.
+            logger.warn("split.worktypeUnresolved", {
+                entryId: id,
+                subtype: s.name,
+                paytype: paytypeValue,
+                timetype: timetypeValue,
+                reason:
+                    worktypes.byKey.size === 0
+                        ? "worktypeTableEmpty"
+                        : paytypeValue == null
+                          ? "paytypeUnresolved"
+                          : timetypeValue == null
+                            ? "timetypeUnresolved"
+                            : "noMatchingWorktype",
+            });
         }
         return payload;
     });
@@ -868,7 +890,14 @@ export async function saveSplit(
     });
     let stage = "prepare";
     try {
-        const prep = await prepareSplit(webApi, utils, fields, id, subtypes);
+        const prep = await prepareSplit(
+            webApi,
+            utils,
+            fields,
+            id,
+            subtypes,
+            logger,
+        );
         op.step("prepared", {
             active: prep.activeCount,
             pauses: prep.pauseIds.length,

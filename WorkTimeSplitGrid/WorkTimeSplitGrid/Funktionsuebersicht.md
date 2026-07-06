@@ -142,9 +142,13 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
      je Split über den zusammengesetzten Key **(paytype, timetype)**: paytype aus
      dem Subtype (`sst_paytype_opt`, sonst Subtype-Name gegen das OptionSet-Label),
      timetype aus dem Original-Eintrag (`sst_timetype_opt`, sonst `sst_type`-Text
-     gegen das Label). Das passende `sst_worktype`-Record wird beim Speichern
-     ermittelt (einmalige Abfrage aller `sst_worktypes`, Label→Wert aus deren
-     Formatted Values). Findet sich kein Treffer, bleibt die Zeiterfassungsart leer.
+     gegen das Label). `sst_worktype_title_str` wird mit dem `sst_title_str` des
+     gefundenen Worktypes gefüllt. Das passende `sst_worktype`-Record wird beim
+     Speichern ermittelt (einmalige Abfrage aller `sst_worktypes`, Label→Wert aus
+     deren Formatted Values). Findet sich kein Treffer, bleibt die Zeiterfassungsart
+     leer — dann wird ein **`split.worktypeUnresolved`-Warn-Event** geloggt
+     (`entryId`, `subtype`, `paytype`, `timetype`, `reason`), damit Lücken in der
+     `sst_worktype`-Pflege im Trace sichtbar sind statt still.
   3. Markiert das Original **und zugehörige Pausen** (gleicher Arbeitsauftrag,
      `sst_type = Pause`) als `sst_worksubtypecompleted = Ja`.
   4. Löscht das Original — die Kind-Subtype-Zeilen werden über die

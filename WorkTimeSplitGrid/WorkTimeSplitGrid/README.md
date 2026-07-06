@@ -108,7 +108,11 @@ deletes the original.
   - creates one Rounded Time Entry per subtype with hours > 0 (copying the
     booking / work order / project lookups, date, name, notes; subtype name into
     `sst_workordersubtype`; type `<Type> (<Subtype>)`; `sst_worksubtypecompleted
-    = Yes`; the resolved `sst_worktype_ref` / `sst_worktype_title_str`),
+    = Yes`; the resolved `sst_worktype_ref` **and** `sst_worktype_title_str` ← the
+    worktype's `sst_title_str`). If no matching worktype resolves, the split is
+    created **without** one and a `split.worktypeUnresolved` **warn** event is
+    logged (`entryId`, `subtype`, `paytype`, `timetype`, `reason`) so gaps in the
+    `sst_worktype` data are visible in the trace instead of silent,
   - marks the original **and its related pauses** completed,
   - deletes the original (child subtype rows cascade).
   These run as a **single `$batch` changeset** (all-or-nothing) posted to the
