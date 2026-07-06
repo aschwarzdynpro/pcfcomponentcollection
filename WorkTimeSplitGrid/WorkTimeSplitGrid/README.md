@@ -64,6 +64,13 @@ deletes the original.
   count** (it caused a layout shift on filter changes and isn't needed).
 - **Search-match highlight** — matching substrings are highlighted in the card
   title and chips as you type.
+- **Info / diagnostics** — a small **ⓘ** button in the top row (next to the sort
+  icon) opens a panel showing the control version, online status, session id, user
+  and environment, plus the **buffered telemetry** of the current session. One
+  **Copy** button copies the whole blob to the clipboard so a user can forward it
+  for support. The telemetry buffer is an in-memory ring (last 200 events); note
+  the control's `logger` events do **not** flow to Application Insights on their
+  own — this panel is the built-in way to hand them off.
 - **Pull-to-refresh (mobile)** — on a phone, pull the list down past the
   threshold to reload from the server (a damped pull indicator + spinner).
 - **Empty state** — when no entries qualify (or a search has no matches) the list
@@ -108,7 +115,11 @@ deletes the original.
   - creates one Rounded Time Entry per subtype with hours > 0 (copying the
     booking / work order / project lookups, date, name, notes; subtype name into
     `sst_workordersubtype`; type `<Type> (<Subtype>)`; `sst_worksubtypecompleted
-    = Yes`; the resolved `sst_worktype_ref` / `sst_worktype_title_str`),
+    = Yes`; the resolved `sst_worktype_ref` **and** `sst_worktype_title_str` ← the
+    worktype's `sst_title_str`). If no matching worktype resolves, the split is
+    created **without** one and a `split.worktypeUnresolved` **warn** event is
+    logged (`entryId`, `subtype`, `paytype`, `timetype`, `reason`) so gaps in the
+    `sst_worktype` data are visible in the trace instead of silent,
   - marks the original **and its related pauses** completed,
   - deletes the original (child subtype rows cascade).
   These run as a **single `$batch` changeset** (all-or-nothing) posted to the

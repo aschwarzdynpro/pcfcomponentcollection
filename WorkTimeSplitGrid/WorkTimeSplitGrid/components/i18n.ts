@@ -57,6 +57,16 @@ export interface Strings {
     pickReportTitle: (n: number) => string;
     pickReportPrompt: string;
     closeLabel: string;
+    /** Debug/info panel. */
+    infoTitle: string;
+    infoVersion: string;
+    infoStatus: string;
+    infoSession: string;
+    infoUser: string;
+    infoEnvironment: string;
+    infoTelemetry: string;
+    infoCopy: string;
+    infoCopied: string;
     offlineBanner: string;
     /** Read-only notice shown in the detail/action area while offline. */
     offlineReadOnly: string;
@@ -139,6 +149,15 @@ export const STRINGS: Record<Lang, Strings> = {
         pickReportTitle: (n) => `${n} delivery notes created`,
         pickReportPrompt: "Which delivery note would you like to open?",
         closeLabel: "Close",
+        infoTitle: "Info & diagnostics",
+        infoVersion: "Version",
+        infoStatus: "Status",
+        infoSession: "Session ID",
+        infoUser: "User",
+        infoEnvironment: "Environment",
+        infoTelemetry: "Telemetry (current session)",
+        infoCopy: "Copy",
+        infoCopied: "Copied ✓",
         offlineBanner:
             "Offline — read-only view from the local cache. Editing is available online.",
         offlineReadOnly: "Offline — editing is only available online.",
@@ -218,6 +237,15 @@ export const STRINGS: Record<Lang, Strings> = {
         pickReportTitle: (n) => `${n} Lieferscheine erstellt`,
         pickReportPrompt: "Welchen Lieferschein möchtest du öffnen?",
         closeLabel: "Schließen",
+        infoTitle: "Info & Diagnose",
+        infoVersion: "Version",
+        infoStatus: "Status",
+        infoSession: "Session-ID",
+        infoUser: "Benutzer",
+        infoEnvironment: "Umgebung",
+        infoTelemetry: "Telemetrie (aktuelle Sitzung)",
+        infoCopy: "Kopieren",
+        infoCopied: "Kopiert ✓",
         offlineBanner:
             "Offline — schreibgeschützte Ansicht aus dem lokalen Cache. Bearbeiten ist nur online möglich.",
         offlineReadOnly: "Offline — Bearbeiten ist nur online möglich.",
@@ -297,6 +325,15 @@ export const STRINGS: Record<Lang, Strings> = {
         pickReportTitle: (n) => `${n} bons de livraison créés`,
         pickReportPrompt: "Quel bon de livraison souhaitez-vous ouvrir ?",
         closeLabel: "Fermer",
+        infoTitle: "Info et diagnostic",
+        infoVersion: "Version",
+        infoStatus: "État",
+        infoSession: "ID de session",
+        infoUser: "Utilisateur",
+        infoEnvironment: "Environnement",
+        infoTelemetry: "Télémétrie (session actuelle)",
+        infoCopy: "Copier",
+        infoCopied: "Copié ✓",
         offlineBanner:
             "Hors connexion — vue en lecture seule du cache local. La modification est possible en ligne.",
         offlineReadOnly: "Hors connexion — la modification n'est possible qu'en ligne.",

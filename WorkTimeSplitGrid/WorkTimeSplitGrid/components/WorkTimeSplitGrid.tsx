@@ -83,6 +83,12 @@ export interface WorkTimeSplitGridProps {
     fields: FieldConfig;
     /** Current user's systemuserid (for the "My hours" filter + role check). */
     userId: string;
+    /** Current user's display name (debug panel). */
+    userName: string;
+    /** Control version string (debug panel). */
+    version: string;
+    /** Best-effort environment/org id or host (debug panel). */
+    environmentId: string;
     /** Phone form factor → touch-first styling (bigger targets, steppers, PTR). */
     isMobile: boolean;
     /**
@@ -134,6 +140,24 @@ function toIso(v: unknown): string {
         return isNaN(d.getTime()) ? "" : d.toISOString();
     }
     return String(v);
+}
+
+/** Clipboard fallback for hosts without the async Clipboard API (mobile webviews). */
+function fallbackCopy(text: string, done: () => void): void {
+    try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        done();
+    } catch {
+        /* clipboard blocked — the user can still select the text manually */
+    }
 }
 
 /**
@@ -269,6 +293,19 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const [refreshing, setRefreshing] = React.useState(false);
     const [myHoursOnly, setMyHoursOnly] = React.useState(true);
     const [isAdmin, setIsAdmin] = React.useState(false);
+    // Debug/info panel: session id (once per control instance) + open/copied state.
+    const [showInfo, setShowInfo] = React.useState(false);
+    const [copied, setCopied] = React.useState(false);
+    const [sessionId] = React.useState(() => {
+        try {
+            const c = (globalThis as { crypto?: { randomUUID?: () => string } })
+                .crypto;
+            if (c?.randomUUID) return c.randomUUID();
+        } catch {
+            /* fall through to the non-crypto id */
+        }
+        return "s-" + Math.random().toString(36).slice(2, 10);
+    });
 
     const currentUserId = React.useMemo(
         () => (props.userId || "").replace(/[{}]/g, "").toLowerCase(),
@@ -551,6 +588,51 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         window.setTimeout(() => setToast(null), 4000);
     }, []);
 
+    // Assemble the debug/info blob (version + context + buffered telemetry).
+    const buildDebugText = (): string => {
+        const events = props.logger.snapshot();
+        return [
+            "WorkTimeSplitGrid — Debug / Info",
+            `Version:     ${props.version}`,
+            `Zeit:        ${new Date().toISOString()}`,
+            `Status:      ${effectiveOffline ? "Offline" : "Online"}`,
+            `Modus:       ${mode}`,
+            `Session ID:  ${sessionId}`,
+            `User:        ${props.userName || "—"} (${props.userId || "—"})`,
+            `Environment: ${props.environmentId || "—"}`,
+            `Sprache:     ${props.lang}`,
+            "",
+            `Telemetrie (${events.length}):`,
+            ...events.map(
+                (e) =>
+                    `${e.time} ${e.level.toUpperCase()} ${e.name}` +
+                    (e.data ? " " + JSON.stringify(e.data) : ""),
+            ),
+        ].join("\n");
+    };
+
+    const handleCopyDebug = (): void => {
+        const text = buildDebugText();
+        const done = () => {
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 2000);
+        };
+        try {
+            const nav = navigator as Navigator & {
+                clipboard?: { writeText?: (t: string) => Promise<void> };
+            };
+            if (nav.clipboard?.writeText) {
+                nav.clipboard
+                    .writeText(text)
+                    .then(done, () => fallbackCopy(text, done));
+                return;
+            }
+        } catch {
+            /* fall through to the textarea fallback */
+        }
+        fallbackCopy(text, done);
+    };
+
     const handleSaved = React.useCallback(() => {
         // Saving is online-only (offline is read-only). The split original is
         // deleted (and its splits are completed), so it leaves the "split" list —
@@ -770,6 +852,32 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                             { value: "durationDesc", label: t.sortDuration },
                         ]}
                     />
+                    <button
+                        type="button"
+                        className="wtsg-infobtn"
+                        aria-label={t.infoTitle}
+                        title={t.infoTitle}
+                        onClick={() => {
+                            setCopied(false);
+                            setShowInfo(true);
+                        }}
+                    >
+                        <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                        >
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 11v5" />
+                            <path d="M12 8h.01" />
+                        </svg>
+                    </button>
                 </div>
                 <div
                     className="wtsg-toggle"
@@ -1049,6 +1157,61 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 onClick={() => setReportPicker(null)}
                             >
                                 {t.closeLabel}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showInfo && (
+                <div
+                    className="wtsg-modal"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={t.infoTitle}
+                >
+                    <div className="wtsg-modal-card wtsg-info-card">
+                        <h4>{t.infoTitle}</h4>
+                        <dl className="wtsg-info-grid">
+                            <dt>{t.infoVersion}</dt>
+                            <dd>{props.version}</dd>
+                            <dt>{t.infoStatus}</dt>
+                            <dd>{effectiveOffline ? "Offline" : "Online"}</dd>
+                            <dt>{t.infoSession}</dt>
+                            <dd>{sessionId}</dd>
+                            <dt>{t.infoUser}</dt>
+                            <dd>
+                                {(props.userName || "—") +
+                                    " (" +
+                                    (props.userId || "—") +
+                                    ")"}
+                            </dd>
+                            <dt>{t.infoEnvironment}</dt>
+                            <dd>{props.environmentId || "—"}</dd>
+                        </dl>
+                        <label className="wtsg-info-tel-label">
+                            {t.infoTelemetry}
+                        </label>
+                        <textarea
+                            className="wtsg-info-tel"
+                            readOnly
+                            value={buildDebugText()}
+                            onFocus={(e) => e.currentTarget.select()}
+                        />
+                        <div className="wtsg-modal-actions">
+                            <button
+                                type="button"
+                                className="wtsg-btn-secondary"
+                                onClick={() => setShowInfo(false)}
+                            >
+                                {t.closeLabel}
+                            </button>
+                            <button
+                                type="button"
+                                className="wtsg-btn-primary"
+                                onClick={handleCopyDebug}
+                            >
+                                {copied ? t.infoCopied : t.infoCopy}
                             </button>
                         </div>
                     </div>
