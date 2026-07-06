@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <manifest>
-  <control namespace="WorkTime" constructor="WorkTimeSplitGrid" version="1.20.4" display-name-key="WorkTimeSplitGrid_Display" description-key="WorkTimeSplitGrid_Desc" control-type="standard" api-version="1.3.18">
+  <control namespace="WorkTime" constructor="WorkTimeSplitGrid" version="1.21.0" display-name-key="WorkTimeSplitGrid_Display" description-key="WorkTimeSplitGrid_Desc" control-type="standard" api-version="1.3.18">
     <data-set name="entries" display-name-key="entries_Display" description-key="entries_Desc"/>
     <property name="showSuggestButton" display-name-key="showSuggestButton_Display" description-key="showSuggestButton_Desc" of-type="SingleLine.Text" usage="input" required="false"/>
     <resources>

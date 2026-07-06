@@ -9,6 +9,9 @@ import { lcidToLang } from "./components/i18n";
 import { resolveFieldConfig } from "./components/schema";
 import { createLogger, Logger, TracingService } from "./components/telemetry";
 
+/** Control version — keep in sync with ControlManifest / package.json / Solution. */
+const CONTROL_VERSION = "1.21.0";
+
 export class WorkTimeSplitGrid
     implements ComponentFramework.StandardControl<IInputs, IOutputs>
 {
@@ -111,6 +114,21 @@ export class WorkTimeSplitGrid
         }
     }
 
+    /** Best-effort environment/org identifier for the debug panel (id, else host). */
+    private environmentId(): string {
+        const c = this._context as unknown as {
+            orgSettings?: { organizationId?: string; uniqueName?: string };
+        };
+        const org =
+            c.orgSettings?.organizationId ?? c.orgSettings?.uniqueName ?? "";
+        if (org) return org;
+        try {
+            return window.location.hostname || "";
+        } catch {
+            return "";
+        }
+    }
+
     /** Suggestion (★) button off by default; shown only when explicitly enabled. */
     private showSuggest(): boolean {
         const raw = (this._context.parameters.showSuggestButton?.raw ?? "")
@@ -143,6 +161,9 @@ export class WorkTimeSplitGrid
                 // subtypeField: params.subtypeField?.raw,
             }),
             userId: this._context.userSettings?.userId ?? "",
+            userName: this._context.userSettings?.userName ?? "",
+            version: CONTROL_VERSION,
+            environmentId: this.environmentId(),
             disabled: this._context.mode.isControlDisabled,
             lang: lcidToLang(this._context.userSettings?.languageId),
             logger: this._logger,

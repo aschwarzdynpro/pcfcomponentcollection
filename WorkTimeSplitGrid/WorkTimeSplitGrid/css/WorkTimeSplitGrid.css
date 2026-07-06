@@ -1447,3 +1447,82 @@
 .wtsg-mobile.wtsg-landscape .wtsg-panel {
     border-left: 1px solid #e1dfdd;
 }
+
+/* ---- Info / debug button + panel ---- */
+.wtsg-infobtn {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #c8c6c4;
+    border-radius: 6px;
+    background: #fff;
+    color: #424242;
+    cursor: pointer;
+}
+
+.wtsg-infobtn:hover {
+    border-color: #0f6cbd;
+    color: #0f6cbd;
+}
+
+.wtsg-mobile .wtsg-infobtn {
+    width: 44px;
+    height: 40px;
+}
+
+.wtsg-mobile.wtsg-landscape .wtsg-infobtn {
+    width: 34px;
+    height: 34px;
+}
+
+.wtsg-info-card {
+    width: min(560px, 92vw);
+    max-width: 92vw;
+}
+
+.wtsg-info-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    margin: 0 0 12px;
+    font-size: 13px;
+}
+
+.wtsg-info-grid dt {
+    color: #616161;
+    white-space: nowrap;
+}
+
+.wtsg-info-grid dd {
+    margin: 0;
+    color: #242424;
+    word-break: break-all;
+}
+
+.wtsg-info-tel-label {
+    display: block;
+    font-size: 12px;
+    color: #616161;
+    margin-bottom: 4px;
+}
+
+.wtsg-info-tel {
+    width: 100%;
+    height: 190px;
+    resize: vertical;
+    box-sizing: border-box;
+    padding: 8px;
+    border: 1px solid #e1dfdd;
+    border-radius: 6px;
+    background: #faf9f8;
+    color: #242424;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: pre;
+    overflow: auto;
+}

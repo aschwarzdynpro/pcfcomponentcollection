@@ -68,6 +68,14 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   beim Filterwechsel einen Layout-Sprung und wird nicht benötigt).
 - **Treffer-Hervorhebung** — passende Teilstrings werden beim Tippen im
   Karten-Titel und in den Chips hervorgehoben.
+- **Info / Diagnose** — ein kleiner **ⓘ**-Button in der oberen Zeile (neben dem
+  Sortier-Icon) öffnet ein Panel mit Control-Version, Online-Status, Session-ID,
+  Benutzer und Umgebung sowie der **aufgelaufenen Telemetrie** der aktuellen
+  Sitzung. Ein **Kopieren**-Button legt alles in die Zwischenablage, damit ein
+  Benutzer es zur Weiterleitung an den Support kopieren kann. Der Telemetrie-Puffer
+  ist ein In-Memory-Ring (letzte 200 Events); die `logger`-Events landen **nicht**
+  von selbst in Application Insights — dieses Panel ist der eingebaute Weg, sie
+  weiterzugeben.
 - **Pull-to-Refresh (Mobil)** — auf dem Handy die Liste über die Schwelle nach
   unten ziehen, um vom Server neu zu laden (gedämpfter Zieh-Indikator + Spinner).
 - **Leerzustand** — wenn keine Einträge passen (oder eine Suche keine Treffer

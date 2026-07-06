@@ -15,6 +15,18 @@ export interface TracingService {
 
 export type LogData = Record<string, unknown>;
 
+/** One buffered telemetry line (for the in-control debug/info panel). */
+export interface LogEntry {
+    /** ISO timestamp when the event was emitted. */
+    time: string;
+    level: string;
+    name: string;
+    data?: LogData;
+}
+
+/** Max lines kept in the in-memory ring buffer (oldest dropped past this). */
+const BUFFER_MAX = 200;
+
 export interface Op {
     /** Log a progress step within the operation (with elapsed ms). */
     step(name: string, data?: LogData): void;
@@ -30,6 +42,8 @@ export interface Logger {
     error(name: string, error: unknown, data?: LogData): void;
     /** Start a timed operation; call step()/ok()/fail() for its lifecycle. */
     op(name: string, data?: LogData): Op;
+    /** Recent buffered events (newest last) — for the in-control debug panel. */
+    snapshot(): LogEntry[];
 }
 
 /** Normalize an unknown thrown value into loggable fields. */
@@ -56,8 +70,16 @@ function safeStringify(value: unknown): string {
 }
 
 export function createLogger(tracing?: TracingService): Logger {
+    const buffer: LogEntry[] = [];
     const emit = (level: string, name: string, data?: LogData): void => {
         const payload = data ? safeStringify(data) : "";
+        // Keep a bounded in-memory trail so the debug panel can surface it.
+        try {
+            buffer.push({ time: new Date().toISOString(), level, name, data });
+            if (buffer.length > BUFFER_MAX) buffer.shift();
+        } catch {
+            /* never let buffering break the control */
+        }
         try {
             tracing?.trace(`[${SRC}] ${level} ${name} ${payload}`);
         } catch {
@@ -97,6 +119,7 @@ export function createLogger(tracing?: TracingService): Logger {
                     }),
             };
         },
+        snapshot: () => buffer.slice(),
     };
 }
 
@@ -110,4 +133,5 @@ export const NOOP_LOGGER: Logger = {
         ok: () => undefined,
         fail: () => undefined,
     }),
+    snapshot: () => [],
 };

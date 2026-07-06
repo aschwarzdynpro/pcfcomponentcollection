@@ -64,6 +64,13 @@ deletes the original.
   count** (it caused a layout shift on filter changes and isn't needed).
 - **Search-match highlight** — matching substrings are highlighted in the card
   title and chips as you type.
+- **Info / diagnostics** — a small **ⓘ** button in the top row (next to the sort
+  icon) opens a panel showing the control version, online status, session id, user
+  and environment, plus the **buffered telemetry** of the current session. One
+  **Copy** button copies the whole blob to the clipboard so a user can forward it
+  for support. The telemetry buffer is an in-memory ring (last 200 events); note
+  the control's `logger` events do **not** flow to Application Insights on their
+  own — this panel is the built-in way to hand them off.
 - **Pull-to-refresh (mobile)** — on a phone, pull the list down past the
   threshold to reload from the server (a damped pull indicator + spinner).
 - **Empty state** — when no entries qualify (or a search has no matches) the list
