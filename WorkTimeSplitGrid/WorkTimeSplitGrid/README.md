@@ -181,6 +181,12 @@ deletes the original.
   straight to the normal online list/editor — no manual offline→online toggle
   needed. **Retry** re-runs the probe, so a device that just reconnected recovers
   with one tap.
+- **Network gate:** if the host reports **no device network** (`context.client.
+  isNetworkAvailable()` returns false) the control blocks **immediately** —
+  skipping the probe and its timeout — instead of briefly showing a stale "online".
+  (Best-effort: on hosts that don't expose the method it's treated as available.
+  Note this gates on *network*, not on pending offline sync — PCF has no API for
+  the sync queue.)
 - `WebAPI`/`Utility` are declared **`required="false"`** so the host still renders
   the control (and thus the "connection required" state) instead of failing with a
   generic "control can't load" error.

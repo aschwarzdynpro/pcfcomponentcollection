@@ -10,7 +10,7 @@ import { resolveFieldConfig } from "./components/schema";
 import { createLogger, Logger, TracingService } from "./components/telemetry";
 
 /** Control version — keep in sync with ControlManifest / package.json / Solution. */
-const CONTROL_VERSION = "1.21.0";
+const CONTROL_VERSION = "1.21.1";
 
 export class WorkTimeSplitGrid
     implements ComponentFramework.StandardControl<IInputs, IOutputs>
@@ -114,6 +114,26 @@ export class WorkTimeSplitGrid
         }
     }
 
+    /**
+     * Whether the device network is available (model-driven). Used as an extra
+     * gate: no network → definitely offline, so the control blocks immediately
+     * instead of waiting on the live probe. Best-effort: if the host doesn't
+     * expose it (older runtimes / canvas), assume available so we don't over-block.
+     */
+    private isNetworkAvailable(): boolean {
+        try {
+            const c = this._context.client as unknown as {
+                isNetworkAvailable?: () => boolean;
+            };
+            if (typeof c.isNetworkAvailable === "function") {
+                return c.isNetworkAvailable() !== false;
+            }
+        } catch {
+            /* unavailable — fall through */
+        }
+        return true;
+    }
+
     /** Best-effort environment/org identifier for the debug panel (id, else host). */
     private environmentId(): string {
         const c = this._context as unknown as {
@@ -148,6 +168,7 @@ export class WorkTimeSplitGrid
             isMobile: mobile,
             singlePane: this.isSinglePane(mobile),
             isOffline: this.isOffline(),
+            networkAvailable: this.isNetworkAvailable(),
             showSuggest: this.showSuggest(),
             // Field-override manifest properties are disabled — the SST defaults
             // in schema.ts apply. Re-add the matching <property> entries in

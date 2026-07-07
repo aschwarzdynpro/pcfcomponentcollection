@@ -98,6 +98,8 @@ export interface WorkTimeSplitGridProps {
     singlePane: boolean;
     /** App is offline → the control's live queries can't run; show a notice. */
     isOffline: boolean;
+    /** Device network available (model-driven). false → block without probing. */
+    networkAvailable: boolean;
     /** Show the AI suggestion (★) button in the split detail (manifest toggle). */
     showSuggest: boolean;
     disabled: boolean;
@@ -339,6 +341,15 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         // "probing" gates the offline block's "Connecting…" vs "Connection
         // required" states; mark it while any load/probe is in flight.
         setProbing(true);
+        // Extra gate: no device network → we're definitely offline. Block right
+        // away (skip the probe + its timeout) instead of showing a stale "online".
+        if (!props.networkAvailable) {
+            setEffectiveOffline(true);
+            setProbing(false);
+            setLoadingEntries(false);
+            setRefreshing(false);
+            return;
+        }
         const runLoad = () =>
             loadEntries(props.webApi, {
                 mode,
@@ -414,6 +425,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         currentUserId,
         props.webApi,
         props.isOffline,
+        props.networkAvailable,
         refreshKey,
         t,
     ]);
@@ -425,11 +437,13 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     // in offline-first this only runs once (props.isOffline doesn't change), so it
     // never fights the probe.
     React.useLayoutEffect(() => {
-        if (props.isOffline) {
+        if (props.isOffline || !props.networkAvailable) {
             setEffectiveOffline(true);
-            setProbing(true);
+            // No network → go straight to "connection required" (nothing to probe);
+            // otherwise show "Connecting…" while the probe decides.
+            setProbing(props.networkAvailable);
         }
-    }, [props.isOffline]);
+    }, [props.isOffline, props.networkAvailable]);
 
     const refresh = React.useCallback(() => {
         setRefreshing(true);
@@ -596,6 +610,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             `Version:     ${props.version}`,
             `Zeit:        ${new Date().toISOString()}`,
             `Status:      ${effectiveOffline ? "Offline" : "Online"}`,
+            `Network:     ${props.networkAvailable ? "available" : "unavailable"}`,
             `Modus:       ${mode}`,
             `Session ID:  ${sessionId}`,
             `User:        ${props.userName || "—"} (${props.userId || "—"})`,
