@@ -243,6 +243,11 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   in die normale Online-Ansicht — **ohne** manuelles Offline→Online-Toggle. **„Erneut
   versuchen"** stößt die Probe neu an, sodass ein gerade wieder verbundenes Gerät mit
   einem Tipp weiterarbeitet.
+- **Netz-Gate:** Meldet der Host **kein Gerätenetz** (`context.client.isNetworkAvailable()`
+  = false), blockt das Control **sofort** — ohne Probe und deren Timeout — statt kurz
+  ein veraltetes „online" zu zeigen. (Best-Effort: fehlt die Methode, gilt Netz als
+  verfügbar. Das prüft *Netz*, **nicht** ausstehende Offline-Syncs — dafür hat PCF
+  keine API.)
 - `WebAPI`/`Utility` sind **`required="false"`**, damit der Host das Control (und
   damit die „Verbindung erforderlich"-Ansicht) überhaupt rendert, statt mit einem
   generischen „Control kann nicht geladen werden" zu scheitern.
