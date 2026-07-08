@@ -52,6 +52,11 @@ deletes the original.
   While the notes are being created a **progress overlay** blocks the list so
   the user can't keep clicking. (Ported from the Schulz `createTimeReport`
   ribbon command.)
+- **Server errors are surfaced** — when a split save or delivery-note creation
+  is rejected by the server (e.g. a plugin / Dual Write error), the actual server
+  **`message`** is shown in the toast (extracted from the Web API / `$batch` /
+  OData `{ error: { message } }` shapes), not just a generic failure. Error toasts
+  stay longer and are **click-to-dismiss**; the full error is also in the ⓘ panel.
 - **Live search** across the title, type, date, **project number**, and
   **resource name** (`sst_resource_ref.name`) — over the full server-filtered
   result set (not just one page).

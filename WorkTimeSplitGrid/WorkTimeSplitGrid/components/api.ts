@@ -649,14 +649,43 @@ function apiRoot(): string | null {
     }
 }
 
-/** Extract the first OData error message from a $batch response body. */
-function parseBatchErrorMessage(text: string): string {
+/** Pull the first `"message":"…"` out of a JSON string (OData error body). */
+function extractJsonMessage(text: string): string {
     const m = /"message"\s*:\s*"((?:[^"\\]|\\.)*)"/.exec(text);
     if (!m) return "";
     try {
         return JSON.parse(`"${m[1]}"`) as string;
     } catch {
         return m[1];
+    }
+}
+
+/** Extract the first OData error message from a $batch response body. */
+function parseBatchErrorMessage(text: string): string {
+    return extractJsonMessage(text);
+}
+
+/**
+ * Best-effort **display** message for a server/Web API error. Handles the shapes
+ * these come back as: a plain `Error` (`.message`), a Web API reject (`{ message }`),
+ * the raw OData body (`{ error: { message } }`), or a JSON string that has the
+ * message nested inside. Falls back to the stringified error.
+ */
+export function serverErrorMessage(e: unknown): string {
+    if (e == null) return "";
+    if (typeof e === "string") return extractJsonMessage(e) || e;
+    const o = e as { message?: unknown; error?: { message?: unknown } };
+    if (o.error && typeof o.error.message === "string" && o.error.message) {
+        return o.error.message;
+    }
+    if (typeof o.message === "string" && o.message) {
+        // Some hosts stuff the whole JSON body into `.message`.
+        return extractJsonMessage(o.message) || o.message;
+    }
+    try {
+        return extractJsonMessage(JSON.stringify(e)) || String(e);
+    } catch {
+        return String(e);
     }
 }
 
@@ -945,6 +974,8 @@ export interface CreateReportsResult {
     reports: CreatedReport[];
     /** The single created report id (when exactly one) — for opening the form. */
     singleReportId: string | null;
+    /** First server error message (when something failed) — for display. */
+    errorMessage?: string;
 }
 
 /**
@@ -1002,6 +1033,7 @@ export async function createTimeReports(
         { woId: string; woName: string; entryIds: string[] }
     >();
     let failed = 0;
+    let firstError = "";
     for (const e of entries) {
         const woRaw = e.rec ? e.rec[WORKORDER_VALUE] : null;
         if (!woRaw) {
@@ -1054,6 +1086,7 @@ export async function createTimeReports(
             });
         } catch (e) {
             failed += wo.entryIds.length; // report creation failed → its entries fail
+            if (!firstError) firstError = serverErrorMessage(e);
             logger.error("createReports.reportFailed", e, {
                 woId: wo.woId,
                 entries: wo.entryIds.length,
@@ -1069,6 +1102,7 @@ export async function createTimeReports(
                 assignedIds.push(eid);
             } catch (e) {
                 failed += 1;
+                if (!firstError) firstError = serverErrorMessage(e);
                 logger.error("createReports.linkFailed", e, { entryId: eid });
             }
         }
@@ -1083,5 +1117,6 @@ export async function createTimeReports(
         assignedIds,
         reports,
         singleReportId: reports.length === 1 ? reports[0].id : null,
+        errorMessage: firstError || undefined,
     };
 }

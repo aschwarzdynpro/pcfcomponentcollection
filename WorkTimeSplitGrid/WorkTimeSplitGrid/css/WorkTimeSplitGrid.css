@@ -388,6 +388,11 @@
     border-radius: 4px;
     font-size: 13px;
     color: #0b5394;
+    cursor: pointer;
+    max-height: 40vh;
+    overflow-y: auto;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
 }
 
 .wtsg-toast-error {
