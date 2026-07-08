@@ -12,6 +12,7 @@ import {
     probeOnline,
     createTimeReports,
     loadEntries,
+    serverErrorMessage,
     LoadedEntry,
     CreatedReport,
 } from "./api";
@@ -597,9 +598,9 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     // selected entry; until then the panel shows a progress indicator (no flicker).
     const subtypesMatched = !!selectedId && subtypesEntryId === selectedId;
 
-    const flashToast = React.useCallback((msg: string) => {
+    const flashToast = React.useCallback((msg: string, durationMs = 4000) => {
         setToast(msg);
-        window.setTimeout(() => setToast(null), 4000);
+        window.setTimeout(() => setToast(null), durationMs);
     }, []);
 
     // Assemble the debug/info blob (version + context + buffered telemetry).
@@ -704,8 +705,11 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 }
                 flashToast(
                     res.failed > 0
-                        ? t.reportsPartial(res.assigned, ids.length)
+                        ? `${t.reportsPartial(res.assigned, ids.length)}${
+                              res.errorMessage ? ` — ${res.errorMessage}` : ""
+                          }`
                         : t.reportsDone(res.reportsCreated, res.assigned),
+                    res.failed > 0 ? 9000 : 4000,
                 );
                 setCheckedIds(new Set());
                 // Assigning is online-only (offline is read-only). The assigned
@@ -724,9 +728,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 }
             } catch (e) {
                 props.logger.error("createReports", e);
-                const msg =
-                    (e as { message?: string })?.message ?? String(e ?? "");
-                flashToast(`${t.createReports}: ${msg}`);
+                flashToast(`${t.createReports}: ${serverErrorMessage(e)}`, 9000);
             } finally {
                 setCreating(false);
             }
@@ -978,7 +980,12 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             )}
 
             {toast && (
-                <div className="wtsg-toast" role="status">
+                <div
+                    className="wtsg-toast"
+                    role="status"
+                    title={t.closeLabel}
+                    onClick={() => setToast(null)}
+                >
                     {toast}
                 </div>
             )}
@@ -1037,7 +1044,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 onBack={() => setSelectedId(null)}
                                 onSubtypesChange={setSubtypes}
                                 onSaved={handleSaved}
-                                onError={(msg) => flashToast(msg)}
+                                onError={(msg) => flashToast(msg, 9000)}
                             />
                         )}
                     </>

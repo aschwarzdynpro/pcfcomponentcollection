@@ -8,6 +8,7 @@ import {
     saveSplit,
     suggestSplit,
     isHolidayForEntry,
+    serverErrorMessage,
     SplitInput,
 } from "./api";
 import { Logger } from "./telemetry";
@@ -137,10 +138,7 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
             );
             props.onSaved();
         } catch (e) {
-            const msg =
-                (e as { message?: string })?.message ??
-                String(e ?? "unknown error");
-            props.onError(`${t.saveFailed}: ${msg}`);
+            props.onError(`${t.saveFailed}: ${serverErrorMessage(e)}`);
         } finally {
             setSaving(false);
         }

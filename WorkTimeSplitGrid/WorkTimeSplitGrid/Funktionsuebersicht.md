@@ -55,6 +55,12 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   über die Liste, damit der Benutzer nicht weiterklickt und sieht, dass im
   Hintergrund etwas passiert. (Portiert aus dem Schulz-Ribbon-Command
   `createTimeReport`.)
+- **Server-Fehler werden angezeigt** — lehnt der Server einen Aufteilen-Save oder
+  eine Lieferschein-Erstellung ab (z. B. Plugin-/Dual-Write-Fehler), wird die echte
+  Server-**`message`** im Toast gezeigt (robust aus Web-API / `$batch` / OData-
+  `{ error: { message } }` extrahiert), nicht nur ein generischer Fehler. Fehler-
+  Toasts bleiben länger stehen und lassen sich **per Klick schließen**; der volle
+  Fehler steckt zusätzlich im ⓘ-Panel.
 - **Freitext-Suche** über Titel, Typ, Datum, **Projektnummer** und
   **Ressourcenname** (`sst_resource_ref.name`) — über die **gesamte**
   serverseitig gefilterte Ergebnismenge (nicht nur eine Seite).
