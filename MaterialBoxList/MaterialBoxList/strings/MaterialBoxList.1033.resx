@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="MaterialBoxList_Display" xml:space="preserve">
+    <value>Material Box List</value>
+    <comment>Display name for the control</comment>
+  </data>
+  <data name="MaterialBoxList_Desc" xml:space="preserve">
+    <value>Mobile-first list of material boxes on storage locations: per-box material counter, long-press (or button) to inspect the contained materials, and a swipe/button action that marks a box as taken. Optimistic UI with a 5 s undo. Trilingual (DE/EN/FR).</value>
+    <comment>Description for the control</comment>
+  </data>
+  <data name="boxDataset_Display" xml:space="preserve">
+    <value>Material Boxes</value>
+    <comment>Display name for the bound dataset</comment>
+  </data>
+  <data name="boxDataset_Desc" xml:space="preserve">
+    <value>The material boxes shown as the master list. Columns, sorting and filtering come from the bound view.</value>
+    <comment>Description for the bound dataset</comment>
+  </data>
+  <data name="childEntityName_Display" xml:space="preserve">
+    <value>Child (Material) Table</value>
+    <comment>Display name for the child entity property</comment>
+  </data>
+  <data name="childEntityName_Desc" xml:space="preserve">
+    <value>Logical name of the child table whose rows are counted per box and shown in the overlay (1:n from the box). Example: sst_material.</value>
+    <comment>Description for the child entity property</comment>
+  </data>
+  <data name="childLookupField_Display" xml:space="preserve">
+    <value>Child Lookup Column</value>
+    <comment>Display name for the child lookup property</comment>
+  </data>
+  <data name="childLookupField_Desc" xml:space="preserve">
+    <value>Logical name of the lookup column on the child table that points back to the box (queried as _&lt;name&gt;_value). Example: sst_materialbox.</value>
+    <comment>Description for the child lookup property</comment>
+  </data>
+  <data name="childDisplayColumns_Display" xml:space="preserve">
+    <value>Child Display Columns</value>
+    <comment>Display name for the child display columns property</comment>
+  </data>
+  <data name="childDisplayColumns_Desc" xml:space="preserve">
+    <value>Comma-separated logical names of the child columns shown in the overlay; the first is the material name. Example: sst_name,sst_quantity,sst_unit.</value>
+    <comment>Description for the child display columns property</comment>
+  </data>
+  <data name="childFilter_Display" xml:space="preserve">
+    <value>Child Filter (optional)</value>
+    <comment>Display name for the child filter property</comment>
+  </data>
+  <data name="childFilter_Desc" xml:space="preserve">
+    <value>Optional OData $filter appended to the batch query, e.g. statecode eq 0. Keep it simple — no aggregates, offline-compatible.</value>
+    <comment>Description for the child filter property</comment>
+  </data>
+  <data name="swipeFieldName_Display" xml:space="preserve">
+    <value>Take-out Field</value>
+    <comment>Display name for the swipe field property</comment>
+  </data>
+  <data name="swipeFieldName_Desc" xml:space="preserve">
+    <value>Logical name of the box column set when a box is marked as taken. Recommended: a DateTime column (audit timestamp). Example: sst_takenon.</value>
+    <comment>Description for the swipe field property</comment>
+  </data>
+  <data name="swipeFieldValue_Display" xml:space="preserve">
+    <value>Take-out Value</value>
+    <comment>Display name for the swipe value property</comment>
+  </data>
+  <data name="swipeFieldValue_Desc" xml:space="preserve">
+    <value>Value written to the take-out field: "@now" for the current timestamp (recommended), "true"/"false" for a Boolean, digits for an OptionSet, otherwise text.</value>
+    <comment>Description for the swipe value property</comment>
+  </data>
+  <data name="takenBehavior_Display" xml:space="preserve">
+    <value>Taken-box Behavior</value>
+    <comment>Display name for the taken-behavior property</comment>
+  </data>
+  <data name="takenBehavior_Desc" xml:space="preserve">
+    <value>How already-taken boxes appear: hide (removed from the list), gray (dimmed, action disabled) or allow-undo (dimmed, can be reverted). Default: gray.</value>
+    <comment>Description for the taken-behavior property</comment>
+  </data>
+  <data name="takenBehavior_hide" xml:space="preserve">
+    <value>Hide</value>
+    <comment>Enum value: hide taken boxes</comment>
+  </data>
+  <data name="takenBehavior_gray" xml:space="preserve">
+    <value>Gray out</value>
+    <comment>Enum value: gray out taken boxes</comment>
+  </data>
+  <data name="takenBehavior_allowUndo" xml:space="preserve">
+    <value>Allow undo</value>
+    <comment>Enum value: allow undo of taken boxes</comment>
+  </data>
+</root>

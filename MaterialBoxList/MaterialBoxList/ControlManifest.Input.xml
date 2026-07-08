@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="MaterialBox" constructor="MaterialBoxList" version="1.0.0" display-name-key="MaterialBoxList_Display" description-key="MaterialBoxList_Desc" control-type="virtual">
+    <!-- Bound dataset: the material boxes shown as the master list. Columns,
+         sorting, filtering and security all come from the bound view. -->
+    <data-set name="boxDataset" display-name-key="boxDataset_Display" description-key="boxDataset_Desc"></data-set>
+
+    <!-- === Child-record (materials) configuration =========================
+         These describe the 1:n child table whose rows are counted per box and
+         shown in the long-press overlay. Repo convention (CLAUDE.md §3.6):
+         input properties are required="false" with sensible defaults baked into
+         schema.ts, so the control always loads (also in the test harness / maker
+         canvas where required props would block render) and degrades gracefully.
+         The defaults are PLACEHOLDERS — set them to your real schema in the
+         maker's control configuration. -->
+    <property name="childEntityName" display-name-key="childEntityName_Display" description-key="childEntityName_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="childLookupField" display-name-key="childLookupField_Display" description-key="childLookupField_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+    <!-- CSV of the child columns to show in the overlay, e.g. "sst_name,sst_quantity,sst_unit" -->
+    <property name="childDisplayColumns" display-name-key="childDisplayColumns_Display" description-key="childDisplayColumns_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+    <!-- Optional OData filter appended to the batch query, e.g. "statecode eq 0" -->
+    <property name="childFilter" display-name-key="childFilter_Display" description-key="childFilter_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- === Swipe / take-out action ======================================== -->
+    <property name="swipeFieldName" display-name-key="swipeFieldName_Display" description-key="swipeFieldName_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+    <!-- Value written as string; interpreted at runtime: "@now" → current
+         timestamp (recommended, DateTime field), "true"/"false" → Boolean,
+         digits → OptionSet/number, otherwise text. -->
+    <property name="swipeFieldValue" display-name-key="swipeFieldValue_Display" description-key="swipeFieldValue_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- Behavior for boxes that are already taken: hide | gray | allow-undo.
+         Enum always resolves to a value, so required="true" is harmless here. -->
+    <property name="takenBehavior" display-name-key="takenBehavior_Display" description-key="takenBehavior_Desc" of-type="Enum" usage="input" required="true">
+      <value name="hide" display-name-key="takenBehavior_hide">hide</value>
+      <value name="gray" display-name-key="takenBehavior_gray" default="true">gray</value>
+      <value name="allow-undo" display-name-key="takenBehavior_allowUndo">allow-undo</value>
+    </property>
+
+    <resources>
+      <code path="index.ts" order="1" />
+      <platform-library name="React" version="16.14.0" />
+      <platform-library name="Fluent" version="9.46.2" />
+      <css path="css/MaterialBoxList.css" order="1" />
+      <resx path="strings/MaterialBoxList.1033.resx" version="1.0.0" />
+    </resources>
+
+    <!-- required="false" (CLAUDE.md §7): a control whose required feature is
+         unavailable (e.g. WebAPI in a canvas/offline context) is NOT rendered by
+         the host at all — hiding the React fallback behind a generic
+         "control can't load" error. With optional features the control always
+         loads: online it uses webAPI, elsewhere it degrades gracefully. -->
+    <feature-usage>
+      <uses-feature name="WebAPI" required="false" />
+      <uses-feature name="Utility" required="false" />
+    </feature-usage>
+  </control>
+</manifest>
