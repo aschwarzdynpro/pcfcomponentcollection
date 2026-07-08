@@ -12,9 +12,9 @@ eine Entnahme-Aktion, die eine Box als *entnommen* markiert.
 > Empfehlung für neue Controls. Das hält das Bundle winzig (~18 KB) und passt
 > besser zu Mobilgeräten.
 
-## Stand – Meilenstein 1 (Gerüst, im Browser testbar)
+## Stand – Meilensteine 1 & 2 (Gerüst + Gesten)
 
-Das ist der erste Meilenstein des Konzepts. Was jetzt funktioniert:
+Was jetzt funktioniert:
 
 - ✅ Darstellung der Boxen aus dem gebundenen Dataset inkl. Paging / Infinite
   Scroll.
@@ -24,19 +24,23 @@ Das ist der erste Meilenstein des Konzepts. Was jetzt funktioniert:
   Child-Spalten, Leer- und Ladezustand.
 - ✅ **Entnahme-Aktion** mit optimistischem UI, 5-Sekunden-**Undo**-Snackbar und
   wiederholbarem Fehlerpfad.
-- ✅ **Fallback-Buttons** („Materialien anzeigen“ / „Entnehmen“), damit jede
-  Funktion ohne Gesten erreichbar ist – voll testbar im Browser und im
-  PCF-Testharness (der kein `webAPI` hat; dort springt ein deterministischer
-  Mock ein).
+- ✅ **Touch-Gesten (M2)**: **Long-Press** (≥ 500 ms, < 10 px) öffnet das
+  Overlay; **Links-Swipe** über 40 % der Zeilenbreite entnimmt die Box, mit
+  Aktionsfläche, die an der Commit-Schwelle von Grau auf Grün kippt. Eine
+  gemeinsame Pointer-Event-State-Machine pro Zeile regelt die
+  Scroll-/Swipe-/Long-Press-Übergabe, inkl. Kanten-Totzone (OS-Back-Geste) und
+  Zurück-Feder-Animation. Natives Long-Press-Kontextmenü unterdrückt.
+- ✅ **Fallback-Buttons** („Materialien anzeigen“ / „Entnehmen“) auf Web
+  (Nicht-Touch), damit jede Funktion ohne Gesten erreichbar ist – voll testbar
+  im Browser und im PCF-Testharness (der kein `webAPI` hat; dort springt ein
+  deterministischer Mock ein). Umschaltung automatisch per `getFormFactor()` /
+  `getClient()`.
 - ✅ Konfigurierbar: Child-Entität/-Spalten, Entnahme-Feld/-Wert, Verhalten für
   bereits entnommene Boxen.
 - ✅ Dreisprachige Oberfläche (DE / EN / FR).
 
 **Noch nicht umgesetzt (spätere Meilensteine):**
 
-- ⏳ M2 – **Gesten**: Long-Press öffnet das Overlay, Links-Swipe entnimmt
-  (Pointer-Event-State-Machine, Kanten-Totzone, Zurück-Feder-Animation). Aktuell
-  decken die Fallback-Buttons dieselben Aktionen überall ab.
 - ⏳ M3 – Typauflösung des Entnahme-Werts über `getEntityMetadata`.
 - ⏳ M4 – Offline-Härtung, optionale Properties `swipeUserFieldName` /
   `groupByColumn`, Gruppierung mit Sticky-Headern, Suche/Filterchips,

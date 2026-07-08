@@ -41,21 +41,57 @@
 
 /* ---- Box row ---- */
 .mbl-row {
+    position: relative;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
-    padding: 12px;
     background: #ffffff;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    /* Vertical scrolling stays with the list; horizontal is reserved for the
-       swipe gesture added in milestone 2 (concept §5.4). */
+    /* Rounded corners must clip the sliding foreground + action surface. */
+    overflow: hidden;
+    /* Vertical scrolling stays with the list; horizontal is the swipe gesture
+       (concept §5.4). Text isn't selectable so a long-press can't select. */
     touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.mbl-row--pressed {
+    transform: scale(0.99);
 }
 
 .mbl-row--taken {
     opacity: 0.55;
     background: #f5f5f5;
+}
+
+/* Foreground content that slides on swipe. */
+.mbl-row__fg {
+    position: relative;
+    z-index: 1;
+    background: inherit;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Action surface revealed behind the row while swiping left. */
+.mbl-row__surface {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 20px;
+    background: #8a8886;
+    color: #ffffff;
+    font-weight: 600;
+    /* Commit threshold flips the colour from grey to green (§5.4). */
+    transition: background 0.12s ease;
+}
+
+.mbl-row__surface--armed {
+    background: #107c10;
 }
 
 .mbl-row__main {
@@ -92,6 +128,7 @@
     flex: 0 0 auto;
     display: flex;
     align-items: center;
+    gap: 8px;
 }
 
 .mbl-row__actions {
@@ -197,6 +234,15 @@
 /* Respect the user's motion preference (CLAUDE.md §7). */
 @media (prefers-reduced-motion: no-preference) {
     .mbl-row {
-        transition: opacity 0.15s ease, background 0.15s ease;
+        transition: opacity 0.15s ease, background 0.15s ease,
+            transform 0.12s ease;
+    }
+    /* Spring the foreground back after a non-committing swipe; no transition
+       while the finger is down so it tracks 1:1. */
+    .mbl-row__fg {
+        transition: transform 0.2s ease;
+    }
+    .mbl-row__fg--swiping {
+        transition: none;
     }
 }

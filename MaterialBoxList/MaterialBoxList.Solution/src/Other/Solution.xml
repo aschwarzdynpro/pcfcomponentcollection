@@ -10,7 +10,7 @@
     <Descriptions>
       <Description description="PCF virtual dataset control for material boxes: per-box material counter, long-press/button overlay of the contained materials, and a swipe/button take-out action with optimistic UI and undo. Mobile-first, trilingual UI (DE/EN/FR)." languagecode="1033" />
     </Descriptions>
-    <Version>1.0.0.0</Version>
+    <Version>1.1.0.0</Version>
     <!-- Solution Package Type: Unmanaged(0)/Managed(1)/Both(2)-->
     <Managed>2</Managed>
     <Publisher>

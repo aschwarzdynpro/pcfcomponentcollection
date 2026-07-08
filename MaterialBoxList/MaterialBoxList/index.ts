@@ -16,7 +16,7 @@ import {
 } from "./services/updateService";
 
 /** Control version — keep in sync with ControlManifest / package.json / Solution. */
-const CONTROL_VERSION = "1.0.0";
+const CONTROL_VERSION = "1.1.0";
 
 type Dataset = ComponentFramework.PropertyTypes.DataSet;
 
@@ -85,6 +85,7 @@ export class MaterialBoxList
             childService: this._childService,
             updateService: this._updateService ?? new MockUpdateService(),
             takenBehavior: this._config.takenBehavior,
+            gesturesEnabled: this.isTouch(context),
             lang: lcidToLang(context.userSettings?.languageId),
             onLoadMore: () => this.loadNextPage(dataset),
         };
@@ -98,6 +99,25 @@ export class MaterialBoxList
 
     public destroy(): void {
         // Virtual controls unmount their React tree automatically.
+    }
+
+    /**
+     * Whether to drive the row with touch gestures (mobile) rather than the
+     * fallback buttons (web). Phone form factor (3) → gestures; the mobile
+     * client also reports via getClient(). Desktop/tablet/web keep the buttons,
+     * which makes the control demoable and testable in the browser + maker.
+     */
+    private isTouch(context: ComponentFramework.Context<IInputs>): boolean {
+        try {
+            if (context.client.getFormFactor() === 3) return true;
+        } catch {
+            /* form factor unavailable — fall through */
+        }
+        try {
+            return context.client.getClient() === "Mobile";
+        } catch {
+            return false;
+        }
     }
 
     /** Build the update service once the bound entity type is known (stable). */

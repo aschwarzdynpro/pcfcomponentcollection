@@ -8,7 +8,7 @@ control for import.
 | Field                | Value                                |
 |----------------------|--------------------------------------|
 | Solution name        | `MaterialBoxList`                    |
-| Version              | `1.0.0.0`                            |
+| Version              | `1.1.0.0`                            |
 | Publisher            | `Schulz Systemtechnik GmbH`          |
 | Customization prefix | `sst`                                |
 | Control unique name  | `sst_MaterialBox.MaterialBoxList`    |

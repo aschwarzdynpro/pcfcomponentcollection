@@ -16,6 +16,8 @@ export interface BoxListProps {
     loading: boolean;
     /** Whether more pages can be loaded (infinite scroll). */
     hasNextPage: boolean;
+    /** Touch gestures instead of fallback buttons (mobile). */
+    gesturesEnabled: boolean;
     strings: Strings;
     onShowMaterials: (boxId: string) => void;
     onTake: (boxId: string) => void;
@@ -35,6 +37,7 @@ export const BoxList: React.FC<BoxListProps> = ({
     errorId,
     loading,
     hasNextPage,
+    gesturesEnabled,
     strings,
     onShowMaterials,
     onTake,
@@ -73,6 +76,7 @@ export const BoxList: React.FC<BoxListProps> = ({
                     count={countOf(box.id)}
                     taken={takenOf(box.id)}
                     error={errorId === box.id}
+                    gesturesEnabled={gesturesEnabled}
                     strings={strings}
                     onShowMaterials={onShowMaterials}
                     onTake={onTake}

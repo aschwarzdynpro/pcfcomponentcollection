@@ -19,6 +19,8 @@ export interface AppProps {
     childService: IChildRecordService;
     updateService: IUpdateService;
     takenBehavior: TakenBehavior;
+    /** Touch gestures (mobile) vs. fallback buttons (web). */
+    gesturesEnabled: boolean;
     lang: Lang;
     onLoadMore: () => void;
 }
@@ -101,6 +103,7 @@ export const App: React.FC<AppProps> = ({
     childService,
     updateService,
     takenBehavior,
+    gesturesEnabled,
     lang,
     onLoadMore,
 }) => {
@@ -191,6 +194,7 @@ export const App: React.FC<AppProps> = ({
                 errorId={state.errorId}
                 loading={loading}
                 hasNextPage={hasNextPage}
+                gesturesEnabled={gesturesEnabled}
                 strings={strings}
                 onShowMaterials={onShowMaterials}
                 onTake={beginTake}

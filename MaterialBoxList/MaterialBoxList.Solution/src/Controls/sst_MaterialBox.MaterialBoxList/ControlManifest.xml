@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <manifest>
-  <control namespace="MaterialBox" constructor="MaterialBoxList" version="1.0.0" display-name-key="MaterialBoxList_Display" description-key="MaterialBoxList_Desc" control-type="virtual" api-version="1.3.18">
+  <control namespace="MaterialBox" constructor="MaterialBoxList" version="1.1.0" display-name-key="MaterialBoxList_Display" description-key="MaterialBoxList_Desc" control-type="virtual" api-version="1.3.18">
     <data-set name="boxDataset" display-name-key="boxDataset_Display" description-key="boxDataset_Desc"/>
     <property name="childEntityName" display-name-key="childEntityName_Display" description-key="childEntityName_Desc" of-type="SingleLine.Text" usage="input" required="false"/>
     <property name="childLookupField" display-name-key="childLookupField_Display" description-key="childLookupField_Desc" of-type="SingleLine.Text" usage="input" required="false"/>

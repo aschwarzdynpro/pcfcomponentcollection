@@ -12,9 +12,9 @@ that marks a box as taken.
 > recommendation for new controls, which keeps the bundle tiny (~18 KB) and is a
 > better fit for mobile.
 
-## Status — Milestone 1 (scaffold, web-testable)
+## Status — Milestones 1 & 2 (scaffold + gestures)
 
-This is the first milestone of the concept. What works now:
+What works now:
 
 - ✅ Bound-dataset rendering of the boxes with paging / infinite scroll.
 - ✅ Per-box **counter chip** — one batched child fetch per page (no aggregate
@@ -23,18 +23,22 @@ This is the first milestone of the concept. What works now:
   columns, an empty state, and a loading state.
 - ✅ **Take-out action** with optimistic UI, a 5-second **undo** snackbar, and a
   retryable error path.
-- ✅ **Fallback buttons** ("Show materials" / "Take out") so every function is
-  reachable without gestures — fully testable in the browser and the PCF
-  harness (which has no `webAPI`; a deterministic mock stands in).
+- ✅ **Touch gestures (M2)**: **long-press** (≥ 500 ms, < 10 px) opens the
+  overlay; **left-swipe** past 40 % of the row width takes the box out, with an
+  action surface that flips grey → green at the commit threshold. One unified
+  Pointer-Event state machine per row handles the scroll/swipe/long-press
+  hand-off, with a left-edge dead zone (OS back-gesture) and spring-back
+  animation. Native long-press context menu suppressed.
+- ✅ **Fallback buttons** ("Show materials" / "Take out") on web (non-touch), so
+  every function is reachable without gestures — fully testable in the browser
+  and the PCF harness (which has no `webAPI`; a deterministic mock stands in).
+  The control switches automatically on `getFormFactor()` / `getClient()`.
 - ✅ Configurable child entity/columns, take-out field/value, and taken-box
   behavior via manifest properties.
 - ✅ Trilingual UI (DE / EN / FR).
 
 **Not yet implemented (later milestones):**
 
-- ⏳ M2 — touch **gestures**: long-press to open the overlay, left-swipe to take
-  out (Pointer-Event state machine, edge dead-zone, spring-back). Today the
-  fallback buttons cover the same actions everywhere.
 - ⏳ M3 — metadata-typed take-out value resolution via `getEntityMetadata`.
 - ⏳ M4 — offline hardening, optional `swipeUserFieldName` / `groupByColumn`,
   grouping with sticky headers, search/filter chips, barcode scan.
@@ -81,10 +85,15 @@ offline profile — an admin task, not a control bug (CLAUDE.md §7).
 ## Mobile-only behavior
 
 The control is designed for Power Apps Mobile / Field Service Mobile. It still
-renders everywhere: in M1 the fallback buttons make it fully usable in the
-browser and maker. Gesture support (M2) will branch on
-`context.client.getFormFactor()` / `getClient()`, keeping the button fallback on
-web.
+renders everywhere: it branches on `context.client.getFormFactor()` /
+`getClient()` — phone/mobile gets the touch gestures, everything else (desktop /
+tablet / web / maker) keeps the fallback buttons, so the control stays fully
+usable and testable in the browser.
+
+> **On-device testing (M2 acceptance):** the Pointer-Event behavior in the
+> Power Apps Mobile WebView differs between iOS and Android and must be verified
+> on real devices (concept §7, milestone 2). The build here validates
+> compilation only.
 
 ## Build
 
@@ -114,6 +123,7 @@ components/
   i18n.ts                    # DE/EN/FR strings, lcidToLang
 hooks/
   useChildCounts.ts          # batch fetch + cache of the per-box materials
+  useRowGesture.ts           # unified pointer-event state machine (long-press + swipe)
 services/
   childRecordService.ts      # WebAPI + Mock implementations (interface)
   updateService.ts           # WebAPI + Mock implementations (interface)

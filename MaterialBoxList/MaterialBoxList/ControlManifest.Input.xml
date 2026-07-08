@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="MaterialBox" constructor="MaterialBoxList" version="1.0.0" display-name-key="MaterialBoxList_Display" description-key="MaterialBoxList_Desc" control-type="virtual">
+  <control namespace="MaterialBox" constructor="MaterialBoxList" version="1.1.0" display-name-key="MaterialBoxList_Display" description-key="MaterialBoxList_Desc" control-type="virtual">
     <!-- Bound dataset: the material boxes shown as the master list. Columns,
          sorting, filtering and security all come from the bound view. -->
     <data-set name="boxDataset" display-name-key="boxDataset_Display" description-key="boxDataset_Desc"></data-set>
