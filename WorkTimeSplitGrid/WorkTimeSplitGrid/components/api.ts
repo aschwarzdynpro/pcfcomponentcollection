@@ -991,6 +991,7 @@ export interface CreateReportsResult {
 export async function createTimeReports(
     webApi: ComponentFramework.WebApi,
     selectedIds: string[],
+    resourceName: string,
     logger: Logger = NOOP_LOGGER,
 ): Promise<CreateReportsResult> {
     const ids = selectedIds.map((s) => s.replace(/[{}]/g, ""));
@@ -1049,11 +1050,18 @@ export async function createTimeReports(
     let assigned = 0;
     const assignedIds: string[] = [];
     const reports: CreatedReport[] = [];
-    const dateStr = new Date().toDateString();
+    // Name to match the parallel cloud flow:
+    //   concat('Timereport ', <date>, ' / ', <resource name>)
+    // date = today (local, yyyy-MM-dd), resource = the executing user's name.
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(
+        now.getDate(),
+    )}`;
+    const reportName = `Timereport ${dateStr} / ${resourceName}`.trim();
 
     for (const wo of byWo.values()) {
         let reportId: string;
-        const reportName = `Report ${wo.woName} On ${dateStr}`;
         try {
             const created = await webApi.createRecord(TIMEREPORT.logicalName, {
                 [TIMEREPORT.name]: reportName,

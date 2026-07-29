@@ -697,6 +697,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 const res = await createTimeReports(
                     props.webApi,
                     ids,
+                    props.userName,
                     props.logger,
                 );
                 if (res.blocked) {
