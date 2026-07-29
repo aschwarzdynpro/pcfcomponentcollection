@@ -48,7 +48,11 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
     (`sst_deliverynotenumberassembly_str`, mit dem Arbeitsauftrag als Unterzeile)
     auflistet, sodass der Benutzer wählt, welchen er öffnet.
   Beide erstellen **je Arbeitsauftrag** einen Lieferschein (`sst_timereports`,
-  `sst_name` = „Report <WO> On <Datum>", `sst_Arbeitsauftrag` → msdyn_workorder)
+  `sst_name` = „Timereport <yyyy-MM-dd> / <Ressourcenname>" — deckungsgleich mit dem
+  parallelen Cloud Flow (`concat('Timereport ', date, ' / ', resource.name)`),
+  Datum = heute (lokal, ISO), Ressource = Name der Ressource des **ersten
+  ausgewählten Eintrags** (`sst_resource_ref.name`, analog zum `Get_Resource`-Schritt
+  des Flows); `sst_Arbeitsauftrag` → msdyn_workorder)
   und verknüpfen jeden ausgewählten Eintrag via `sst_TimeReport` mit dem
   Lieferschein seines Arbeitsauftrags. Bereits zugeordnete Einträge werden
   abgewiesen. Während der Erstellung blendet sich ein **Fortschritts-Overlay**

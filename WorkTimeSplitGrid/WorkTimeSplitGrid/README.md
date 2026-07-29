@@ -48,7 +48,12 @@ deletes the original.
     with the work order as a sub-line) so the user chooses which to open.
   Both create one delivery note (`sst_timereports`) per work order across the
   selection and link each selected entry to its work order's note via
-  `sst_TimeReport`. Entries already assigned to a delivery note are rejected.
+  `sst_TimeReport`. The note's `sst_name` is **`Timereport <yyyy-MM-dd> / <resource
+  name>`** — matching the parallel cloud flow
+  (`concat('Timereport ', date, ' / ', resource.name)`; date = today (local ISO),
+  resource = the resource of the **first selected entry** (`sst_resource_ref.name`),
+  like the flow's `Get_Resource` step). Entries already assigned to a delivery note
+  are rejected.
   While the notes are being created a **progress overlay** blocks the list so
   the user can't keep clicking. (Ported from the Schulz `createTimeReport`
   ribbon command.)

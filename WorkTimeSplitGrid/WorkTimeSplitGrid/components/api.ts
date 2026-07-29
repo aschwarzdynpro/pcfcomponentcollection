@@ -997,14 +997,16 @@ export async function createTimeReports(
     const fmt = "@OData.Community.Display.V1.FormattedValue";
     const op = logger.op("createReports", { selected: ids.length });
 
-    // Retrieve work order + current delivery note for each selected entry.
+    // Retrieve work order + current delivery note + resource (for the name) for
+    // each selected entry.
     const entries = await Promise.all(
         ids.map((id) =>
             webApi
                 .retrieveRecord(
                     PARENT.logicalName,
                     id,
-                    `?$select=${WORKORDER_VALUE},${TIMEREPORT.value}`,
+                    `?$select=${WORKORDER_VALUE},${TIMEREPORT.value}` +
+                        `&$expand=sst_resource_ref($select=name)`,
                 )
                 .then(
                     (rec: any) => ({ id, rec }),
@@ -1049,11 +1051,28 @@ export async function createTimeReports(
     let assigned = 0;
     const assignedIds: string[] = [];
     const reports: CreatedReport[] = [];
-    const dateStr = new Date().toDateString();
+    // Name to match the parallel cloud flow:
+    //   concat('Timereport ', <date>, ' / ', <resource name>)
+    // date = today (local, yyyy-MM-dd); resource = the name of the resource on the
+    // FIRST selected booking entry (sst_resource_ref.name), like the flow's
+    // Get_Resource step.
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(
+        now.getDate(),
+    )}`;
+    let resourceName = "";
+    for (const e of entries) {
+        const rn = e.rec?.sst_resource_ref?.name;
+        if (rn) {
+            resourceName = String(rn);
+            break;
+        }
+    }
+    const reportName = `Timereport ${dateStr} / ${resourceName}`.trim();
 
     for (const wo of byWo.values()) {
         let reportId: string;
-        const reportName = `Report ${wo.woName} On ${dateStr}`;
         try {
             const created = await webApi.createRecord(TIMEREPORT.logicalName, {
                 [TIMEREPORT.name]: reportName,
