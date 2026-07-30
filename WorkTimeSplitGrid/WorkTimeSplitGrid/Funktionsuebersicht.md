@@ -153,9 +153,14 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   2. Legt pro Subtype mit Wert > 0 eine neue Rounded Time Entry an:
      `sst_workordersubtype` = Subtype-Name, `sst_duration` = Subtype-Stunden,
      `sst_type` = `<Original-Typ> (<Subtype>)`, `sst_worksubtypecompleted` = Ja,
-     plus übernommene Felder (`sst_name`, `sst_date`, `sst_freitextfeld`) und
-     Lookups (`sst_workorder`, `sst_bookableresourcebooking`, `sst_project_id`)
-     vom Original.
+     plus übernommene Felder (`sst_name`, `sst_date`, `sst_freitextfeld`,
+     `sst_resource`, `sst_useremail`) und Lookups (`sst_workorder`,
+     `sst_bookableresourcebooking`, `sst_project_id`, `sst_resource_ref`,
+     `sst_projecttask_ref`) vom Original. Ressource, Projektaufgabe und
+     User-E-Mail setzt beim regulären Anlegen das Plugin
+     `CreateRoundedTimeEntries` aus der Buchung — der Split reicht sie weiter,
+     damit „Meine Stunden" und die Projektaufgaben-Zuordnung erhalten bleiben.
+     Übernommen wird jeweils nur, was am Original **gefüllt** ist.
   2b. Setzt die **Zeiterfassungsart** (`sst_worktype_ref` + `sst_worktype_title_str`)
      je Split über den zusammengesetzten Key **(paytype, timetype)**: paytype aus
      dem Subtype (`sst_paytype_opt`, sonst Subtype-Name gegen das OptionSet-Label),

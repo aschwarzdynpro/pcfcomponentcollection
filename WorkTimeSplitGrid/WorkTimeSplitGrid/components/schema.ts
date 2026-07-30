@@ -139,6 +139,13 @@ export function normalizeLabel(s: string | null | undefined): string {
 /**
  * Parent lookups copied onto each split record. `logical` is the `_x_value`
  * source on the original; `bind` is the @odata.bind navigation property name.
+ *
+ * The navigation property is the attribute's **SchemaName**, which is NOT
+ * uniformly cased in this schema — `sst_WorkOrder`, `sst_BookableResourceBooking`,
+ * `sst_Project_id` and `sst_TimeReport` are PascalCase, while `sst_resource_ref`,
+ * `sst_projecttask_ref` and `sst_worktype_ref` are lower-case. Verified live
+ * against D365-SCHULZ-INT-11 (2026-07-30, `pac modelbuilder`, which emits
+ * SchemaNames) and against the SSTCoreV2 export. Don't "normalize" these.
  */
 export const PARENT_LOOKUPS = [
     { logical: "sst_workorder", value: "_sst_workorder_value", bind: "sst_WorkOrder" },
@@ -148,7 +155,25 @@ export const PARENT_LOOKUPS = [
         bind: "sst_BookableResourceBooking",
     },
     { logical: "sst_project_id", value: "_sst_project_id_value", bind: "sst_Project_id" },
+    // Resource + project task: set by the CreateRoundedTimeEntries plugin from the
+    // booking. Carried over so a split keeps the "My hours" filter working and
+    // stays attributable to its project task.
+    { logical: "sst_resource_ref", value: "_sst_resource_ref_value", bind: "sst_resource_ref" },
+    {
+        logical: "sst_projecttask_ref",
+        value: "_sst_projecttask_ref_value",
+        bind: "sst_projecttask_ref",
+    },
 ] as const;
+
+/**
+ * Plain (non-lookup) columns copied 1:1 from the original onto each split when
+ * the original has them filled. Both are denormalized onto the entry by the
+ * CreateRoundedTimeEntries plugin (resource name / resource primary email) and
+ * are read back by downstream filtering — a split must not lose them.
+ * Verified `nvarchar` in the SSTCoreV2 export.
+ */
+export const COPIED_FIELDS = ["sst_resource", "sst_useremail"] as const;
 
 /** Work-order lookup value column — used to find the related Pause entries. */
 export const WORKORDER_VALUE = "_sst_workorder_value";

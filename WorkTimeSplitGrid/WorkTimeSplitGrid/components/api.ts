@@ -2,6 +2,7 @@ import {
     PARENT,
     CHILD,
     PARENT_LOOKUPS,
+    COPIED_FIELDS,
     WORKORDER_VALUE,
     WORKTYPE,
     ENTRY_TIMETYPE,
@@ -517,6 +518,7 @@ async function prepareSplit(
         ENTRY_TIMETYPE,
         WORKORDER_VALUE,
         lookupSelects,
+        COPIED_FIELDS.join(","),
     ]
         .filter(Boolean)
         .join(",");
@@ -555,6 +557,14 @@ async function prepareSplit(
         lookupBinds[`${lk.bind}@odata.bind`] = `/${set}(${targetId})`;
     }
 
+    // Plain columns carried over from the original — only when actually filled,
+    // so a split never writes an empty string over a column the original left null.
+    const copiedFields: Record<string, unknown> = {};
+    for (const f of COPIED_FIELDS) {
+        const v = original[f];
+        if (v != null && v !== "") copiedFields[f] = v;
+    }
+
     const active = subtypes.filter((s) => s.value > 0);
     const splitPayloads = active.map((s) => {
         const payload: Record<string, unknown> = {
@@ -565,6 +575,7 @@ async function prepareSplit(
                 : s.name,
             [fields.completed]: true,
             ...lookupBinds,
+            ...copiedFields,
         };
         if (originalName) payload[PARENT.primaryName] = originalName;
         if (originalDate != null) payload[fields.date] = originalDate;

@@ -123,7 +123,10 @@ deletes the original.
   `@odata.bind` targets, builds the per-subtype create payloads and finds the
   related pauses), then performs all mutations **transactionally**:
   - creates one Rounded Time Entry per subtype with hours > 0 (copying the
-    booking / work order / project lookups, date, name, notes; subtype name into
+    booking / work order / project / resource / project-task lookups, date, name,
+    notes, resource text and user email — each only when filled on the original,
+    so a split keeps the "My hours" filter and its project-task attribution;
+    subtype name into
     `sst_workordersubtype`; type `<Type> (<Subtype>)`; `sst_worksubtypecompleted
     = Yes`; the resolved `sst_worktype_ref` **and** `sst_worktype_title_str` ← the
     worktype's `sst_title_str`). If no matching worktype resolves, the split is
@@ -269,7 +272,13 @@ the maker UI. To re-expose any one, uncomment the matching `<property>` in
 Fixed schema (in `schema.ts`): parent `sst_roundedtimeentries`, child
 `sst_roundedtimeentryworksubtypes` (`sst_name`, `sst_timevalue`,
 `sst_roundedtimeentry`), copied lookups `sst_workorder` / `sst_bookableresourcebooking`
-/ `sst_project_id`, notes `sst_freitextfeld`.
+/ `sst_project_id` / `sst_resource_ref` / `sst_projecttask_ref`, copied plain
+columns `sst_resource` / `sst_useremail`, notes `sst_freitextfeld`.
+
+> The `@odata.bind` navigation property is the attribute's **PhysicalName**, which
+> is not uniformly cased in this schema — `sst_WorkOrder` is PascalCase while
+> `sst_resource_ref` / `sst_projecttask_ref` are lower-case (verified against the
+> SSTCoreV2 `customizations.xml`). Don't normalize them.
 
 ## 🛠️ Build
 
