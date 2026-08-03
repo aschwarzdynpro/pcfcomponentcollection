@@ -127,10 +127,19 @@ export const PROJECT_TYPE = {
     fixedPriceValue: 100000001,
 } as const;
 
-/** Normalize a label/name for option matching (case/space/slash-insensitive). */
+/**
+ * Normalize a label/name for option matching (case/space/separator-insensitive).
+ *
+ * Ampersand and slash collapse to the SAME separator on purpose: the
+ * environments disagree on the wording — PROD's `sst_worktype` option label is
+ * "Nacht & Sonntag" while the child rows are named "Nacht / Sonntag". Without
+ * this the pay-type name-match silently failed for that subtype and the split
+ * was created without a work type. Verified in PROD 2026-07-30.
+ */
 export function normalizeLabel(s: string | null | undefined): string {
     return (s ?? "")
         .toLowerCase()
+        .replace(/&/g, "/")
         .replace(/\s*\/\s*/g, "/")
         .replace(/\s+/g, " ")
         .trim();
@@ -257,15 +266,13 @@ export function resolveFieldConfig(overrides: {
 }
 
 /**
- * Canonical ordering of the work subtypes (matches the Custom Page). Subtype
- * rows are sorted to this order; unknown names are appended alphabetically.
+ * Canonical ordering of the work subtypes (matches the Custom Page), expressed as
+ * lower-case KEYWORDS matched against the normalized row name — NOT as exact
+ * names. The environments word them differently ("Überstunde" in PROD vs
+ * "Überstunden" in INT/UAT), and an exact comparison silently dropped those rows
+ * to the end of the list. Rows matching no keyword are appended alphabetically.
  */
-export const SUBTYPE_ORDER = [
-    "Normal",
-    "Überstunden",
-    "Nacht / Sonntag",
-    "Feiertag",
-];
+export const SUBTYPE_ORDER = ["normal", "überstund", "sonntag", "feiertag"];
 
 /** Float-safe comparison for the "sum equals total" save guard. */
 export const EPSILON = 0.001;

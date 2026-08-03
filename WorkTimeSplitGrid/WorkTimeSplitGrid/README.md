@@ -15,7 +15,10 @@ deletes the original.
   shows the composed title, a label-less chip row (**resource → project**), and
   the total duration. The resource is `sst_resource_ref.name` (falling back to
   the `sst_resource` text field); the project chip is the project number
-  (`sst_project_id.sst_projectnumber`).
+  (`sst_project_id.sst_projectnumber`). Entries on a **fixed-price project** get
+  a third, amber-accented **🏷️ Fixed price** chip (`hso_projecttype =
+  100000001`, read from the same `sst_Project_id` `$expand`) — so once a team
+  lead switches them into the list, they stay distinguishable at a glance.
 - **Composed entry title** (list + detail): `<type> am <date>` (e.g. *Arbeit am
   07.08.2024*). The date and the related project number
   (`sst_project_id.sst_projectnumber`) are fetched per page via one WebAPI
@@ -29,7 +32,8 @@ deletes the original.
     `sst_timereport` empty; a multi-select list with a **Create delivery notes**
     action.
   Breaks (`sst_type` = `pauseValue`, default `Pause`) are excluded from both
-  modes, as are entries on **fixed-price ("Festpreis") projects** (the project's
+  modes, as are entries on **fixed-price ("Festpreis") projects** — unless a team
+  lead enables the *Show fixed-price hours* switch (desktop only, see below) (the project's
   `hso_projecttype = 100000001`, filtered via the `sst_Project_id` navigation
   property). The list is loaded **directly from the server with the mode filter
   already applied** (`webApi.retrieveMultipleRecords` on
@@ -92,6 +96,13 @@ deletes the original.
   `_sst_resource_ref_value` (a server-side filter). The switch is **locked off**
   (my hours) for everyone except holders of **System Administrator** or **SST |
   Dispo Teamleitung Addon**, who may turn it on to see all hours.
+- **Fixed-price switch** (*Show fixed-price hours*, defaults to **off**) — sits
+  next to the scope switch and adds entries on fixed-price ("Festpreis") projects
+  back into the list, which both modes hide by default. It is rendered **only**
+  for holders of the same two roles **and only in the desktop layout** (never on
+  the phone form factor). Turning it on drops the `hso_projecttype` clause from
+  the server query; the state is additionally gated on the permission, so a stale
+  `on` can never widen the query for a user who may not use it.
 - **Detail split panel** — selecting an entry loads its work-subtype rows
   (`sst_roundedtimeentryworksubtypes`) and lets the user edit the hours per
   subtype, with a live **Total / Distributed / Remaining** summary. The detail
@@ -293,6 +304,15 @@ To produce importable solution zips, run the solution
 ## 📝 Notes / assumptions
 - The work-subtype rows are expected to exist per entry (created upstream); the
   control edits their values and writes the split records.
+- **Environment tolerance (schema drift).** `sst_paytype_opt` on the child table
+  is treated as **optional**: it was deployed in INT/UAT but missing in PROD, and
+  because Dataverse rejects the *entire* query when a `$select` names an unknown
+  property, that single column took the whole split editor down. `loadSubtypes`
+  now probes once, retries without the column, caches the answer for the session
+  and logs `subtypes.payTypeColumnMissing`; the pay type then falls back to the
+  name match. Likewise, subtype ordering and option matching are **keyword- and
+  separator-insensitive** ("Überstunde" vs "Überstunden", "Nacht & Sonntag" vs
+  "Nacht / Sonntag"), because the environments word these differently.
 - "Total duration" is read from `sst_duration`. If your environment uses a
   different total column, re-enable the `totalField` override (see Properties).
 - Verified against the SSTCore solution export; sanity-check field names against

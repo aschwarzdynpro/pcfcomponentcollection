@@ -46,7 +46,10 @@ async function entitySetFor(
 /** Sort subtype rows into the canonical surcharge order. */
 function sortSubtypes<T extends { name: string }>(rows: T[]): T[] {
     const rank = (n: string) => {
-        const i = SUBTYPE_ORDER.indexOf(n);
+        // Keyword match (not equality) — see SUBTYPE_ORDER: the naming differs
+        // per environment ("Überstunde" / "Überstunden").
+        const norm = normalizeLabel(n);
+        const i = SUBTYPE_ORDER.findIndex((kw) => norm.indexOf(kw) !== -1);
         return i === -1 ? SUBTYPE_ORDER.length : i;
     };
     return [...rows].sort((a, b) => {
@@ -54,6 +57,19 @@ function sortSubtypes<T extends { name: string }>(rows: T[]): T[] {
         return r !== 0 ? r : a.name.localeCompare(b.name);
     });
 }
+
+/**
+ * Whether the OPTIONAL `sst_paytype_opt` column exists on the child table in this
+ * environment: `null` = not probed yet, then cached for the session.
+ *
+ * It is not deployed everywhere — PROD lacked it while INT/UAT had it (verified
+ * 2026-07-30). Dataverse rejects the ENTIRE query when a `$select` names an
+ * unknown property, so a single missing optional column took the whole split
+ * editor down ("Die Work Subtypes konnten nicht geladen werden"). We therefore
+ * probe once and fall back to a query without it; the pay type then comes from
+ * the name-match against the worktype option labels (see prepareSplit).
+ */
+let childPayTypeAvailable: boolean | null = null;
 
 /**
  * Load the work-subtype rows belonging to a Rounded Time Entry.
@@ -67,13 +83,45 @@ function sortSubtypes<T extends { name: string }>(rows: T[]): T[] {
 export async function loadSubtypes(
     webApi: ComponentFramework.WebApi,
     parentId: string,
+    logger: Logger = NOOP_LOGGER,
 ): Promise<SubtypeRow[]> {
     const id = parentId.replace(/[{}]/g, "");
     const nav = CHILD.parentCollectionNav;
-    const query =
+    const query = (withPayType: boolean): string =>
         `?$select=${PARENT.primaryId}` +
-        `&$expand=${nav}($select=${CHILD.primaryId},${CHILD.name},${CHILD.timeValue},${CHILD.payType})`;
-    const rec: any = await webApi.retrieveRecord(PARENT.logicalName, id, query);
+        `&$expand=${nav}($select=${CHILD.primaryId},${CHILD.name},${CHILD.timeValue}` +
+        `${withPayType ? `,${CHILD.payType}` : ""})`;
+
+    let rec: any;
+    if (childPayTypeAvailable === false) {
+        rec = await webApi.retrieveRecord(PARENT.logicalName, id, query(false));
+    } else {
+        try {
+            rec = await webApi.retrieveRecord(
+                PARENT.logicalName,
+                id,
+                query(true),
+            );
+            childPayTypeAvailable = true;
+        } catch (e) {
+            // Retry WITHOUT the optional column. If that succeeds, the column is
+            // the cause (not permissions/network) — remember it so the rest of the
+            // session issues a single request. If it fails too, the error is real
+            // and propagates to the caller unchanged.
+            rec = await webApi.retrieveRecord(
+                PARENT.logicalName,
+                id,
+                query(false),
+            );
+            if (childPayTypeAvailable === null) {
+                logger.warn("subtypes.payTypeColumnMissing", {
+                    column: CHILD.payType,
+                    detail: serverErrorMessage(e),
+                });
+            }
+            childPayTypeAvailable = false;
+        }
+    }
     const kids: any[] = Array.isArray(rec?.[nav]) ? rec[nav] : [];
     const rows: SubtypeRow[] = kids.map((e: any) => {
         const value =
@@ -292,6 +340,8 @@ export interface LoadedEntry {
     timereport: string;
     /** Booking number (bookableresourcebooking display value, e.g. S-120044). */
     bookingNumber: string;
+    /** Entry belongs to a fixed-price ("Festpreis") project → flagged in the list. */
+    fixedPrice: boolean;
 }
 
 export interface LoadEntriesOptions {
@@ -301,6 +351,12 @@ export interface LoadEntriesOptions {
     resourceUserId: string | null;
     /** Type value that marks a break — excluded from both modes when set. */
     pauseValue?: string | null;
+    /**
+     * When true, KEEP entries on fixed-price ("Festpreis") projects, which are
+     * otherwise excluded from both modes. Driven by the team-lead-only
+     * "show fixed-price hours" switch; defaults to false (exclude).
+     */
+    includeFixedPrice?: boolean;
 }
 
 const ENTRY_FMT = "@OData.Community.Display.V1.FormattedValue";
@@ -331,6 +387,10 @@ function mapLoadedEntry(e: Record<string, any>): LoadedEntry {
         bookingNumber: String(
             e[`_sst_bookableresourcebooking_value${ENTRY_FMT}`] ?? "",
         ),
+        fixedPrice:
+            e.sst_Project_id != null &&
+            Number(e.sst_Project_id[PROJECT_TYPE.field]) ===
+                PROJECT_TYPE.fixedPriceValue,
     };
 }
 
@@ -382,10 +442,12 @@ export async function loadEntries(
         : "";
     // Exclude entries on fixed-price ("Festpreis") projects — both modes. Filter
     // on the project's hso_projecttype via the lookup navigation property; `ne`
-    // keeps projects with no type set.
-    const projectTypeClause =
-        ` and ${PROJECT_TYPE.nav}/${PROJECT_TYPE.field}` +
-        ` ne ${PROJECT_TYPE.fixedPriceValue}`;
+    // keeps projects with no type set. Team leads can opt back in via
+    // `includeFixedPrice`, which drops the clause entirely.
+    const projectTypeClause = opts.includeFixedPrice
+        ? ""
+        : ` and ${PROJECT_TYPE.nav}/${PROJECT_TYPE.field}` +
+          ` ne ${PROJECT_TYPE.fixedPriceValue}`;
     const filter =
         "_sst_project_id_value ne null" +
         projectTypeClause +
@@ -397,7 +459,8 @@ export async function loadEntries(
         `?$select=sst_roundedtimeentriesid,sst_name,sst_type,sst_date,sst_duration,sst_resource,` +
         `sst_worksubtypecompleted,_sst_project_id_value,_sst_timereport_value,_sst_resource_ref_value,` +
         `_sst_bookableresourcebooking_value` +
-        `&$expand=sst_Project_id($select=sst_projectnumber),sst_resource_ref($select=name)` +
+        `&$expand=sst_Project_id($select=sst_projectnumber,${PROJECT_TYPE.field}),` +
+        `sst_resource_ref($select=name)` +
         `&$filter=${filter}&$orderby=sst_date desc`;
 
     const out: LoadedEntry[] = [];
@@ -983,8 +1046,6 @@ export interface CreateReportsResult {
     assignedIds: string[];
     /** Every created delivery note (one per work order), with id + name. */
     reports: CreatedReport[];
-    /** The single created report id (when exactly one) — for opening the form. */
-    singleReportId: string | null;
     /** First server error message (when something failed) — for display. */
     errorMessage?: string;
 }
@@ -1036,7 +1097,6 @@ export async function createTimeReports(
             failed: 0,
             assignedIds: [],
             reports: [],
-            singleReportId: null,
         };
     }
 
@@ -1146,7 +1206,6 @@ export async function createTimeReports(
         failed,
         assignedIds,
         reports,
-        singleReportId: reports.length === 1 ? reports[0].id : null,
         errorMessage: firstError || undefined,
     };
 }

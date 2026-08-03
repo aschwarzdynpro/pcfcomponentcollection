@@ -29,6 +29,8 @@ export interface EntryRow {
     timereport?: string;
     /** Whether the project lookup (sst_project_id) is set. */
     projectPresent?: boolean;
+    /** Project is of type "Festpreis" (fixed price) → shown as a chip. */
+    fixedPrice?: boolean;
     /** Extra view columns surfaced as small chips. */
     extras: { key: string; label: string; value: string }[];
 }

@@ -15,7 +15,11 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   zusammengesetzten Titel, eine **Chip-Reihe ohne Label** (**Ressource →
   Projekt**) und die Gesamtdauer. Die Ressource ist `sst_resource_ref.name`
   (Fallback auf das Textfeld `sst_resource`); der Projekt-Chip ist die
-  Projektnummer (`sst_project_id.sst_projectnumber`).
+  Projektnummer (`sst_project_id.sst_projectnumber`). Einträge zu einem
+  **Festpreis-Projekt** erhalten zusätzlich einen amberfarbenen Chip
+  **🏷️ Festpreis** (`hso_projecttype = 100000001`, aus demselben
+  `sst_Project_id`-`$expand`) — sobald die Teamleitung sie einblendet, bleiben
+  sie damit auf einen Blick unterscheidbar.
 - **Zusammengesetzter Titel** (Liste + Detail): `<sst_type> am <sst_date>`
   (z. B. „Arbeit am 07.08.2024"). `sst_date` und die Projektnummer des
   verknüpften Projekts (`sst_project_id.sst_projectnumber` auf `msdyn_project`)
@@ -30,7 +34,9 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
     → Mehrfachauswahl-Liste mit Aktion **„Lieferscheine erstellen"**.
   **Pausen** (`sst_type` = `pauseValue`, Default `Pause`) werden in beiden Modi
   ausgeblendet — ebenso Einträge auf **Festpreis-Projekten** (Projekt-Feld
-  `hso_projecttype = 100000001`, gefiltert über die `sst_Project_id`-Navigation).
+  `hso_projecttype = 100000001`, gefiltert über die `sst_Project_id`-Navigation),
+  sofern die Teamleitung nicht den Schalter **„Festpreiszeiten anzeigen"**
+  aktiviert (nur Desktop, siehe unten).
   Die Liste wird **direkt vom Server geladen, mit bereits angewandtem
   Modus-Filter** (`webApi.retrieveMultipleRecords` auf `sst_roundedtimeentries`)
   — statt alle Seiten des gebundenen Views zu laden und clientseitig zu filtern.
@@ -100,7 +106,29 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   Benutzer; nur Inhaber der Rolle **System Administrator** oder **SST | Dispo
   Teamleitung Addon** können ihn einschalten (alle Stunden sehen). Rollenprüfung
   über `systemuserroles_association` (direkt zugewiesene Rollen).
+- **Schalter „Festpreiszeiten anzeigen"** (Default **Aus**) — steht direkt neben
+  dem Stunden-Schalter und blendet zusätzlich die Einträge zu **Festpreis-
+  Projekten** ein, die beide Modi sonst ausblenden. Er wird **nur** für Inhaber
+  derselben beiden Rollen (**System Administrator** / **SST | Dispo Teamleitung
+  Addon**) gerendert — **und nur in der Desktop-Variante**, nie im Handy-Layout
+  (Formfaktor Telefon). Eingeschaltet entfällt die `hso_projecttype`-Bedingung in
+  der Server-Abfrage. Der Zustand ist zusätzlich an die Berechtigung gekoppelt,
+  damit ein stehengebliebenes „An" die Abfrage nie für jemanden erweitert, der
+  den Schalter nicht nutzen darf.
 - Statuspunkt je Karte (offen = rot, aufgeteilt = grün).
+
+### Umgebungs-Toleranz (Schema-Drift)
+- **`sst_paytype_opt` auf der Kindtabelle gilt als optional.** Das Feld war in
+  INT/UAT vorhanden, in PROD nicht — und da Dataverse bei einer unbekannten
+  Property im `$select` die **gesamte** Abfrage verwirft, legte diese eine Spalte
+  den kompletten Aufteilen-Dialog lahm („Die Work Subtypes konnten nicht geladen
+  werden"). `loadSubtypes` probiert das Feld daher einmal, wiederholt die Abfrage
+  bei Fehlschlag ohne die Spalte, merkt sich das Ergebnis für die Sitzung und
+  protokolliert `subtypes.payTypeColumnMissing`. Der Zahlungstyp kommt dann über
+  den Namensabgleich.
+- **Sortierung und Options-Abgleich sind schlagwort- und trennzeichen-tolerant:**
+  „Überstunde" ↔ „Überstunden" sowie „Nacht & Sonntag" ↔ „Nacht / Sonntag" gelten
+  als gleich, weil die Umgebungen unterschiedlich formulieren.
 
 ### Detail-Aufteilung (rechts)
 - **Detail-Titel gekürzt** auf **Projekt-ID / Booking-Nummer** (z. B.
