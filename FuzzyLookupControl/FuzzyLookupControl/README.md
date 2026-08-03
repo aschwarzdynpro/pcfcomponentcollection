@@ -4,16 +4,31 @@ A drop-in replacement for the standard model-driven Lookup control. It uses
 **Dataverse Search** (Azure Cognitive Search under the hood) for typo-tolerant
 typeahead, renders each suggestion as a **card** (primary column as title,
 up to three configured columns stacked as subtitles), and supports in-place
-**Quick-Create** of new records. Architecture hooks for **Favorites** and
-**Recently used** records are wired in v1 (off by default; enable per form).
+**Quick-Create** of new records. An optional **additional filter** with
+runtime tokens restores the pre-search filtering the OOB lookup loses under a
+custom control. On touch devices, **swipe-right** pins a favourite and
+**long-press** opens a preview — optionally driven by a **Quick View Form**.
+Architecture hooks for **Favorites** and **Recently used** records are wired
+in v1 (off by default; enable per form).
 
 ## How it works
 
 1. User starts typing in the lookup input.
 2. After 2 characters and a 200 ms debounce, the control calls
-   `POST {clientUrl}/api/data/v9.2/searchquery` with Lucene query syntax and a
-   trailing `~` per token — Dataverse Search interprets `~` as fuzzy with edit
-   distance up to 2, so `Mitcrosoft` matches `Microsoft`.
+   `POST {clientUrl}/api/data/v9.2/searchquery` with Lucene query syntax.
+   Every whitespace-separated token gets up to three OR-joined matching
+   strategies, and the token groups are AND-joined via `searchmode: "all"`:
+
+   | Strategy | Shape | Catches |
+   | -------- | ----- | ------- |
+   | Prefix wildcard | `token*` | Typeahead — `nym*` finds `Nymphenburg`. |
+   | Fuzzy | `token~` (tokens of 4+ chars only) | Typos — `mitcrosoft~` finds `Microsoft`. Skipped on short tokens, where edit distance 2 matches almost anything. |
+   | Infix regex | `/.*token.*/` | Substrings *inside* an indexed token — searching `810` finds product number `15012810`, which a prefix match alone would miss. |
+
+   `searchmode: "all"` means every token must land *somewhere* in the
+   record, but not necessarily in the same column: `NYM 2211` matches a row
+   where `NYM` sits in the name and `2211` in the product number.
+   `besteffortsearchenabled` adds the engine's own spell correction on top.
 3. The response includes the configured columns directly (via
    `entities[].selectColumns`) plus highlight fragments wrapped in
    `{crmhit}…{/crmhit}` markers that the UI converts to `<mark>` tags.
@@ -21,9 +36,14 @@ up to three configured columns stacked as subtitles), and supports in-place
    `notifyOutputChanged()` round-trip — the form's dirty flag and save pipeline
    behave exactly as with the OOB lookup.
 
-If Dataverse Search is unavailable in the environment, the control degrades
-to a plain OData `contains()` query and surfaces a small banner so the maker
-knows to enable search.
+When `searchquery` **throws** (HTTP 4xx/5xx, network blip, malformed
+envelope — typically because Dataverse Search is off or the table is not
+indexed), the control degrades to a plain OData `contains()` query and
+surfaces a small banner so the maker knows to enable search. When
+`searchquery` succeeds but returns **zero results**, that answer is trusted:
+the dropdown shows "No matches" and no OData probe runs. Probing anyway
+used to raise the "search unavailable" banner in situations where search
+was perfectly healthy and simply had nothing to return.
 
 ## Properties
 
@@ -36,10 +56,70 @@ knows to enable search.
 | `column4`             | input — `SingleLine.Text`     | Logical name of the third subtitle line. Empty → hidden.                                                                 |
 | `pageSize`            | input — `Whole.None`          | Maximum suggestions returned per search. Clamped to `1..50`; default `25`.                                               |
 | `placeholder`         | input — `SingleLine.Text`     | Placeholder shown when no record is selected. Empty → localized default ("Search…" / "Suchen…" / "Rechercher…").          |
+| `additionalFilter`    | input — `SingleLine.Text`     | OData `$filter` expression AND-joined onto **every** search, with `{record.…}` / `{user.…}` tokens resolved at runtime. See [Additional filter](#additional-filter). |
 | `enableQuickCreate`   | input — `TwoOptions`          | Shows a `+ New` button that opens the target table's Quick-Create form. Default **on**.                                  |
 | `enableFavorites`     | input — `TwoOptions`          | Shows a per-user "Favorites" section. Each row gets a pin button. Stored in `localStorage`. Default **off**.             |
 | `enableRecentlyUsed`  | input — `TwoOptions`          | Shows a per-user "Recently used" section above the search results. Stored in `localStorage`. Default **off**.            |
 | `previewFormId`       | input — `SingleLine.Text`     | Optional GUID of a **Quick View Form** for the target table. When set, the long-press preview modal renders that form's fields (sections, labels, full values). Empty → default preview (configured columns only). |
+
+## Additional filter
+
+`additionalFilter` narrows every search to a subset of the target table —
+the equivalent of the standard lookup's pre-search filter, which does not
+survive a custom control. Write it in **OData `$filter` syntax**; the
+control AND-joins it onto whatever the user typed, on both the Search and
+the OData path.
+
+```
+statecode eq 0
+statecode eq 0 and _ownerid_value eq {user.id}
+_msdyn_companyid_value eq {record.sst_company_ref}
+```
+
+### Runtime tokens
+
+Tokens are resolved on every keystroke-triggered search, so the filter
+follows the form as the user edits it.
+
+| Token | Resolves to |
+| ----- | ----------- |
+| `{record.<column>}` | The value of `<column>` on the **current form** (via `Xrm.Page.getAttribute`). Lookups yield the bare GUID (braces stripped, lower-cased), text yields the string, choices yield the numeric value. |
+| `{user.id}` | The current user's `systemuserid`. |
+| `{user.bu}` (alias `{user.businessunit}`) | The current user's business unit id. Resolved once per session via a `systemuser` lookup and cached. |
+
+If **any** token cannot be resolved — source field empty, attribute not on
+the form, BU lookup failed — the control drops the **entire filter** for
+that search and logs a `console.warn`. That is deliberate: emitting a
+half-substituted expression like `_ownerid_value eq ` would produce a
+broken OData query, and silently returning nothing would look like a data
+problem instead of a configuration one.
+
+### Dialect differences between the two search paths
+
+The maker always writes plain OData. The **OData fallback path** uses that
+string unchanged. The **Dataverse Search path** needs a different dialect,
+so the control rewrites it before sending (`odataFilterToSearchFilter()`):
+
+- `_<col>_value` → `<col>`. Search wants the lookup's plain logical name;
+  the OData annotation form returns HTTP 200 with the filter **silently
+  ignored** — the worst possible failure mode, since results look right
+  but are unfiltered.
+- Bare GUIDs get wrapped in single quotes. Without them Search answers
+  HTTP 400 `0x80048d0b "invalid expression in the search query"`.
+
+Two caveats the control cannot rewrite away:
+
+- Dataverse Search **rejects the `not` operator** — use `ne`.
+- Not every searchable column is *filterable*. If a filter silently returns
+  zero rows, check the column's filterable flag in the search index.
+
+### The advanced dialog is not filtered
+
+The magnifier button opens UCI's native `lookupObjects()` dialog, which
+takes **FetchXML**, not OData — so `additionalFilter` cannot be forwarded
+to it. When a filter is configured, the control writes a `console.warn` on
+dialog open so this is discoverable. Point users at the inline search when
+the filter matters; a v2 OData → FetchXML converter would close the gap.
 
 ## Environment prerequisites
 
@@ -80,6 +160,28 @@ to the left of each card. The favorite-toggle, when enabled, sits at the
 right edge of the card vertically centred. Subtitle lines whose underlying
 column value is empty for a given record are silently skipped so a missing
 value doesn't leave a blank line in the card.
+
+## Dropdown placement & search feedback
+
+The suggestion list is rendered in a React portal under `document.body`
+with `position: fixed`, because Quick-Create panels, BPF flyouts and
+dialogs all use `overflow: hidden` containers that would otherwise clip it.
+Its anchor is recomputed in JS on resize and on any ancestor scroll:
+
+- **Width** follows the input, clamped to 360–480 px on desktop and pulled
+  back inside the viewport if the input sits near the right edge. Below the
+  mobile breakpoint the dropdown goes edge-to-edge with a small gutter.
+- **Height** is capped by the space actually available below the input, not
+  by a fixed value — so a lookup near the bottom of a form gets a short
+  scrollable list instead of one that runs off-screen.
+- **Flip above:** when the space below is too cramped to be usable *and*
+  there is materially more room above, the dropdown opens upward instead.
+  Below stays the default placement, matching OOB lookup behaviour.
+
+While a search is in flight the status line shows a CSS ring spinner next
+to "Searching…", so a slow `searchquery` reads as *working* rather than as
+a frozen dropdown. The animation is disabled under
+`prefers-reduced-motion`.
 
 ## Touch gestures (mobile / tablet)
 
@@ -135,6 +237,12 @@ Behavior details:
 | `Enter`        | Select the highlighted suggestion.    |
 | `Esc`          | Close the dropdown.                   |
 | Click on chip  | Open the selected record in the form. |
+| `×` on chip    | Clear the selection.                  |
+
+Arrowing past the bottom of the visible list keeps the focused card in
+view: each row calls `scrollIntoView({ block: "nearest" })` when it becomes
+active, which is a no-op while the card is already fully visible and
+otherwise scrolls the minimum distance needed.
 
 ## Localization
 
@@ -163,3 +271,5 @@ To produce a Dataverse-importable solution zip, run
   the source of columns, filter, and sort order, eliminating the need to
   configure column inputs individually.
 - **Polymorphic lookups** — `Customer`, `Owner`, `Regarding`, MultiTable.
+- **OData → FetchXML converter** so `additionalFilter` also applies to the
+  advanced `lookupObjects()` dialog, which today only logs a warning.
