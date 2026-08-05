@@ -297,6 +297,15 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const [refreshing, setRefreshing] = React.useState(false);
     const [myHoursOnly, setMyHoursOnly] = React.useState(true);
     const [isAdmin, setIsAdmin] = React.useState(false);
+    // Gate for the FIRST entries load: the role check is async, and privileged
+    // users default to "all hours" (ADO 13687). Loading before the check would
+    // fetch "my hours" first and then visibly re-fetch — so hold the first load
+    // until the answer is in. Always released, even when no check runs.
+    const [roleChecked, setRoleChecked] = React.useState(false);
+    // The "all hours" default is applied ONCE per control instance; afterwards a
+    // deliberate switch back to "my hours" must survive refreshes and an
+    // offline→online transition (which re-runs the role check).
+    const defaultScopeApplied = React.useRef(false);
     // Team-lead-only, desktop-only opt-in to ALSO show entries on fixed-price
     // ("Festpreis") projects, which both modes hide by default.
     const [showFixedPrice, setShowFixedPrice] = React.useState(false);
@@ -320,13 +329,31 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     );
 
     // Admins (System Administrator / SST Dispo Teamleitung Addon) may toggle the
-    // "My hours" filter off; everyone else stays locked to their own hours.
+    // "My hours" filter off; everyone else stays locked to their own hours. For
+    // them the scope also STARTS on "all hours" (ADO 13687).
     React.useEffect(() => {
-        if (!currentUserId || effectiveOffline) return;
+        // Nothing to check (offline / no user id) — don't block the list.
+        if (!currentUserId || effectiveOffline) {
+            setRoleChecked(true);
+            return;
+        }
         let cancelled = false;
-        userHasAnyRole(props.webApi, currentUserId, ADMIN_ROLES).then((admin) => {
-            if (!cancelled) setIsAdmin(admin);
-        });
+        userHasAnyRole(props.webApi, currentUserId, ADMIN_ROLES).then(
+            (admin) => {
+                if (cancelled) return;
+                setIsAdmin(admin);
+                if (admin && !defaultScopeApplied.current) {
+                    defaultScopeApplied.current = true;
+                    setMyHoursOnly(false);
+                }
+                setRoleChecked(true);
+            },
+            () => {
+                // Check failed → stay non-admin (locked to own hours), but never
+                // leave the list waiting on a gate that will not open.
+                if (!cancelled) setRoleChecked(true);
+            },
+        );
         return () => {
             cancelled = true;
         };
@@ -347,6 +374,11 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     // & no delivery note; "My hours"→the user's resource). This replaces pulling
     // every dataset page + enriching, which breaks past the 5000-record cap.
     React.useEffect(() => {
+        // Hold the FIRST load until the role check answered — a privileged user
+        // would otherwise load "my hours" and immediately re-load "all hours"
+        // (ADO 13687). `loadingEntries` starts true, so the spinner keeps
+        // running; the gate is released unconditionally and cannot deadlock.
+        if (!roleChecked) return;
         let cancelled = false;
         setLoadingEntries(true);
         setEntriesError(null);
@@ -436,6 +468,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         mode,
         myHoursActive,
         includeFixedPrice,
+        roleChecked,
         currentUserId,
         props.webApi,
         props.isOffline,

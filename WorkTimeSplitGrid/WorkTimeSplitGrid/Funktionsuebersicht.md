@@ -106,6 +106,15 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   Benutzer; nur Inhaber der Rolle **System Administrator** oder **SST | Dispo
   Teamleitung Addon** können ihn einschalten (alle Stunden sehen). Rollenprüfung
   über `systemuserroles_association` (direkt zugewiesene Rollen).
+  Für diese berechtigten Rollen startet der Schalter zudem **direkt auf „Alle
+  Stunden"** — auf allen Formfaktoren (ADO 13687). Da die Rollenprüfung
+  asynchron läuft, wird der **erste** Listenaufbau bis zu ihrem Ergebnis
+  zurückgehalten; sonst würde die Liste erst „Meine Stunden" laden und sofort
+  sichtbar auf „Alle Stunden" nachladen (zwei Serverabfragen). Der Default greift
+  **einmalig**: Schaltet ein Berechtigter bewusst auf „Meine Stunden", bleibt das
+  bei Aktualisieren und Offline-/Online-Wechsel erhalten. Läuft keine Prüfung
+  (offline, keine Benutzer-ID) oder schlägt sie fehl, wird die Sperre sofort
+  freigegeben — die Liste bleibt nie hängen.
 - **Schalter „Festpreiszeiten anzeigen"** (Default **Aus**) — steht direkt neben
   dem Stunden-Schalter und blendet zusätzlich die Einträge zu **Festpreis-
   Projekten** ein, die beide Modi sonst ausblenden. Er wird **nur** für Inhaber

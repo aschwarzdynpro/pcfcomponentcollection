@@ -10,7 +10,7 @@ import { resolveFieldConfig } from "./components/schema";
 import { createLogger, Logger, TracingService } from "./components/telemetry";
 
 /** Control version — keep in sync with ControlManifest / package.json / Solution. */
-const CONTROL_VERSION = "1.22.4";
+const CONTROL_VERSION = "1.23.0";
 
 export class WorkTimeSplitGrid
     implements ComponentFramework.StandardControl<IInputs, IOutputs>

@@ -95,7 +95,12 @@ deletes the original.
   are resolved via `_userid_value`, and the list query is restricted to those via
   `_sst_resource_ref_value` (a server-side filter). The switch is **locked off**
   (my hours) for everyone except holders of **System Administrator** or **SST |
-  Dispo Teamleitung Addon**, who may turn it on to see all hours.
+  Dispo Teamleitung Addon**, who may turn it on to see all hours. For those
+  privileged users the switch also **starts on "All hours"** (on every form
+  factor). Because the role check is async, the *first* entries load is held
+  until it answers — otherwise the list would fetch "my hours" and immediately
+  re-fetch "all hours". The default is applied **once**, so a deliberate switch
+  back to "my hours" survives a refresh or an offline→online transition.
 - **Fixed-price switch** (*Show fixed-price hours*, defaults to **off**) — sits
   next to the scope switch and adds entries on fixed-price ("Festpreis") projects
   back into the list, which both modes hide by default. It is rendered **only**
