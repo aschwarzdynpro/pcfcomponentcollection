@@ -49,11 +49,15 @@ deletes the original.
   - **Create & open ↗** — does the same, then opens the result: a single
     delivery note opens directly; if **several** were created, a picker overlay
     lists them by **delivery-note number** (`sst_deliverynotenumberassembly_str`,
-    with the work order as a sub-line) so the user chooses which to open.
-  Both create one delivery note (`sst_timereports`) per work order across the
-  selection and link each selected entry to its work order's note via
-  `sst_TimeReport`. The note's `sst_name` is **`Timereport <yyyy-MM-dd> / <resource
-  name>`** — matching the parallel cloud flow
+    with the project as a sub-line) so the user chooses which to open.
+  Both create one delivery note (`sst_timereports`) **per project** across the
+  selection and link each selected entry to its project's note via
+  `sst_TimeReport` — 5 entries on 2 projects give 2 notes. The project is bound
+  to the note's `sst_Projekt` (→ `msdyn_projects`); the work order
+  (`sst_Arbeitsauftrag`) is only set when **all** entries of that project group
+  share the same work order, and left empty otherwise so dual-write never gets an
+  arbitrary `WORKORDER`. The note's `sst_name` is **`Timereport <yyyy-MM-dd> /
+  <resource name>`** — matching the parallel cloud flow
   (`concat('Timereport ', date, ' / ', resource.name)`; date = today (local ISO),
   resource = the resource of the **first selected entry** (`sst_resource_ref.name`),
   like the flow's `Get_Resource` step). Entries already assigned to a delivery note

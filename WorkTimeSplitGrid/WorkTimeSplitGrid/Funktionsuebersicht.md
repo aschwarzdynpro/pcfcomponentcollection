@@ -51,16 +51,20 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   - **Erstellen & öffnen ↗** — dasselbe, öffnet danach das Ergebnis: ein einzelner
     Lieferschein wird direkt geöffnet; wurden **mehrere** erstellt, erscheint ein
     Auswahl-Overlay, das sie nach **Lieferscheinnummer**
-    (`sst_deliverynotenumberassembly_str`, mit dem Arbeitsauftrag als Unterzeile)
+    (`sst_deliverynotenumberassembly_str`, mit dem Projekt als Unterzeile)
     auflistet, sodass der Benutzer wählt, welchen er öffnet.
-  Beide erstellen **je Arbeitsauftrag** einen Lieferschein (`sst_timereports`,
+  Beide erstellen **je Projekt** einen Lieferschein (`sst_timereports`,
   `sst_name` = „Timereport <yyyy-MM-dd> / <Ressourcenname>" — deckungsgleich mit dem
   parallelen Cloud Flow (`concat('Timereport ', date, ' / ', resource.name)`),
   Datum = heute (lokal, ISO), Ressource = Name der Ressource des **ersten
   ausgewählten Eintrags** (`sst_resource_ref.name`, analog zum `Get_Resource`-Schritt
-  des Flows); `sst_Arbeitsauftrag` → msdyn_workorder)
+  des Flows); Projekt → `sst_Projekt` → msdyn_project)
   und verknüpfen jeden ausgewählten Eintrag via `sst_TimeReport` mit dem
-  Lieferschein seines Arbeitsauftrags. Bereits zugeordnete Einträge werden
+  Lieferschein seines Projekts — 5 Zeiten auf 2 Projekten ergeben also
+  **2 Lieferscheine**. Der **Arbeitsauftrag** (`sst_Arbeitsauftrag`) wird nur
+  gesetzt, wenn **alle** Zeiten der Projektgruppe denselben Arbeitsauftrag haben;
+  bei gemischten Gruppen bleibt er leer, damit über Dual Write kein willkürlicher
+  `WORKORDER` nach AX geht. Bereits zugeordnete Einträge werden
   abgewiesen. Während der Erstellung blendet sich ein **Fortschritts-Overlay**
   über die Liste, damit der Benutzer nicht weiterklickt und sieht, dass im
   Hintergrund etwas passiert. (Portiert aus dem Schulz-Ribbon-Command

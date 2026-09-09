@@ -66,7 +66,12 @@ export const ENTRY_TIMETYPE = "sst_timetype_opt";
 /**
  * Delivery note ("Lieferschein" / sst_timereports). In "assign" mode the grid
  * lists completed entries whose `sst_timereport` is empty and can create one
- * delivery note per work order, linking the selected entries to it.
+ * delivery note **per project**, linking the selected entries to it.
+ *
+ * Both lookups on the note are optional (`RequiredLevel: none`, verified in the
+ * SSTCoreV2 export). The note's own form filters the work order by the selected
+ * project (`sst_msdyn_workorder_Projekt_ref_msdyn_project`), i.e. project → work
+ * order is the intended order there too.
  */
 export const TIMEREPORT = {
     /** Lieferschein logical name (webApi create/update). */
@@ -77,7 +82,18 @@ export const TIMEREPORT = {
     name: "sst_name",
     /** Delivery-note number (autonumber, e.g. AZN-015554) — for display. */
     number: "sst_deliverynotenumberassembly_str",
-    /** Work-order lookup nav on the Lieferschein (→ msdyn_workorders). */
+    /**
+     * Project lookup nav on the Lieferschein (→ msdyn_projects). SchemaName is
+     * PascalCase `sst_Projekt` (logical name `sst_projekt`) — the grouping key
+     * for created notes. Dual-write maps it to AX `PROJID`.
+     */
+    projectNav: "sst_Projekt",
+    /**
+     * Work-order lookup nav on the Lieferschein (→ msdyn_workorders). Only set
+     * when every entry of the project group shares the same work order — a note
+     * spanning several work orders leaves it empty rather than picking one
+     * arbitrarily (dual-write maps it to AX `WORKORDER`).
+     */
     workorderNav: "sst_Arbeitsauftrag",
     /** Lookup value of the Lieferschein on the entry (the "assign" filter). */
     value: "_sst_timereport_value",
@@ -87,6 +103,9 @@ export const TIMEREPORT = {
 
 /** Work-order entity set (target of the Lieferschein's work-order lookup). */
 export const WORKORDER_SET = "msdyn_workorders";
+
+/** Project entity set (target of the Lieferschein's project lookup). */
+export const PROJECT_SET = "msdyn_projects";
 
 /**
  * Public-holiday lookup chain for the split auto-fill suggestion. From the entry:
@@ -186,6 +205,13 @@ export const COPIED_FIELDS = ["sst_resource", "sst_useremail"] as const;
 
 /** Work-order lookup value column — used to find the related Pause entries. */
 export const WORKORDER_VALUE = "_sst_workorder_value";
+
+/**
+ * Project lookup value column on the entry — the grouping key when creating
+ * delivery notes. Always filled in "assign" mode (the mode filter requires
+ * `_sst_project_id_value ne null`).
+ */
+export const PROJECT_VALUE = "_sst_project_id_value";
 
 /**
  * Resource lookup on the entry → BookableResource. Used for the resource name

@@ -1208,7 +1208,11 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                     key={rep.id}
                                     type="button"
                                     className="wtsg-report-item"
-                                    title={rep.number || rep.woName || rep.name}
+                                    title={
+                                        rep.number ||
+                                        rep.projectName ||
+                                        rep.name
+                                    }
                                     onClick={() => {
                                         openReport(rep.id);
                                         setReportPicker(null);
@@ -1216,11 +1220,13 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 >
                                     <span className="wtsg-report-text">
                                         <span className="wtsg-report-number">
-                                            {rep.number || rep.woName || rep.name}
+                                            {rep.number ||
+                                                rep.projectName ||
+                                                rep.name}
                                         </span>
-                                        {rep.number && rep.woName && (
+                                        {rep.number && rep.projectName && (
                                             <span className="wtsg-report-sub">
-                                                {rep.woName}
+                                                {rep.projectName}
                                             </span>
                                         )}
                                     </span>

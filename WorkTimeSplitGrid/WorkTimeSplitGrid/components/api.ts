@@ -4,10 +4,12 @@ import {
     PARENT_LOOKUPS,
     COPIED_FIELDS,
     WORKORDER_VALUE,
+    PROJECT_VALUE,
     WORKTYPE,
     ENTRY_TIMETYPE,
     TIMEREPORT,
     WORKORDER_SET,
+    PROJECT_SET,
     PROJECT_TYPE,
     HOLIDAY,
     normalizeLabel,
@@ -1031,7 +1033,8 @@ export async function saveSplit(
 export interface CreatedReport {
     id: string;
     name: string;
-    woName: string;
+    /** Project the note groups (formatted lookup value) — picker sub-label. */
+    projectName: string;
     /** Delivery-note number (autonumber) — preferred display label. */
     number: string;
 }
@@ -1044,21 +1047,29 @@ export interface CreateReportsResult {
     failed: number;
     /** Ids of the entries that were actually linked (for optimistic removal). */
     assignedIds: string[];
-    /** Every created delivery note (one per work order), with id + name. */
+    /** Every created delivery note (one per project), with id + name. */
     reports: CreatedReport[];
     /** First server error message (when something failed) — for display. */
     errorMessage?: string;
 }
 
 /**
- * "Assign" mode action: create one delivery note (sst_timereports) per work order
- * across the selected entries and link each entry to its work order's note
- * (sst_TimeReport). Mirrors the Schulz ribbon `createTimeReport` logic.
+ * "Assign" mode action: create one delivery note (sst_timereports) **per project**
+ * across the selected entries and link each entry to its project's note
+ * (sst_TimeReport). 5 entries on 2 projects → 2 notes.
+ *
+ * The work order is no longer the grouping key (it was until v1.23.x). It is
+ * still written to the note's `sst_Arbeitsauftrag`, but only when every entry of
+ * the project group shares the same work order — a note spanning several work
+ * orders leaves it empty rather than picking one arbitrarily, which would push a
+ * misleading `WORKORDER` to AX via dual-write.
  *
  * Guard: if any selected entry already has a delivery note, nothing is created
- * (returns blocked=true). Entries without a work order can't be assigned and are
- * counted as failures. The unused booking/resource retrieval from the original
- * script (its resource binding was commented out) is intentionally omitted.
+ * (returns blocked=true). Entries without a project can't be assigned and are
+ * counted as failures — in practice the "assign" filter already excludes them
+ * (`_sst_project_id_value ne null`). The unused booking/resource retrieval from
+ * the original script (its resource binding was commented out) is intentionally
+ * omitted.
  */
 export async function createTimeReports(
     webApi: ComponentFramework.WebApi,
@@ -1069,15 +1080,15 @@ export async function createTimeReports(
     const fmt = "@OData.Community.Display.V1.FormattedValue";
     const op = logger.op("createReports", { selected: ids.length });
 
-    // Retrieve work order + current delivery note + resource (for the name) for
-    // each selected entry.
+    // Retrieve project + work order + current delivery note + resource (for the
+    // name) for each selected entry.
     const entries = await Promise.all(
         ids.map((id) =>
             webApi
                 .retrieveRecord(
                     PARENT.logicalName,
                     id,
-                    `?$select=${WORKORDER_VALUE},${TIMEREPORT.value}` +
+                    `?$select=${PROJECT_VALUE},${WORKORDER_VALUE},${TIMEREPORT.value}` +
                         `&$expand=sst_resource_ref($select=name)`,
                 )
                 .then(
@@ -1100,23 +1111,41 @@ export async function createTimeReports(
         };
     }
 
-    // Group selected entries by work order.
-    const byWo = new Map<
+    // Group selected entries by project. `woIds` collects the distinct work
+    // orders seen in the group so the note's work-order lookup can be set when
+    // — and only when — the group is unambiguous (entries without a work order
+    // contribute "" and therefore also make the group ambiguous).
+    const byProject = new Map<
         string,
-        { woId: string; woName: string; entryIds: string[] }
+        {
+            projectId: string;
+            projectName: string;
+            entryIds: string[];
+            woIds: Set<string>;
+        }
     >();
     let failed = 0;
     let firstError = "";
     for (const e of entries) {
-        const woRaw = e.rec ? e.rec[WORKORDER_VALUE] : null;
-        if (!woRaw) {
-            failed += 1; // no work order → cannot create a delivery note
+        const projRaw = e.rec ? e.rec[PROJECT_VALUE] : null;
+        if (!projRaw) {
+            failed += 1; // no project → cannot create a delivery note
             continue;
         }
-        const key = String(woRaw).replace(/[{}]/g, "");
-        const woName = (e.rec[WORKORDER_VALUE + fmt] as string) ?? "";
-        if (!byWo.has(key)) byWo.set(key, { woId: key, woName, entryIds: [] });
-        byWo.get(key)!.entryIds.push(e.id);
+        const key = String(projRaw).replace(/[{}]/g, "");
+        const projectName = (e.rec[PROJECT_VALUE + fmt] as string) ?? "";
+        if (!byProject.has(key)) {
+            byProject.set(key, {
+                projectId: key,
+                projectName,
+                entryIds: [],
+                woIds: new Set<string>(),
+            });
+        }
+        const grp = byProject.get(key)!;
+        grp.entryIds.push(e.id);
+        const woRaw = e.rec[WORKORDER_VALUE];
+        grp.woIds.add(woRaw ? String(woRaw).replace(/[{}]/g, "") : "");
     }
 
     let assigned = 0;
@@ -1142,13 +1171,26 @@ export async function createTimeReports(
     }
     const reportName = `Timereport ${dateStr} / ${resourceName}`.trim();
 
-    for (const wo of byWo.values()) {
+    for (const grp of byProject.values()) {
+        // Unambiguous work order (exactly one, and it is set) → carry it onto the
+        // note; mixed or missing → leave the lookup empty.
+        const woList = Array.from(grp.woIds);
+        const woId = woList.length === 1 && woList[0] ? woList[0] : null;
         let reportId: string;
         try {
-            const created = await webApi.createRecord(TIMEREPORT.logicalName, {
+            const payload: ComponentFramework.WebApi.Entity = {
                 [TIMEREPORT.name]: reportName,
-                [`${TIMEREPORT.workorderNav}@odata.bind`]: `/${WORKORDER_SET}(${wo.woId})`,
-            });
+                [`${TIMEREPORT.projectNav}@odata.bind`]: `/${PROJECT_SET}(${grp.projectId})`,
+            };
+            if (woId) {
+                payload[
+                    `${TIMEREPORT.workorderNav}@odata.bind`
+                ] = `/${WORKORDER_SET}(${woId})`;
+            }
+            const created = await webApi.createRecord(
+                TIMEREPORT.logicalName,
+                payload,
+            );
             reportId = created.id;
             // The delivery-note number is an autonumber (set synchronously on
             // create); fetch it for the picker label. Best-effort.
@@ -1161,29 +1203,30 @@ export async function createTimeReports(
                 );
                 number = String(back?.[TIMEREPORT.number] ?? "");
             } catch {
-                /* number stays empty → picker falls back to the WO name */
+                /* number stays empty → picker falls back to the project name */
             }
             reports.push({
                 id: reportId,
                 name: reportName,
-                woName: wo.woName,
+                projectName: grp.projectName,
                 number,
             });
             op.step("reportCreated", {
-                woId: wo.woId,
+                projectId: grp.projectId,
+                woId: woId ?? "(mixed)",
                 number,
-                entries: wo.entryIds.length,
+                entries: grp.entryIds.length,
             });
         } catch (e) {
-            failed += wo.entryIds.length; // report creation failed → its entries fail
+            failed += grp.entryIds.length; // report creation failed → its entries fail
             if (!firstError) firstError = serverErrorMessage(e);
             logger.error("createReports.reportFailed", e, {
-                woId: wo.woId,
-                entries: wo.entryIds.length,
+                projectId: grp.projectId,
+                entries: grp.entryIds.length,
             });
             continue;
         }
-        for (const eid of wo.entryIds) {
+        for (const eid of grp.entryIds) {
             try {
                 await webApi.updateRecord(PARENT.logicalName, eid, {
                     [`${TIMEREPORT.entryNav}@odata.bind`]: `/${TIMEREPORT.entitySet}(${reportId})`,
