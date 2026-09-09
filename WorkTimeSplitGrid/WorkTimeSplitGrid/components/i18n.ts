@@ -22,6 +22,15 @@ export interface Strings {
     allHours: string;
     /** aria-label for the my-hours / all-hours scope switch. */
     scopeToggle: string;
+    /**
+     * Label of the team-lead-only switch that includes entries on fixed-price
+     * ("Festpreis") projects, which are excluded by default. Desktop only.
+     */
+    fixedPrice: string;
+    /** Tooltip/aria description for the fixed-price switch. */
+    fixedPriceHint: string;
+    /** Chip on a list card marking an entry on a fixed-price project. */
+    fixedPriceChip: string;
     /** Period filter (segmented). */
     periodLabel: string;
     periodAll: string;
@@ -119,6 +128,10 @@ export const STRINGS: Record<Lang, Strings> = {
         myHoursLocked: "Locked — you only see your own hours.",
         allHours: "All hours",
         scopeToggle: "Hours scope — off: my hours, on: all hours",
+        fixedPrice: "Show fixed-price hours",
+        fixedPriceHint:
+            "Also list entries on fixed-price („Festpreis“) projects, which are hidden by default.",
+        fixedPriceChip: "Fixed price",
         periodLabel: "Period",
         periodAll: "All",
         periodToday: "Today",
@@ -207,6 +220,10 @@ export const STRINGS: Record<Lang, Strings> = {
         myHoursLocked: "Gesperrt — du siehst nur deine eigenen Stunden.",
         allHours: "Alle Stunden",
         scopeToggle: "Stundenbereich — Aus: meine Stunden, An: alle Stunden",
+        fixedPrice: "Festpreiszeiten anzeigen",
+        fixedPriceHint:
+            "Zeigt zusätzlich Einträge zu Festpreis-Projekten, die standardmäßig ausgeblendet sind.",
+        fixedPriceChip: "Festpreis",
         periodLabel: "Zeitraum",
         periodAll: "Alle",
         periodToday: "Heute",
@@ -295,6 +312,10 @@ export const STRINGS: Record<Lang, Strings> = {
         myHoursLocked: "Verrouillé — vous ne voyez que vos propres heures.",
         allHours: "Toutes les heures",
         scopeToggle: "Portée des heures — désactivé : mes heures, activé : toutes les heures",
+        fixedPrice: "Afficher les heures au forfait",
+        fixedPriceChip: "Forfait",
+        fixedPriceHint:
+            "Affiche également les entrées des projets au forfait (« Festpreis »), masquées par défaut.",
         periodLabel: "Période",
         periodAll: "Toutes",
         periodToday: "Aujourd'hui",

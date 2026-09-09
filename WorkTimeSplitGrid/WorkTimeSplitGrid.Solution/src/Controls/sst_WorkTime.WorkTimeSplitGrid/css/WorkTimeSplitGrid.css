@@ -381,6 +381,12 @@
 
 /* ---- Toast ---- */
 .wtsg-toast {
+    /* `.wtsg-root` is a flex column: without an explicit flex-shrink of 0 the
+       toast inherits the `0 1 auto` default and gets squashed to a few pixels
+       when the control is short — the message was clipped mid-line and the
+       max-height/overflow rule below even drew a scrollbar inside the sliver.
+       Every other direct child (toolbar, subbar, actionbar) pins this too. */
+    flex: 0 0 auto;
     margin: 8px 10px 0;
     padding: 8px 12px;
     background: #f3f9ff;
@@ -679,6 +685,13 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* Fixed-price ("Festpreis") marker — amber accent so it reads as a flag rather
+   than as another neutral data chip (resource / project). */
+.wtsg-chip-fixed {
+    background: #fdf3d7;
+    color: #6b4b00;
 }
 
 /* ---- Detail panel ---- */

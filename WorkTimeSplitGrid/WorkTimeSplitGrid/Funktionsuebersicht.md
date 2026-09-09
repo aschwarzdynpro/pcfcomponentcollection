@@ -15,7 +15,11 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   zusammengesetzten Titel, eine **Chip-Reihe ohne Label** (**Ressource →
   Projekt**) und die Gesamtdauer. Die Ressource ist `sst_resource_ref.name`
   (Fallback auf das Textfeld `sst_resource`); der Projekt-Chip ist die
-  Projektnummer (`sst_project_id.sst_projectnumber`).
+  Projektnummer (`sst_project_id.sst_projectnumber`). Einträge zu einem
+  **Festpreis-Projekt** erhalten zusätzlich einen amberfarbenen Chip
+  **🏷️ Festpreis** (`hso_projecttype = 100000001`, aus demselben
+  `sst_Project_id`-`$expand`) — sobald die Teamleitung sie einblendet, bleiben
+  sie damit auf einen Blick unterscheidbar.
 - **Zusammengesetzter Titel** (Liste + Detail): `<sst_type> am <sst_date>`
   (z. B. „Arbeit am 07.08.2024"). `sst_date` und die Projektnummer des
   verknüpften Projekts (`sst_project_id.sst_projectnumber` auf `msdyn_project`)
@@ -30,7 +34,9 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
     → Mehrfachauswahl-Liste mit Aktion **„Lieferscheine erstellen"**.
   **Pausen** (`sst_type` = `pauseValue`, Default `Pause`) werden in beiden Modi
   ausgeblendet — ebenso Einträge auf **Festpreis-Projekten** (Projekt-Feld
-  `hso_projecttype = 100000001`, gefiltert über die `sst_Project_id`-Navigation).
+  `hso_projecttype = 100000001`, gefiltert über die `sst_Project_id`-Navigation),
+  sofern die Teamleitung nicht den Schalter **„Festpreiszeiten anzeigen"**
+  aktiviert (nur Desktop, siehe unten).
   Die Liste wird **direkt vom Server geladen, mit bereits angewandtem
   Modus-Filter** (`webApi.retrieveMultipleRecords` auf `sst_roundedtimeentries`)
   — statt alle Seiten des gebundenen Views zu laden und clientseitig zu filtern.
@@ -45,16 +51,20 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   - **Erstellen & öffnen ↗** — dasselbe, öffnet danach das Ergebnis: ein einzelner
     Lieferschein wird direkt geöffnet; wurden **mehrere** erstellt, erscheint ein
     Auswahl-Overlay, das sie nach **Lieferscheinnummer**
-    (`sst_deliverynotenumberassembly_str`, mit dem Arbeitsauftrag als Unterzeile)
+    (`sst_deliverynotenumberassembly_str`, mit dem Projekt als Unterzeile)
     auflistet, sodass der Benutzer wählt, welchen er öffnet.
-  Beide erstellen **je Arbeitsauftrag** einen Lieferschein (`sst_timereports`,
+  Beide erstellen **je Projekt** einen Lieferschein (`sst_timereports`,
   `sst_name` = „Timereport <yyyy-MM-dd> / <Ressourcenname>" — deckungsgleich mit dem
   parallelen Cloud Flow (`concat('Timereport ', date, ' / ', resource.name)`),
   Datum = heute (lokal, ISO), Ressource = Name der Ressource des **ersten
   ausgewählten Eintrags** (`sst_resource_ref.name`, analog zum `Get_Resource`-Schritt
-  des Flows); `sst_Arbeitsauftrag` → msdyn_workorder)
+  des Flows); Projekt → `sst_Projekt` → msdyn_project)
   und verknüpfen jeden ausgewählten Eintrag via `sst_TimeReport` mit dem
-  Lieferschein seines Arbeitsauftrags. Bereits zugeordnete Einträge werden
+  Lieferschein seines Projekts — 5 Zeiten auf 2 Projekten ergeben also
+  **2 Lieferscheine**. Der **Arbeitsauftrag** (`sst_Arbeitsauftrag`) wird nur
+  gesetzt, wenn **alle** Zeiten der Projektgruppe denselben Arbeitsauftrag haben;
+  bei gemischten Gruppen bleibt er leer, damit über Dual Write kein willkürlicher
+  `WORKORDER` nach AX geht. Bereits zugeordnete Einträge werden
   abgewiesen. Während der Erstellung blendet sich ein **Fortschritts-Overlay**
   über die Liste, damit der Benutzer nicht weiterklickt und sieht, dass im
   Hintergrund etwas passiert. (Portiert aus dem Schulz-Ribbon-Command
@@ -100,7 +110,38 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   Benutzer; nur Inhaber der Rolle **System Administrator** oder **SST | Dispo
   Teamleitung Addon** können ihn einschalten (alle Stunden sehen). Rollenprüfung
   über `systemuserroles_association` (direkt zugewiesene Rollen).
+  Für diese berechtigten Rollen startet der Schalter zudem **direkt auf „Alle
+  Stunden"** — auf allen Formfaktoren (ADO 13687). Da die Rollenprüfung
+  asynchron läuft, wird der **erste** Listenaufbau bis zu ihrem Ergebnis
+  zurückgehalten; sonst würde die Liste erst „Meine Stunden" laden und sofort
+  sichtbar auf „Alle Stunden" nachladen (zwei Serverabfragen). Der Default greift
+  **einmalig**: Schaltet ein Berechtigter bewusst auf „Meine Stunden", bleibt das
+  bei Aktualisieren und Offline-/Online-Wechsel erhalten. Läuft keine Prüfung
+  (offline, keine Benutzer-ID) oder schlägt sie fehl, wird die Sperre sofort
+  freigegeben — die Liste bleibt nie hängen.
+- **Schalter „Festpreiszeiten anzeigen"** (Default **Aus**) — steht direkt neben
+  dem Stunden-Schalter und blendet zusätzlich die Einträge zu **Festpreis-
+  Projekten** ein, die beide Modi sonst ausblenden. Er wird **nur** für Inhaber
+  derselben beiden Rollen (**System Administrator** / **SST | Dispo Teamleitung
+  Addon**) gerendert — **und nur in der Desktop-Variante**, nie im Handy-Layout
+  (Formfaktor Telefon). Eingeschaltet entfällt die `hso_projecttype`-Bedingung in
+  der Server-Abfrage. Der Zustand ist zusätzlich an die Berechtigung gekoppelt,
+  damit ein stehengebliebenes „An" die Abfrage nie für jemanden erweitert, der
+  den Schalter nicht nutzen darf.
 - Statuspunkt je Karte (offen = rot, aufgeteilt = grün).
+
+### Umgebungs-Toleranz (Schema-Drift)
+- **`sst_paytype_opt` auf der Kindtabelle gilt als optional.** Das Feld war in
+  INT/UAT vorhanden, in PROD nicht — und da Dataverse bei einer unbekannten
+  Property im `$select` die **gesamte** Abfrage verwirft, legte diese eine Spalte
+  den kompletten Aufteilen-Dialog lahm („Die Work Subtypes konnten nicht geladen
+  werden"). `loadSubtypes` probiert das Feld daher einmal, wiederholt die Abfrage
+  bei Fehlschlag ohne die Spalte, merkt sich das Ergebnis für die Sitzung und
+  protokolliert `subtypes.payTypeColumnMissing`. Der Zahlungstyp kommt dann über
+  den Namensabgleich.
+- **Sortierung und Options-Abgleich sind schlagwort- und trennzeichen-tolerant:**
+  „Überstunde" ↔ „Überstunden" sowie „Nacht & Sonntag" ↔ „Nacht / Sonntag" gelten
+  als gleich, weil die Umgebungen unterschiedlich formulieren.
 
 ### Detail-Aufteilung (rechts)
 - **Detail-Titel gekürzt** auf **Projekt-ID / Booking-Nummer** (z. B.

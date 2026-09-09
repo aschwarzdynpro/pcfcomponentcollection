@@ -4,10 +4,12 @@ import {
     PARENT_LOOKUPS,
     COPIED_FIELDS,
     WORKORDER_VALUE,
+    PROJECT_VALUE,
     WORKTYPE,
     ENTRY_TIMETYPE,
     TIMEREPORT,
     WORKORDER_SET,
+    PROJECT_SET,
     PROJECT_TYPE,
     HOLIDAY,
     normalizeLabel,
@@ -46,7 +48,10 @@ async function entitySetFor(
 /** Sort subtype rows into the canonical surcharge order. */
 function sortSubtypes<T extends { name: string }>(rows: T[]): T[] {
     const rank = (n: string) => {
-        const i = SUBTYPE_ORDER.indexOf(n);
+        // Keyword match (not equality) — see SUBTYPE_ORDER: the naming differs
+        // per environment ("Überstunde" / "Überstunden").
+        const norm = normalizeLabel(n);
+        const i = SUBTYPE_ORDER.findIndex((kw) => norm.indexOf(kw) !== -1);
         return i === -1 ? SUBTYPE_ORDER.length : i;
     };
     return [...rows].sort((a, b) => {
@@ -54,6 +59,19 @@ function sortSubtypes<T extends { name: string }>(rows: T[]): T[] {
         return r !== 0 ? r : a.name.localeCompare(b.name);
     });
 }
+
+/**
+ * Whether the OPTIONAL `sst_paytype_opt` column exists on the child table in this
+ * environment: `null` = not probed yet, then cached for the session.
+ *
+ * It is not deployed everywhere — PROD lacked it while INT/UAT had it (verified
+ * 2026-07-30). Dataverse rejects the ENTIRE query when a `$select` names an
+ * unknown property, so a single missing optional column took the whole split
+ * editor down ("Die Work Subtypes konnten nicht geladen werden"). We therefore
+ * probe once and fall back to a query without it; the pay type then comes from
+ * the name-match against the worktype option labels (see prepareSplit).
+ */
+let childPayTypeAvailable: boolean | null = null;
 
 /**
  * Load the work-subtype rows belonging to a Rounded Time Entry.
@@ -67,13 +85,45 @@ function sortSubtypes<T extends { name: string }>(rows: T[]): T[] {
 export async function loadSubtypes(
     webApi: ComponentFramework.WebApi,
     parentId: string,
+    logger: Logger = NOOP_LOGGER,
 ): Promise<SubtypeRow[]> {
     const id = parentId.replace(/[{}]/g, "");
     const nav = CHILD.parentCollectionNav;
-    const query =
+    const query = (withPayType: boolean): string =>
         `?$select=${PARENT.primaryId}` +
-        `&$expand=${nav}($select=${CHILD.primaryId},${CHILD.name},${CHILD.timeValue},${CHILD.payType})`;
-    const rec: any = await webApi.retrieveRecord(PARENT.logicalName, id, query);
+        `&$expand=${nav}($select=${CHILD.primaryId},${CHILD.name},${CHILD.timeValue}` +
+        `${withPayType ? `,${CHILD.payType}` : ""})`;
+
+    let rec: any;
+    if (childPayTypeAvailable === false) {
+        rec = await webApi.retrieveRecord(PARENT.logicalName, id, query(false));
+    } else {
+        try {
+            rec = await webApi.retrieveRecord(
+                PARENT.logicalName,
+                id,
+                query(true),
+            );
+            childPayTypeAvailable = true;
+        } catch (e) {
+            // Retry WITHOUT the optional column. If that succeeds, the column is
+            // the cause (not permissions/network) — remember it so the rest of the
+            // session issues a single request. If it fails too, the error is real
+            // and propagates to the caller unchanged.
+            rec = await webApi.retrieveRecord(
+                PARENT.logicalName,
+                id,
+                query(false),
+            );
+            if (childPayTypeAvailable === null) {
+                logger.warn("subtypes.payTypeColumnMissing", {
+                    column: CHILD.payType,
+                    detail: serverErrorMessage(e),
+                });
+            }
+            childPayTypeAvailable = false;
+        }
+    }
     const kids: any[] = Array.isArray(rec?.[nav]) ? rec[nav] : [];
     const rows: SubtypeRow[] = kids.map((e: any) => {
         const value =
@@ -292,6 +342,8 @@ export interface LoadedEntry {
     timereport: string;
     /** Booking number (bookableresourcebooking display value, e.g. S-120044). */
     bookingNumber: string;
+    /** Entry belongs to a fixed-price ("Festpreis") project → flagged in the list. */
+    fixedPrice: boolean;
 }
 
 export interface LoadEntriesOptions {
@@ -301,6 +353,12 @@ export interface LoadEntriesOptions {
     resourceUserId: string | null;
     /** Type value that marks a break — excluded from both modes when set. */
     pauseValue?: string | null;
+    /**
+     * When true, KEEP entries on fixed-price ("Festpreis") projects, which are
+     * otherwise excluded from both modes. Driven by the team-lead-only
+     * "show fixed-price hours" switch; defaults to false (exclude).
+     */
+    includeFixedPrice?: boolean;
 }
 
 const ENTRY_FMT = "@OData.Community.Display.V1.FormattedValue";
@@ -331,6 +389,10 @@ function mapLoadedEntry(e: Record<string, any>): LoadedEntry {
         bookingNumber: String(
             e[`_sst_bookableresourcebooking_value${ENTRY_FMT}`] ?? "",
         ),
+        fixedPrice:
+            e.sst_Project_id != null &&
+            Number(e.sst_Project_id[PROJECT_TYPE.field]) ===
+                PROJECT_TYPE.fixedPriceValue,
     };
 }
 
@@ -382,10 +444,12 @@ export async function loadEntries(
         : "";
     // Exclude entries on fixed-price ("Festpreis") projects — both modes. Filter
     // on the project's hso_projecttype via the lookup navigation property; `ne`
-    // keeps projects with no type set.
-    const projectTypeClause =
-        ` and ${PROJECT_TYPE.nav}/${PROJECT_TYPE.field}` +
-        ` ne ${PROJECT_TYPE.fixedPriceValue}`;
+    // keeps projects with no type set. Team leads can opt back in via
+    // `includeFixedPrice`, which drops the clause entirely.
+    const projectTypeClause = opts.includeFixedPrice
+        ? ""
+        : ` and ${PROJECT_TYPE.nav}/${PROJECT_TYPE.field}` +
+          ` ne ${PROJECT_TYPE.fixedPriceValue}`;
     const filter =
         "_sst_project_id_value ne null" +
         projectTypeClause +
@@ -397,7 +461,8 @@ export async function loadEntries(
         `?$select=sst_roundedtimeentriesid,sst_name,sst_type,sst_date,sst_duration,sst_resource,` +
         `sst_worksubtypecompleted,_sst_project_id_value,_sst_timereport_value,_sst_resource_ref_value,` +
         `_sst_bookableresourcebooking_value` +
-        `&$expand=sst_Project_id($select=sst_projectnumber),sst_resource_ref($select=name)` +
+        `&$expand=sst_Project_id($select=sst_projectnumber,${PROJECT_TYPE.field}),` +
+        `sst_resource_ref($select=name)` +
         `&$filter=${filter}&$orderby=sst_date desc`;
 
     const out: LoadedEntry[] = [];
@@ -968,7 +1033,8 @@ export async function saveSplit(
 export interface CreatedReport {
     id: string;
     name: string;
-    woName: string;
+    /** Project the note groups (formatted lookup value) — picker sub-label. */
+    projectName: string;
     /** Delivery-note number (autonumber) — preferred display label. */
     number: string;
 }
@@ -981,23 +1047,29 @@ export interface CreateReportsResult {
     failed: number;
     /** Ids of the entries that were actually linked (for optimistic removal). */
     assignedIds: string[];
-    /** Every created delivery note (one per work order), with id + name. */
+    /** Every created delivery note (one per project), with id + name. */
     reports: CreatedReport[];
-    /** The single created report id (when exactly one) — for opening the form. */
-    singleReportId: string | null;
     /** First server error message (when something failed) — for display. */
     errorMessage?: string;
 }
 
 /**
- * "Assign" mode action: create one delivery note (sst_timereports) per work order
- * across the selected entries and link each entry to its work order's note
- * (sst_TimeReport). Mirrors the Schulz ribbon `createTimeReport` logic.
+ * "Assign" mode action: create one delivery note (sst_timereports) **per project**
+ * across the selected entries and link each entry to its project's note
+ * (sst_TimeReport). 5 entries on 2 projects → 2 notes.
+ *
+ * The work order is no longer the grouping key (it was until v1.23.x). It is
+ * still written to the note's `sst_Arbeitsauftrag`, but only when every entry of
+ * the project group shares the same work order — a note spanning several work
+ * orders leaves it empty rather than picking one arbitrarily, which would push a
+ * misleading `WORKORDER` to AX via dual-write.
  *
  * Guard: if any selected entry already has a delivery note, nothing is created
- * (returns blocked=true). Entries without a work order can't be assigned and are
- * counted as failures. The unused booking/resource retrieval from the original
- * script (its resource binding was commented out) is intentionally omitted.
+ * (returns blocked=true). Entries without a project can't be assigned and are
+ * counted as failures — in practice the "assign" filter already excludes them
+ * (`_sst_project_id_value ne null`). The unused booking/resource retrieval from
+ * the original script (its resource binding was commented out) is intentionally
+ * omitted.
  */
 export async function createTimeReports(
     webApi: ComponentFramework.WebApi,
@@ -1008,15 +1080,15 @@ export async function createTimeReports(
     const fmt = "@OData.Community.Display.V1.FormattedValue";
     const op = logger.op("createReports", { selected: ids.length });
 
-    // Retrieve work order + current delivery note + resource (for the name) for
-    // each selected entry.
+    // Retrieve project + work order + current delivery note + resource (for the
+    // name) for each selected entry.
     const entries = await Promise.all(
         ids.map((id) =>
             webApi
                 .retrieveRecord(
                     PARENT.logicalName,
                     id,
-                    `?$select=${WORKORDER_VALUE},${TIMEREPORT.value}` +
+                    `?$select=${PROJECT_VALUE},${WORKORDER_VALUE},${TIMEREPORT.value}` +
                         `&$expand=sst_resource_ref($select=name)`,
                 )
                 .then(
@@ -1036,27 +1108,44 @@ export async function createTimeReports(
             failed: 0,
             assignedIds: [],
             reports: [],
-            singleReportId: null,
         };
     }
 
-    // Group selected entries by work order.
-    const byWo = new Map<
+    // Group selected entries by project. `woIds` collects the distinct work
+    // orders seen in the group so the note's work-order lookup can be set when
+    // — and only when — the group is unambiguous (entries without a work order
+    // contribute "" and therefore also make the group ambiguous).
+    const byProject = new Map<
         string,
-        { woId: string; woName: string; entryIds: string[] }
+        {
+            projectId: string;
+            projectName: string;
+            entryIds: string[];
+            woIds: Set<string>;
+        }
     >();
     let failed = 0;
     let firstError = "";
     for (const e of entries) {
-        const woRaw = e.rec ? e.rec[WORKORDER_VALUE] : null;
-        if (!woRaw) {
-            failed += 1; // no work order → cannot create a delivery note
+        const projRaw = e.rec ? e.rec[PROJECT_VALUE] : null;
+        if (!projRaw) {
+            failed += 1; // no project → cannot create a delivery note
             continue;
         }
-        const key = String(woRaw).replace(/[{}]/g, "");
-        const woName = (e.rec[WORKORDER_VALUE + fmt] as string) ?? "";
-        if (!byWo.has(key)) byWo.set(key, { woId: key, woName, entryIds: [] });
-        byWo.get(key)!.entryIds.push(e.id);
+        const key = String(projRaw).replace(/[{}]/g, "");
+        const projectName = (e.rec[PROJECT_VALUE + fmt] as string) ?? "";
+        if (!byProject.has(key)) {
+            byProject.set(key, {
+                projectId: key,
+                projectName,
+                entryIds: [],
+                woIds: new Set<string>(),
+            });
+        }
+        const grp = byProject.get(key)!;
+        grp.entryIds.push(e.id);
+        const woRaw = e.rec[WORKORDER_VALUE];
+        grp.woIds.add(woRaw ? String(woRaw).replace(/[{}]/g, "") : "");
     }
 
     let assigned = 0;
@@ -1082,13 +1171,26 @@ export async function createTimeReports(
     }
     const reportName = `Timereport ${dateStr} / ${resourceName}`.trim();
 
-    for (const wo of byWo.values()) {
+    for (const grp of byProject.values()) {
+        // Unambiguous work order (exactly one, and it is set) → carry it onto the
+        // note; mixed or missing → leave the lookup empty.
+        const woList = Array.from(grp.woIds);
+        const woId = woList.length === 1 && woList[0] ? woList[0] : null;
         let reportId: string;
         try {
-            const created = await webApi.createRecord(TIMEREPORT.logicalName, {
+            const payload: ComponentFramework.WebApi.Entity = {
                 [TIMEREPORT.name]: reportName,
-                [`${TIMEREPORT.workorderNav}@odata.bind`]: `/${WORKORDER_SET}(${wo.woId})`,
-            });
+                [`${TIMEREPORT.projectNav}@odata.bind`]: `/${PROJECT_SET}(${grp.projectId})`,
+            };
+            if (woId) {
+                payload[
+                    `${TIMEREPORT.workorderNav}@odata.bind`
+                ] = `/${WORKORDER_SET}(${woId})`;
+            }
+            const created = await webApi.createRecord(
+                TIMEREPORT.logicalName,
+                payload,
+            );
             reportId = created.id;
             // The delivery-note number is an autonumber (set synchronously on
             // create); fetch it for the picker label. Best-effort.
@@ -1101,29 +1203,30 @@ export async function createTimeReports(
                 );
                 number = String(back?.[TIMEREPORT.number] ?? "");
             } catch {
-                /* number stays empty → picker falls back to the WO name */
+                /* number stays empty → picker falls back to the project name */
             }
             reports.push({
                 id: reportId,
                 name: reportName,
-                woName: wo.woName,
+                projectName: grp.projectName,
                 number,
             });
             op.step("reportCreated", {
-                woId: wo.woId,
+                projectId: grp.projectId,
+                woId: woId ?? "(mixed)",
                 number,
-                entries: wo.entryIds.length,
+                entries: grp.entryIds.length,
             });
         } catch (e) {
-            failed += wo.entryIds.length; // report creation failed → its entries fail
+            failed += grp.entryIds.length; // report creation failed → its entries fail
             if (!firstError) firstError = serverErrorMessage(e);
             logger.error("createReports.reportFailed", e, {
-                woId: wo.woId,
-                entries: wo.entryIds.length,
+                projectId: grp.projectId,
+                entries: grp.entryIds.length,
             });
             continue;
         }
-        for (const eid of wo.entryIds) {
+        for (const eid of grp.entryIds) {
             try {
                 await webApi.updateRecord(PARENT.logicalName, eid, {
                     [`${TIMEREPORT.entryNav}@odata.bind`]: `/${TIMEREPORT.entitySet}(${reportId})`,
@@ -1146,7 +1249,6 @@ export async function createTimeReports(
         failed,
         assignedIds,
         reports,
-        singleReportId: reports.length === 1 ? reports[0].id : null,
         errorMessage: firstError || undefined,
     };
 }

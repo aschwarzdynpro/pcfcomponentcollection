@@ -4,8 +4,10 @@
     solution zips (unmanaged + managed).
 
     Output:
-        bin\FuzzyLookupControl.zip          (Unmanaged)
-        bin\FuzzyLookupControl_managed.zip  (Managed)
+        bin\FuzzyLookupControl.zip                    (Unmanaged, latest)
+        bin\FuzzyLookupControl_managed.zip            (Managed, latest)
+        bin\FuzzyLookupControl_<ver>.zip              (Unmanaged, archived)
+        bin\FuzzyLookupControl_managed_<ver>.zip      (Managed, archived)
 
     Prerequisites:
         - Node.js + npm
@@ -68,6 +70,16 @@ if ($LASTEXITCODE -ne 0) { throw 'pac solution pack (Unmanaged) failed.' }
 pac solution pack --zipfile $managed   --folder (Join-Path $solutionRoot 'src') --packagetype Managed
 if ($LASTEXITCODE -ne 0) { throw 'pac solution pack (Managed) failed.' }
 
+# Versioned archive copies (never overwritten) so older builds stay available
+# for roll-back without git. Version comes from the solution manifest.
+$solutionXml = Join-Path $solutionRoot 'src\Other\Solution.xml'
+$version = ([xml](Get-Content -Raw -Path $solutionXml)).ImportExportXml.SolutionManifest.Version
+$unmanagedV = Join-Path $binDir "FuzzyLookupControl_$version.zip"
+$managedV   = Join-Path $binDir "FuzzyLookupControl_managed_$version.zip"
+Copy-Item $unmanaged $unmanagedV -Force
+Copy-Item $managed   $managedV   -Force
+Write-Host "==> Archived versioned copies for $version" -ForegroundColor Cyan
+
 Write-Host ''
 Write-Host 'Built solution packages:' -ForegroundColor Green
-Get-ChildItem $binDir -Filter '*.zip' | Format-Table Name, Length, LastWriteTime
+Get-ChildItem $binDir -Filter '*.zip' | Sort-Object Name | Format-Table Name, Length, LastWriteTime

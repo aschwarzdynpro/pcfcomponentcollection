@@ -8,7 +8,7 @@ control for import.
 | Field                | Value                                |
 |----------------------|--------------------------------------|
 | Solution name        | `FuzzyLookupControl`                 |
-| Version              | `1.0.0.0`                            |
+| Version              | `1.0.35.0`                           |
 | Publisher            | `HerbertWaldmann`                    |
 | Customization prefix | `wal`                                |
 | Option-value prefix  | `15282`                              |
@@ -19,9 +19,11 @@ control for import.
 ```
 FuzzyLookupControl.Solution/
 ├── build.ps1                              # build script
-├── bin/
-│   ├── FuzzyLookupControl.zip             # unmanaged solution
-│   └── FuzzyLookupControl_managed.zip     # managed solution
+├── bin/                                   # git-ignored, local archive only
+│   ├── FuzzyLookupControl.zip             # unmanaged solution (latest)
+│   ├── FuzzyLookupControl_managed.zip     # managed solution (latest)
+│   ├── FuzzyLookupControl_<ver>.zip       # unmanaged, versioned archive
+│   └── FuzzyLookupControl_managed_<ver>.zip  # managed, versioned archive
 └── src/
     ├── Other/
     │   ├── Customizations.xml
@@ -49,6 +51,10 @@ The script:
 1. Runs `npm install` (if needed) and `npm run build` in `../FuzzyLookupControl/`.
 2. Stages the built artifacts into `src/Controls/wal_Lookup.FuzzyLookupControl/`.
 3. Packs unmanaged + managed solution zips with `pac solution pack`.
+4. Copies both to versioned archive names (`…_<ver>.zip`), reading the
+   version from `src/Other/Solution.xml`. Existing archives of other
+   versions are never overwritten, so older builds stay importable for
+   roll-back.
 
 ## Import
 
