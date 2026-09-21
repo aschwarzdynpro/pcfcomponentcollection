@@ -663,9 +663,26 @@
     margin-top: 6px;
 }
 
+/* Third tile line: project-name chip on the left, total pushed to the right. */
+.wtsg-card-foot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    min-width: 0;
+}
+
+.wtsg-card-foot .wtsg-chip-project {
+    flex: 0 1 auto;
+    max-width: none;
+    min-width: 0;
+}
+
 .wtsg-card-total {
     font-size: 13px;
-    margin-top: 4px;
+    margin-left: auto;
+    white-space: nowrap;
+    flex: 0 0 auto;
 }
 
 .wtsg-card-extras {

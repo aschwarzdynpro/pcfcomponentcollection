@@ -11,11 +11,13 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
 ## Funktionen
 
 ### Master-Liste (links)
-- Zeigt die Rounded Time Entries als Karten. Jede Karte zeigt den
-  zusammengesetzten Titel, eine **Chip-Reihe ohne Label** (**Ressource →
-  Projekt**) und die Gesamtdauer. Die Ressource ist `sst_resource_ref.name`
-  (Fallback auf das Textfeld `sst_resource`); der Projekt-Chip ist die
-  Projektnummer (`sst_project_id.sst_projectnumber`). Einträge zu einem
+- Zeigt die Rounded Time Entries als Karten mit drei Zeilen: dem
+  zusammengesetzten Titel, einer **Chip-Reihe ohne Label** (**Ressource →
+  Projektnummer**) und einer Fußzeile mit dem **Projektname**-Chip links und
+  der Gesamtdauer („Gesamt: xx h") rechtsbündig. Die Ressource ist
+  `sst_resource_ref.name` (Fallback auf das Textfeld `sst_resource`); die
+  Projekt-Chips sind die Projektnummer (`sst_project_id.sst_projectnumber`) und
+  der Projektname (`sst_project_id.msdyn_subject`). Einträge zu einem
   **Festpreis-Projekt** erhalten zusätzlich einen amberfarbenen Chip
   **🏷️ Festpreis** (`hso_projecttype = 100000001`, aus demselben
   `sst_Project_id`-`$expand`) — sobald die Teamleitung sie einblendet, bleiben
@@ -75,7 +77,7 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   `{ error: { message } }` extrahiert), nicht nur ein generischer Fehler. Fehler-
   Toasts bleiben länger stehen und lassen sich **per Klick schließen**; der volle
   Fehler steckt zusätzlich im ⓘ-Panel.
-- **Freitext-Suche** über Titel, Typ, Datum, **Projektnummer** und
+- **Freitext-Suche** über Titel, Typ, Datum, **Projektnummer**, **Projektname** und
   **Ressourcenname** (`sst_resource_ref.name`) — über die **gesamte**
   serverseitig gefilterte Ergebnismenge (nicht nur eine Seite).
 - **Zeitraum-Filter & Sortierung** — der Zeitraum-Filter (**Alle / Heute / Diese
