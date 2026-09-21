@@ -248,6 +248,14 @@ export interface FieldConfig {
     type: string;
     /** Type value that marks a break/pause (hidden from the list). */
     pauseValue: string;
+    /**
+     * Type prefixes that count as WORK time in the per-day summary (matched
+     * case-insensitively against the start of the normalized type text, so
+     * "Arbeit (Nacht / Sonntag)" is work). First match wins.
+     */
+    workPrefixes: string[];
+    /** Type prefixes that count as TRAVEL time in the per-day summary. */
+    travelPrefixes: string[];
     /** Boolean "already split" flag on the parent. */
     completed: string;
     /** Text column on the split record that stores the subtype name. */
@@ -261,6 +269,9 @@ const DEFAULTS: FieldConfig = {
     date: "sst_date",
     type: "sst_type",
     pauseValue: "Pause",
+    // INT/UAT test data also carries English types ("Work", "Traveling").
+    workPrefixes: ["Arbeit", "Work"],
+    travelPrefixes: ["Fahrzeit", "Travel"],
     completed: "sst_worksubtypecompleted",
     subtype: "sst_workordersubtype",
     notes: "sst_freitextfeld",
@@ -285,10 +296,29 @@ export function resolveFieldConfig(overrides: {
         date: clean(overrides.dateField) ?? DEFAULTS.date,
         type: clean(overrides.typeField) ?? DEFAULTS.type,
         pauseValue: clean(overrides.pauseValue) ?? DEFAULTS.pauseValue,
+        workPrefixes: DEFAULTS.workPrefixes,
+        travelPrefixes: DEFAULTS.travelPrefixes,
         completed: clean(overrides.completedField) ?? DEFAULTS.completed,
         subtype: clean(overrides.subtypeField) ?? DEFAULTS.subtype,
         notes: DEFAULTS.notes,
     };
+}
+
+/** Coarse time category of an entry, used for the per-day sums in the list. */
+export type TimeKind = "work" | "travel" | "other";
+
+/**
+ * Classify an entry's type text as work / travel / other by prefix. Split
+ * children carry the subtype in parentheses ("Fahrzeit (Normal)"), unsplit
+ * originals just the bare type ("Fahrzeit") — a prefix match covers both.
+ */
+export function classifyType(type: string, cfg: FieldConfig): TimeKind {
+    const t = normalizeLabel(type);
+    if (!t) return "other";
+    const starts = (p: string) => t.startsWith(normalizeLabel(p));
+    if (cfg.workPrefixes.some(starts)) return "work";
+    if (cfg.travelPrefixes.some(starts)) return "travel";
+    return "other";
 }
 
 /**

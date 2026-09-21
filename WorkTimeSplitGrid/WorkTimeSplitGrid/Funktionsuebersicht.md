@@ -22,6 +22,17 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   **🏷️ Festpreis** (`hso_projecttype = 100000001`, aus demselben
   `sst_Project_id`-`$expand`) — sobald die Teamleitung sie einblendet, bleiben
   sie damit auf einen Blick unterscheidbar.
+- **Tagesgruppen mit Tagessummen** — solange die Liste nach Datum sortiert ist
+  (Standard), werden die Karten je Kalendertag unter einer haftenden Kopfzeile
+  („Fr, 31.01.2025") gruppiert, die **Arbeit**, **Fahrzeit** und **Gesamt** des
+  Tages in Stunden als Pills zeigt. Die Kategorie ergibt sich per Präfix aus dem
+  `sst_type`-Text (`Arbeit`/`Work` → Arbeit, `Fahrzeit`/`Travel` → Fahrzeit,
+  Defaults in `schema.ts`); andere Typen zählen nur zur Gesamtsumme. Die Summen
+  werden clientseitig über die geladenen (gefilterten) Zeilen gebildet — Suche
+  und Zeitraum-Filter engen sie also mit ein. Bei Sortierung nach Projekt,
+  Ressource oder Dauer bleibt die Liste flach, damit diese Reihenfolge nicht
+  durch Datums-Kopfzeilen zerrissen wird. Mobil brechen die Summen unter das
+  Datum um; die Kopfzeile bleibt beim Scrollen oben stehen.
 - **Zusammengesetzter Titel** (Liste + Detail): `<sst_type> am <sst_date>`
   (z. B. „Arbeit am 07.08.2024"). `sst_date` und die Projektnummer des
   verknüpften Projekts (`sst_project_id.sst_projectnumber` auf `msdyn_project`)

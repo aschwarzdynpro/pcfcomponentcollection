@@ -96,6 +96,11 @@ export interface Strings {
     errLoadSubtypes: string;
     noSubtypes: string;
     total: string;
+    /** Per-day summary labels in the master list ("Work 6.5 h · Travel 1 h"). */
+    dayWork: string;
+    dayTravel: string;
+    /** Duration unit suffix for the day sums ("h"). */
+    hoursUnit: string;
     distributed: string;
     remaining: string;
     save: string;
@@ -187,6 +192,9 @@ export const STRINGS: Record<Lang, Strings> = {
         errLoadSubtypes: "Could not load the work subtypes.",
         noSubtypes: "No work subtypes found for this entry.",
         total: "Total",
+        dayWork: "Work",
+        dayTravel: "Travel",
+        hoursUnit: "h",
         distributed: "Distributed",
         remaining: "Remaining",
         save: "Save split",
@@ -279,6 +287,9 @@ export const STRINGS: Record<Lang, Strings> = {
         errLoadSubtypes: "Die Work Subtypes konnten nicht geladen werden.",
         noSubtypes: "Für diesen Eintrag wurden keine Work Subtypes gefunden.",
         total: "Gesamt",
+        dayWork: "Arbeit",
+        dayTravel: "Fahrzeit",
+        hoursUnit: "h",
         distributed: "Verteilt",
         remaining: "Rest",
         save: "Aufteilung speichern",
@@ -371,6 +382,9 @@ export const STRINGS: Record<Lang, Strings> = {
         errLoadSubtypes: "Impossible de charger les sous-types de travail.",
         noSubtypes: "Aucun sous-type de travail pour cette entrée.",
         total: "Total",
+        dayWork: "Travail",
+        dayTravel: "Trajet",
+        hoursUnit: "h",
         distributed: "Réparti",
         remaining: "Restant",
         save: "Enregistrer la répartition",

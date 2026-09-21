@@ -22,6 +22,16 @@ deletes the original.
   chip (`hso_projecttype = 100000001`, read from the same `sst_Project_id`
   `$expand`) — so once a team lead switches them into the list, they stay
   distinguishable at a glance.
+- **Day groups with per-day sums** — while the list is sorted by date (the
+  default), the cards are grouped under a sticky header per calendar day
+  (*Fr, 31.01.2025*) that shows the day's **Work**, **Travel** and **Total**
+  hours as pills. The category comes from the entry's `sst_type` text by
+  prefix (`Arbeit`/`Work` → work, `Fahrzeit`/`Travel` → travel, defaults in
+  `schema.ts`); other types count towards the total only. Sums are computed
+  client-side over the loaded (filtered) rows, so search/period filters narrow
+  them too. Sorting by project, resource or duration switches back to a flat
+  list so those orders aren't broken up by date headers. On mobile the sums
+  wrap below the date and the header stays pinned while scrolling.
 - **Composed entry title** (list + detail): `<type> am <date>` (e.g. *Arbeit am
   07.08.2024*). The date and the related project number
   (`sst_project_id.sst_projectnumber`) are fetched per page via one WebAPI

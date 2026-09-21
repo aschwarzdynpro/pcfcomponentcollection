@@ -440,6 +440,81 @@
 
 /* Empty-state (no entries / no search matches) — margin:auto centers it while
    keeping any pull-to-refresh indicator pinned to the top. */
+/* ---- Day groups (date-sorted list): sticky header with per-day sums ---- */
+.wtsg-day {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.wtsg-day-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    padding: 6px 4px 6px 2px;
+    background: #fff;
+    border-bottom: 1px solid #e1dfdd;
+    font-size: 12px;
+    color: #616161;
+}
+
+.wtsg-day-label {
+    font-weight: 600;
+    font-size: 13px;
+    color: #242424;
+    white-space: nowrap;
+}
+
+.wtsg-day-sums {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    margin-left: auto;
+}
+
+.wtsg-day-sum {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 3px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    background: #f3f2f1;
+    white-space: nowrap;
+    font-size: 11px;
+    color: #424242;
+}
+
+.wtsg-day-sum strong {
+    font-weight: 600;
+    color: #242424;
+}
+
+.wtsg-day-sum-work {
+    background: #e8f1fa;
+}
+
+.wtsg-day-sum-travel {
+    background: #e9f5ee;
+}
+
+.wtsg-day-sum-total {
+    background: #f3f2f1;
+}
+
+.wtsg-day-sum-total strong {
+    font-weight: 700;
+}
+
+.wtsg-day-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .wtsg-empty-state {
     margin: auto;
     display: flex;
@@ -1268,6 +1343,29 @@
     padding-right: 10px;
 }
 
+/* Day headers: cancel the list's 10px padding so the sticky header sits flush
+   at the top; sums wrap below the date on narrow screens with touch-friendly
+   pills. */
+.wtsg-mobile .wtsg-day-head {
+    top: -10px;
+    margin: 0 -10px;
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+.wtsg-mobile .wtsg-day-label {
+    font-size: 14px;
+}
+
+.wtsg-mobile .wtsg-day-sum {
+    font-size: 12px;
+    padding: 3px 10px;
+}
+
+.wtsg-mobile .wtsg-day-cards {
+    gap: 10px;
+}
+
 /* Bigger, finger-friendly cards */
 .wtsg-mobile .wtsg-card {
     padding: 14px 16px;
@@ -1476,6 +1574,13 @@
     max-width: 460px;
     padding: 8px;
     padding-right: 6px;
+}
+
+/* Landscape list padding is 8px (right 6px) → realign the sticky day header. */
+.wtsg-mobile.wtsg-landscape:not(.wtsg-assign) .wtsg-day-head {
+    top: -8px;
+    margin: 0 -6px 0 -8px;
+    padding: 6px 10px;
 }
 
 /* Re-add a separator between the two panes (mobile drops the panel border). */

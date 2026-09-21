@@ -1,3 +1,5 @@
+import type { TimeKind } from "./schema";
+
 export type Lang = "de" | "en" | "fr";
 
 /** A Rounded Time Entry flattened for the master list. */
@@ -11,6 +13,8 @@ export interface EntryRow {
     dateValue?: string;
     /** Type text (Arbeit / Fahrzeit / …). */
     type: string;
+    /** Coarse category of `type` (work / travel / other) for the day sums. */
+    kind?: TimeKind;
     /** Total duration as a number (for the split guard). */
     total: number;
     /** Formatted total for display. */

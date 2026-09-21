@@ -5,7 +5,7 @@ import { Dropdown } from "./Dropdown";
 import { CollapsibleActionBar } from "./CollapsibleActionBar";
 import { EntryRow, Lang, SubtypeRow } from "./types";
 import { STRINGS } from "./i18n";
-import { FieldConfig, ADMIN_ROLES, TIMEREPORT } from "./schema";
+import { FieldConfig, ADMIN_ROLES, TIMEREPORT, classifyType } from "./schema";
 import {
     loadSubtypes,
     userHasAnyRole,
@@ -111,6 +111,7 @@ export interface WorkTimeSplitGridProps {
 /** Map a server-loaded entry to a master-list row with the composed title. */
 function toEntryRow(
     e: LoadedEntry,
+    fields: FieldConfig,
     title: (type: string, date: string) => string,
 ): EntryRow {
     return {
@@ -119,6 +120,7 @@ function toEntryRow(
         date: e.date,
         dateValue: e.dateValue,
         type: e.type,
+        kind: classifyType(e.type, fields),
         total: e.total,
         totalFormatted: e.totalFormatted,
         completed: e.completed,
@@ -238,6 +240,7 @@ function buildOfflineEntries(
             date,
             dateValue: toIso(get(fields.date)),
             type,
+            kind: classifyType(type, fields),
             total: Number.isFinite(total) ? total : 0,
             totalFormatted:
                 fmt(fields.total) ||
@@ -445,7 +448,9 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                     setEffectiveOffline(true); // confirmed offline → block
                     return;
                 }
-                setEntries(loaded.map((e) => toEntryRow(e, t.title)));
+                setEntries(
+                    loaded.map((e) => toEntryRow(e, fields, t.title)),
+                );
                 setEffectiveOffline(false); // the live query answered → online
             },
             (err) => {
@@ -582,6 +587,11 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         });
         return sortRows(filtered, sortBy);
     }, [sourceEntries, search, period, sortBy]);
+
+    // Day groups (with per-day work / travel / total sums) only make sense
+    // while the list is in date order; project / resource / duration sorts
+    // stay flat so the chosen order isn't broken up by date headers.
+    const groupByDay = sortBy === "dateDesc" || sortBy === "dateAsc";
 
     // Compact one-liner of the active filters for the collapsed mobile bar:
     // "<search> · <mode> · <period> · <sort>" (search part only when set).
@@ -1096,6 +1106,8 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 enablePull={props.isMobile}
                                 refreshing={refreshing}
                                 onRefresh={refresh}
+                                groupByDay={groupByDay}
+                                lang={props.lang}
                                 strings={t}
                             />
                         )}
@@ -1142,6 +1154,8 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                         enablePull={props.isMobile}
                         refreshing={refreshing}
                         onRefresh={refresh}
+                        groupByDay={groupByDay}
+                        lang={props.lang}
                         strings={t}
                     />
                 )}
