@@ -118,6 +118,21 @@ export interface Strings {
     takeRemaining: string;
     /** Tooltip/aria for the star/AI pre-fill button. */
     suggest: string;
+    /** Day-level split (list header button + editor). */
+    daySplitButton: string;
+    daySplitTitle: string;
+    daySplitEntries: (n: number) => string;
+    /** Entries of the day whose type is neither work nor travel. */
+    daySplitOther: (n: number) => string;
+    daySplitNoEntries: string;
+    daySplitPreview: string;
+    /** An entry lacks the subtype row the user assigned hours to. */
+    daySplitMissingSubtype: (entry: string, subtype: string) => string;
+    daySplitConfirmBody: (entries: number, splits: number) => string;
+    daySplitSaved: (n: number) => string;
+    daySplitPartial: (saved: number, total: number) => string;
+    /** Hint in the empty detail pane (split mode). */
+    selectHintDay: string;
     /** Composed list/detail title: "<type> am <date>". */
     title: (type: string, date: string) => string;
 }
@@ -212,6 +227,24 @@ export const STRINGS: Record<Lang, Strings> = {
         back: "Back",
         takeRemaining: "Use remaining",
         suggest: "Suggest distribution (date + duration)",
+        daySplitButton: "Split day",
+        daySplitTitle: "Day split",
+        daySplitEntries: (n) => (n === 1 ? "1 entry" : `${n} entries`),
+        daySplitOther: (n) =>
+            n === 1
+                ? "1 entry of another type is not distributed."
+                : `${n} entries of another type are not distributed.`,
+        daySplitNoEntries: "No open work / travel entries on this day.",
+        daySplitPreview: "Preview per entry",
+        daySplitMissingSubtype: (entry, subtype) =>
+            `"${entry}" has no subtype "${subtype}".`,
+        daySplitConfirmBody: (entries, splits) =>
+            `${entries} entries will be replaced by ${splits} split records and deleted. Continue?`,
+        daySplitSaved: (n) =>
+            n === 1 ? "1 entry split." : `${n} entries split.`,
+        daySplitPartial: (saved, total) =>
+            `Only ${saved} of ${total} entries were split — the list has been refreshed.`,
+        selectHintDay: "Select an entry or a day to distribute its hours.",
         title: (type, date) => {
             let s = type || "—";
             if (date) s += ` on ${date}`;
@@ -307,6 +340,26 @@ export const STRINGS: Record<Lang, Strings> = {
         back: "Zurück",
         takeRemaining: "Rest übernehmen",
         suggest: "Verteilung vorschlagen (Datum + Dauer)",
+        daySplitButton: "Tag aufteilen",
+        daySplitTitle: "Tagesaufteilung",
+        daySplitEntries: (n) => (n === 1 ? "1 Eintrag" : `${n} Einträge`),
+        daySplitOther: (n) =>
+            n === 1
+                ? "1 Eintrag mit anderem Typ wird nicht verteilt."
+                : `${n} Einträge mit anderem Typ werden nicht verteilt.`,
+        daySplitNoEntries:
+            "Keine offenen Arbeits-/Fahrzeit-Einträge an diesem Tag.",
+        daySplitPreview: "Vorschau je Eintrag",
+        daySplitMissingSubtype: (entry, subtype) =>
+            `„${entry}" hat keinen Subtyp „${subtype}".`,
+        daySplitConfirmBody: (entries, splits) =>
+            `${entries} Einträge werden durch ${splits} Split-Datensätze ersetzt und gelöscht. Fortfahren?`,
+        daySplitSaved: (n) =>
+            n === 1 ? "1 Eintrag aufgeteilt." : `${n} Einträge aufgeteilt.`,
+        daySplitPartial: (saved, total) =>
+            `Nur ${saved} von ${total} Einträgen aufgeteilt — die Liste wurde aktualisiert.`,
+        selectHintDay:
+            "Eintrag oder Tag wählen, um die Stunden aufzuteilen.",
         title: (type, date) => {
             let s = type || "—";
             if (date) s += ` am ${date}`;
@@ -402,6 +455,26 @@ export const STRINGS: Record<Lang, Strings> = {
         back: "Retour",
         takeRemaining: "Reporter le reste",
         suggest: "Proposer la répartition (date + durée)",
+        daySplitButton: "Répartir la journée",
+        daySplitTitle: "Répartition journalière",
+        daySplitEntries: (n) => (n === 1 ? "1 entrée" : `${n} entrées`),
+        daySplitOther: (n) =>
+            n === 1
+                ? "1 entrée d'un autre type n'est pas répartie."
+                : `${n} entrées d'un autre type ne sont pas réparties.`,
+        daySplitNoEntries:
+            "Aucune entrée travail / trajet ouverte pour cette journée.",
+        daySplitPreview: "Aperçu par entrée",
+        daySplitMissingSubtype: (entry, subtype) =>
+            `« ${entry} » n'a pas de sous-type « ${subtype} ».`,
+        daySplitConfirmBody: (entries, splits) =>
+            `${entries} entrées seront remplacées par ${splits} enregistrements répartis puis supprimées. Continuer ?`,
+        daySplitSaved: (n) =>
+            n === 1 ? "1 entrée répartie." : `${n} entrées réparties.`,
+        daySplitPartial: (saved, total) =>
+            `Seules ${saved} entrées sur ${total} ont été réparties — la liste a été actualisée.`,
+        selectHintDay:
+            "Sélectionnez une entrée ou une journée pour répartir ses heures.",
         title: (type, date) => {
             let s = type || "—";
             if (date) s += ` le ${date}`;

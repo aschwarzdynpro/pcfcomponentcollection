@@ -1,6 +1,8 @@
 import * as React from "react";
 import { EntryList } from "./EntryList";
 import { SplitPanel } from "./SplitPanel";
+import { DaySplitPanel } from "./DaySplitPanel";
+import { groupRows } from "./dayGroups";
 import { Dropdown } from "./Dropdown";
 import { CollapsibleActionBar } from "./CollapsibleActionBar";
 import { EntryRow, Lang, SubtypeRow } from "./types";
@@ -267,6 +269,11 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const [period, setPeriod] = React.useState<Period>("all");
     const [sortBy, setSortBy] = React.useState<SortKey>("dateDesc");
     const [selectedId, setSelectedId] = React.useState<string | null>(null);
+    // Day-level split: the selected (day, resource) group key — mutually
+    // exclusive with `selectedId` (one detail pane).
+    const [selectedDayKey, setSelectedDayKey] = React.useState<string | null>(
+        null,
+    );
     // Assign mode multi-selection + in-flight "create delivery notes" state.
     const [checkedIds, setCheckedIds] = React.useState<Set<string>>(
         () => new Set(),
@@ -592,6 +599,31 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     // while the list is in date order; project / resource / duration sorts
     // stay flat so the chosen order isn't broken up by date headers.
     const groupByDay = sortBy === "dateDesc" || sortBy === "dateAsc";
+    const dayGroups = React.useMemo(
+        () => (groupByDay ? groupRows(displayRows, props.lang) : null),
+        [groupByDay, displayRows, props.lang],
+    );
+    const selectedDay = React.useMemo(
+        () =>
+            selectedDayKey && dayGroups
+                ? dayGroups.find((g) => g.key === selectedDayKey) ?? null
+                : null,
+        [selectedDayKey, dayGroups],
+    );
+    // A day selection that no longer exists (sort switched, rows gone) is
+    // dropped so the pane falls back to the hint.
+    React.useEffect(() => {
+        if (selectedDayKey && !selectedDay) setSelectedDayKey(null);
+    }, [selectedDayKey, selectedDay]);
+
+    const selectEntry = React.useCallback((id: string | null) => {
+        setSelectedId(id);
+        if (id) setSelectedDayKey(null);
+    }, []);
+    const selectDay = React.useCallback((key: string | null) => {
+        setSelectedDayKey((cur) => (cur === key ? null : key));
+        if (key) setSelectedId(null);
+    }, []);
 
     // Compact one-liner of the active filters for the collapsed mobile bar:
     // "<search> · <mode> · <period> · <sort>" (search part only when set).
@@ -727,9 +759,23 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         setSubtypes(null);
     }, [selectedId, removeEntries, flashToast, t.saveSucceeded]);
 
+    // Day split saved: drop the split entries locally; when the fallback path
+    // stopped part-way (`failedId`), the panel already showed the partial
+    // message — reload from the server so the list reflects the true state.
+    const handleDaySaved = React.useCallback(
+        (savedIds: string[], failedId?: string) => {
+            if (!failedId) flashToast(t.daySplitSaved(savedIds.length));
+            if (savedIds.length) removeEntries(savedIds);
+            setSelectedDayKey(null);
+            if (failedId) refresh();
+        },
+        [removeEntries, flashToast, t, refresh],
+    );
+
     const switchMode = React.useCallback((m: Mode) => {
         setMode(m);
         setSelectedId(null);
+        setSelectedDayKey(null);
         setCheckedIds(new Set());
     }, []);
 
@@ -1090,11 +1136,11 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             >
                 {mode === "split" ? (
                     <>
-                        {(!props.singlePane || !selected) && (
+                        {(!props.singlePane || (!selected && !selectedDay)) && (
                             <EntryList
                                 rows={displayRows}
                                 selectedId={selectedId}
-                                onSelect={setSelectedId}
+                                onSelect={selectEntry}
                                 emptyMessage={
                                     search.trim()
                                         ? t.noResultsSearch
@@ -1106,12 +1152,31 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 enablePull={props.isMobile}
                                 refreshing={refreshing}
                                 onRefresh={refresh}
-                                groupByDay={groupByDay}
+                                groups={dayGroups}
+                                onSelectDay={effectiveOffline ? undefined : selectDay}
+                                selectedDayKey={selectedDayKey}
                                 lang={props.lang}
                                 strings={t}
                             />
                         )}
-                        {(!props.singlePane || !!selected) && (
+                        {selectedDay ? (
+                            <DaySplitPanel
+                                group={selectedDay}
+                                fields={fields}
+                                webApi={props.webApi}
+                                utils={props.utils}
+                                disabled={props.disabled}
+                                isMobile={props.isMobile}
+                                singlePane={props.singlePane}
+                                isOffline={effectiveOffline}
+                                showSuggest={props.showSuggest}
+                                lang={props.lang}
+                                logger={props.logger}
+                                onBack={() => setSelectedDayKey(null)}
+                                onSaved={handleDaySaved}
+                                onError={(msg) => flashToast(msg, 9000)}
+                            />
+                        ) : (!props.singlePane || !!selected) && (
                             <SplitPanel
                                 entry={selected}
                                 subtypes={subtypesMatched ? subtypes : null}
@@ -1134,6 +1199,11 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 onSubtypesChange={setSubtypes}
                                 onSaved={handleSaved}
                                 onError={(msg) => flashToast(msg, 9000)}
+                                hint={
+                                    dayGroups && !effectiveOffline
+                                        ? t.selectHintDay
+                                        : undefined
+                                }
                             />
                         )}
                     </>
@@ -1154,7 +1224,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                         enablePull={props.isMobile}
                         refreshing={refreshing}
                         onRefresh={refresh}
-                        groupByDay={groupByDay}
+                        groups={dayGroups}
                         lang={props.lang}
                         strings={t}
                     />

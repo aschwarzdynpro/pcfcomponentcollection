@@ -175,6 +175,41 @@ deletes the original.
   so a split never leaves duplicates or an orphaned original.
 - **Confirmation dialog** before the destructive save/delete.
 
+### 📅 Day-level split
+- Every day header (date-sorted list, split mode, online) carries a
+  **Split day** button. It opens the day editor for that (day, resource)
+  group instead of a single entry — the surcharge rules (8 h/day → overtime,
+  Sunday, holiday) are per person and per day, which is why the group key
+  includes the resource: in the team-lead "all hours" view two people working
+  the same day get separate headers (`Fr, 31.01.2025 · <resource>`).
+- The editor shows **one block per category** — *Work* and *Travel* — each
+  with the day's total for that category and the union of the entries' work
+  subtypes (matched by normalized name, so "Überstunde"/"Überstunden" merge).
+  Entries of any other type are listed as "not distributed" and left alone;
+  the single-entry split remains available for them and for fine-tuning.
+- **Chronological fill** (`daySplit.ts`): the day's entries are walked in
+  time order and the subtypes in canonical order (Normal → Überstunde →
+  Nacht/Sonntag → Feiertag), pouring each subtype's hours into the entries
+  from the top. Overtime therefore lands on the last entries of the day, the
+  cut happens at one boundary per subtype (quarter hours stay quarter hours),
+  and **every entry keeps exactly its own total** — the per-entry save guard
+  still holds. A collapsible **preview per entry** shows the outcome live.
+- ★ **Suggestion** works on the day total (holiday / Sunday / 8 h rule) — the
+  main reason for day-level splitting: per entry, three 4 h entries would each
+  be suggested as "Normal 4 h" although 4 h of the day are overtime.
+- Save guard: every block must be fully distributed (remaining = 0) and every
+  entry must own the subtype rows that receive hours (otherwise the missing
+  ones are named and the save stays disabled).
+- **Saved as ONE `$batch` changeset** for all entries of the day (same
+  mutation as the single split per entry; pause updates de-duplicated across
+  entries sharing a work order) — all or nothing. If `$batch` is unavailable
+  in the host, the entries fall back to the per-entry compensating sequence in
+  order; a failure mid-way reports "only x of y entries split" and reloads the
+  list, so the earlier entries are correctly gone and the rest stay open.
+- Mobile: the day editor is a full-screen pane like the single split (back
+  header, sticky save button, −/+ steppers, preview collapsed by default).
+- Offline: the button is hidden (the split is a server transaction).
+
 ### 📱 Adaptive (desktop + mobile)
 - **One control, three layouts**, chosen at runtime from
   `context.client.getFormFactor()` (with an allocated-width fallback) and the
@@ -273,6 +308,10 @@ WorkTimeSplitGrid/
 │   ├── WorkTimeSplitGrid.tsx      # Master/detail shell, toolbar, toggle, state
 │   ├── EntryList.tsx              # Left master list (highlight + pull-to-refresh)
 │   ├── SplitPanel.tsx            # Right split editor + save + confirm dialog
+│   ├── DaySplitPanel.tsx         # Day-level editor (work/travel blocks, preview)
+│   ├── SubtypeRowEditor.tsx      # Shared subtype input row (arrow + stepper)
+│   ├── dayGroups.ts              # (day, resource) grouping + sums + formatting
+│   ├── daySplit.ts               # Chronological fill of a day total into entries
 │   ├── Dropdown.tsx              # Custom, dependency-free sort dropdown
 │   ├── api.ts                    # WebAPI: load entries/subtypes + split-save + reports
 │   ├── schema.ts                 # Single source of truth for logical names

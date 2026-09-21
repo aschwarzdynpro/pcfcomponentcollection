@@ -1,6 +1,7 @@
 import * as React from "react";
 import { EntryRow, Lang } from "./types";
 import { Strings } from "./i18n";
+import { DayGroup, formatHours } from "./dayGroups";
 
 export interface EntryListProps {
     rows: EntryRow[];
@@ -25,94 +26,21 @@ export interface EntryListProps {
     /** A pull-triggered refresh is in flight (shows the spinner). */
     refreshing?: boolean;
     onRefresh?: () => void;
-    /** Group the cards under sticky day headers with work / travel / total
-     *  sums. Only sensible while `rows` is in date order. */
-    groupByDay?: boolean;
-    /** UI language — drives the weekday + number formatting of day headers. */
+    /** Day groups (computed by the parent from `rows`): when set, the cards
+     *  render under sticky per-day headers with work / travel / total sums.
+     *  Only sensible while `rows` is in date order. */
+    groups?: DayGroup[] | null;
+    /** Day-level split: the header gets a "split day" button that selects the
+     *  whole group; `selectedDayKey` highlights the selected group. */
+    onSelectDay?: (key: string) => void;
+    selectedDayKey?: string | null;
+    /** UI language — drives the number formatting of the day sums. */
     lang?: Lang;
     strings: Strings;
 }
 
 /** Pull distance (damped px) past which a release triggers a refresh. */
 const PTR_THRESHOLD = 48;
-
-const LOCALE: Record<Lang, string> = { de: "de-DE", en: "en-US", fr: "fr-FR" };
-
-/** One day's worth of rows plus its sums (hours) for the group header. */
-interface DayGroup {
-    key: string;
-    label: string;
-    rows: EntryRow[];
-    work: number;
-    travel: number;
-    total: number;
-}
-
-/** Local calendar-day key ("2025-01-31") from the row's ISO date; falls back
- *  to the formatted display date so undated rows still group consistently. */
-function dayKey(r: EntryRow): string {
-    if (r.dateValue) {
-        const d = new Date(r.dateValue);
-        if (!isNaN(d.getTime())) {
-            const p = (n: number) => String(n).padStart(2, "0");
-            return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-        }
-    }
-    return r.date || "";
-}
-
-/** Header label: "Fr, 31.01.2025" (weekday in the UI language), else the
- *  formatted date as delivered by the platform. */
-function dayLabel(r: EntryRow, lang: Lang): string {
-    if (r.dateValue) {
-        const d = new Date(r.dateValue);
-        if (!isNaN(d.getTime())) {
-            try {
-                const wd = new Intl.DateTimeFormat(LOCALE[lang], {
-                    weekday: "short",
-                }).format(d);
-                return r.date ? `${wd}, ${r.date}` : wd;
-            } catch {
-                /* fall through */
-            }
-        }
-    }
-    return r.date || "—";
-}
-
-/** Group rows by day, keeping the incoming (date-sorted) order. */
-function groupRows(rows: EntryRow[], lang: Lang): DayGroup[] {
-    const groups: DayGroup[] = [];
-    const byKey = new Map<string, DayGroup>();
-    for (const r of rows) {
-        const key = dayKey(r);
-        let g = byKey.get(key);
-        if (!g) {
-            g = { key, label: dayLabel(r, lang), rows: [], work: 0, travel: 0, total: 0 };
-            byKey.set(key, g);
-            groups.push(g);
-        }
-        g.rows.push(r);
-        const h = Number.isFinite(r.total) ? r.total : 0;
-        g.total += h;
-        if (r.kind === "work") g.work += h;
-        else if (r.kind === "travel") g.travel += h;
-    }
-    return groups;
-}
-
-/** "6,5 h" — locale number with at most 2 decimals plus the unit. */
-function formatHours(n: number, lang: Lang, unit: string): string {
-    let s: string;
-    try {
-        s = new Intl.NumberFormat(LOCALE[lang], {
-            maximumFractionDigits: 2,
-        }).format(n);
-    } catch {
-        s = String(Math.round(n * 100) / 100);
-    }
-    return unit ? `${s} ${unit}` : s;
-}
 
 /** Wrap case-insensitive matches of `q` in `text` with a highlight <mark>. */
 function renderHighlighted(text: string, q: string): React.ReactNode {
@@ -174,7 +102,9 @@ export const EntryList: React.FC<EntryListProps> = ({
     enablePull,
     refreshing,
     onRefresh,
-    groupByDay,
+    groups,
+    onSelectDay,
+    selectedDayKey,
     lang = "de",
     strings,
 }) => {
@@ -387,11 +317,43 @@ export const EntryList: React.FC<EntryListProps> = ({
                         <span>{emptyMessage ?? strings.noResults}</span>
                     </div>
                 )
-            ) : groupByDay ? (
-                groupRows(rows, lang).map((g) => (
-                    <div key={g.key} className="wtsg-day" role="group" aria-label={g.label}>
+            ) : groups ? (
+                groups.map((g) => {
+                    const daySelected = !!selectedDayKey && g.key === selectedDayKey;
+                    const canSplitDay =
+                        !!onSelectDay &&
+                        g.rows.some(
+                            (r) => !r.completed && (r.kind === "work" || r.kind === "travel"),
+                        );
+                    return (
+                    <div
+                        key={g.key}
+                        className={`wtsg-day ${daySelected ? "selected" : ""}`}
+                        role="group"
+                        aria-label={g.label}
+                    >
                         <div className="wtsg-day-head">
                             <span className="wtsg-day-label">{g.label}</span>
+                            {canSplitDay && (
+                                <button
+                                    type="button"
+                                    className={`wtsg-day-split ${daySelected ? "active" : ""}`}
+                                    onClick={() => onSelectDay!(g.key)}
+                                    title={strings.daySplitButton}
+                                    aria-pressed={daySelected}
+                                >
+                                    <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+                                        <path
+                                            d="M8 2v12M3 8h10M4.5 4.5l7 7M11.5 4.5l-7 7"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="1.5"
+                                            strokeLinecap="round"
+                                        />
+                                    </svg>
+                                    <span>{strings.daySplitButton}</span>
+                                </button>
+                            )}
                             <span className="wtsg-day-sums">
                                 <span className="wtsg-day-sum wtsg-day-sum-work">
                                     <span className="wtsg-day-sum-label">{strings.dayWork}</span>{" "}
@@ -411,7 +373,8 @@ export const EntryList: React.FC<EntryListProps> = ({
                             {g.rows.map(renderCard)}
                         </div>
                     </div>
-                ))
+                    );
+                })
             ) : (
                 rows.map(renderCard)
             )}

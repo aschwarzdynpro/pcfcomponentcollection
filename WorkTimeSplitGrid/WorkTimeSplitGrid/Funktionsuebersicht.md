@@ -187,6 +187,48 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   erscheint neben **jedem** Subtype-Feld ein kleines Pfeil-Icon; ein Klick addiert
   den Rest zum aktuellen Wert des Feldes (Aufteilung mit einem Klick abschließen).
 
+### Tagesaufteilung
+- Jede Tages-Kopfzeile (datumssortierte Liste, Modus Aufteilen, online) hat
+  einen Button **„Tag aufteilen"**. Er öffnet statt eines einzelnen Eintrags
+  den Tages-Editor für die Gruppe (Tag, Ressource). Die Zuschlagsregeln
+  (8 h/Tag → Überstunde, Sonntag, Feiertag) gelten pro Person und Tag — deshalb
+  steckt die Ressource im Gruppenschlüssel: in der Teamleiter-Sicht „Alle
+  Stunden" bekommen zwei Personen am selben Tag getrennte Kopfzeilen
+  („Fr, 31.01.2025 · <Ressource>").
+- Der Editor zeigt **einen Block je Kategorie** — *Arbeit* und *Fahrzeit* —
+  jeweils mit der Tagessumme der Kategorie und der Vereinigungsmenge der Work
+  Subtypes der Einträge (per normalisiertem Namen, „Überstunde"/„Überstunden"
+  fallen zusammen). Einträge anderer Typen werden als „nicht verteilt"
+  ausgewiesen und nicht angefasst; der Einzel-Split bleibt für sie und zur
+  Feinjustierung erhalten.
+- **Chronologisches Füllprinzip** (`daySplit.ts`): Die Einträge des Tages
+  werden in Zeitreihenfolge, die Subtypes in kanonischer Reihenfolge (Normal →
+  Überstunde → Nacht/Sonntag → Feiertag) durchlaufen; die Stunden jedes Subtyps
+  werden von oben in die Einträge „eingegossen". Überstunden landen damit auf
+  den letzten Einträgen des Tages, geschnitten wird nur an einer Grenze je
+  Subtyp (Viertelstunden bleiben Viertelstunden), und **jeder Eintrag behält
+  exakt seine Gesamtdauer** — der Save-Guard je Eintrag bleibt gültig. Eine
+  aufklappbare **Vorschau je Eintrag** zeigt das Ergebnis live.
+- ★ **Vorschlag** arbeitet auf der Tagessumme (Feiertag / Sonntag / 8-h-Regel)
+  — der eigentliche Grund für die Tagesebene: pro Eintrag würden drei
+  4-h-Einträge jeweils „Normal 4 h" vorgeschlagen, obwohl 4 h des Tages
+  Überstunden sind.
+- Speichern nur, wenn jeder Block vollständig verteilt ist (Rest = 0) und jeder
+  Eintrag die Subtype-Zeilen besitzt, die Stunden erhalten (sonst werden die
+  fehlenden benannt und Speichern bleibt gesperrt).
+- **Gespeichert als EIN `$batch`-Changeset** für alle Einträge des Tages
+  (dieselbe Mutation wie der Einzel-Split je Eintrag; Pausen-Updates werden
+  über Einträge mit gleichem Work Order dedupliziert) — ganz oder gar nicht.
+  Ist `$batch` im Host nicht verfügbar, laufen die Einträge nacheinander über
+  die kompensierende Sequenz; ein Fehler mittendrin meldet „Nur x von y
+  Einträgen aufgeteilt" und lädt die Liste neu — die vorderen Einträge sind
+  dann korrekt weg, der Rest bleibt offen.
+- Mobil: Der Tages-Editor ist ein Vollbild-Panel wie der Einzel-Split
+  (Zurück-Header, haftender Speichern-Button, −/+-Stepper, Vorschau
+  standardmäßig eingeklappt).
+- Offline: Der Button ist ausgeblendet (die Aufteilung ist eine
+  Server-Transaktion).
+
 ### Speichern (Aufteilung)
 - Der Button **„Aufteilung speichern"** ist nur aktiv, wenn die Summe der
   verteilten Stunden der Gesamtdauer (`sst_duration`) entspricht und der Eintrag
