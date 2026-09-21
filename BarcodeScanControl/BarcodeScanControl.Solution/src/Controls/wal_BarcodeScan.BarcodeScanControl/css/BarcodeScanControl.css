@@ -1,0 +1,64 @@
+/* =========================================================================
+   BarcodeScanControl — one full-size button that opens the device scanner.
+   Prefix: bsc-  |  Colors and font size come in as inline styles from the
+   manifest inputs; this file only carries layout and states.
+   ========================================================================= */
+
+.bsc-host {
+    display: block;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system,
+        BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+}
+
+.bsc-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    width: 100%;
+    height: 100%;
+    min-height: 44px;
+    margin: 0;
+    padding: 0 1em;
+    border: 0;
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+.bsc-button:disabled {
+    cursor: default;
+    opacity: 0.55;
+}
+
+.bsc-button:not(:disabled):active {
+    filter: brightness(0.88);
+}
+
+.bsc-button:focus-visible {
+    outline: 3px solid rgba(0, 0, 0, 0.35);
+    outline-offset: 2px;
+}
+
+.bsc-icon {
+    flex: 0 0 auto;
+}
+
+.bsc-caption {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .bsc-button {
+        transition: filter 120ms ease, opacity 120ms ease;
+    }
+}
