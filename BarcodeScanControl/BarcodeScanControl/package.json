@@ -1,14 +1,14 @@
 {
-  "name": "worktime-split-grid",
-  "version": "1.25.0",
-  "description": "WorkTimeSplitGrid PCF dataset control for Dataverse — splits a rounded time entry's total duration across work subtypes (Normal/Overtime/Night-Sunday/Holiday) and writes the split records, with trilingual UI (DE/EN/FR).",
+  "name": "barcode-scan-control",
+  "version": "1.0.0",
+  "description": "PCF control for canvas apps: a button that opens the native device barcode/QR scanner (Device.getBarcodeValue) and exposes the scanned code as statically typed text — the value survives YAML round-trips where the first-party BarcodeReader's dynamic schema does not. Trilingual UI (DE / EN / FR).",
   "keywords": [
     "PCF",
-    "Dataverse",
     "PowerApps",
-    "Grid",
-    "TimeEntry",
-    "WorkSubtype",
+    "Canvas",
+    "Barcode",
+    "QR",
+    "Scanner",
     "React"
   ],
   "author": "PCF Component Collection",

@@ -7,6 +7,7 @@ and model-driven apps.
 
 | Component | Type | Purpose |
 |-----------|------|---------|
+| [BarcodeScanControl](./BarcodeScanControl/BarcodeScanControl/) | field | Canvas-app button that opens the native device barcode/QR scanner (`Device.getBarcodeValue`) and exposes the code as statically typed text (`value`, `scanCount`, `errorMessage`) — built because the first-party Barcode reader's dynamic `Barcodes` schema does not survive YAML round-trips or component-library imports. Trilingual UI (DE / EN / FR). |
 | [ChoicePickerControl](./ChoicePickerControl/ChoicePickerControl/) | field | Modern React replacement for the standard Dataverse Choice dropdown. One control binds to both single `Choice` (OptionSet) and multi-select `Choices` (MultiSelectOptionSet): colored options, searchable list, removable chips, full keyboard navigation. Trilingual UI (DE / EN / FR). |
 | [DataverseCrudComponent](./DataverseCrudComponent/) | dataset | React-based CRUD UI for Dataverse datasets — list, search, create, edit, and delete records inside a model-driven form, view, or dashboard. |
 | [FlagPhoneControl](./FlagPhoneControl/FlagPhoneControl/) | field | International phone-number input for `SingleLine.Phone` columns with country flag selector, dial-code parsing, libphonenumber-validation, and trilingual UI (DE / EN / FR). |
@@ -25,6 +26,7 @@ Importable Dataverse solutions live alongside their source components:
 
 | Solution | Source | Notes |
 |----------|--------|-------|
+| [BarcodeScanControl.Solution](./BarcodeScanControl/BarcodeScanControl.Solution/) | `BarcodeScanControl/BarcodeScanControl/` | Publisher `HerbertWaldmann`, prefix `wal`. Run [`build.ps1`](./BarcodeScanControl/BarcodeScanControl.Solution/build.ps1) to produce unmanaged + managed zips. |
 | [ChoicePickerControl.Solution](./ChoicePickerControl/ChoicePickerControl.Solution/) | `ChoicePickerControl/ChoicePickerControl/` | Publisher `HerbertWaldmann`, prefix `wal`. Run [`build.ps1`](./ChoicePickerControl/ChoicePickerControl.Solution/build.ps1) to produce unmanaged + managed zips. |
 | [FlagPhoneControl.Solution](./FlagPhoneControl/FlagPhoneControl.Solution/) | `FlagPhoneControl/FlagPhoneControl/` | Publisher `HerbertWaldmann`, prefix `wal`. Run [`build.ps1`](./FlagPhoneControl/FlagPhoneControl.Solution/build.ps1) to produce unmanaged + managed zips. |
 | [FuzzyLookupControl.Solution](./FuzzyLookupControl/FuzzyLookupControl.Solution/) | `FuzzyLookupControl/FuzzyLookupControl/` | Publisher `HerbertWaldmann`, prefix `wal`. Run [`build.ps1`](./FuzzyLookupControl/FuzzyLookupControl.Solution/build.ps1) to produce unmanaged + managed zips. |
@@ -42,6 +44,9 @@ walkthrough (build → solution package → import → form configuration).
 
 ```
 pcfcomponentcollection/
+├── BarcodeScanControl/             # feature folder grouping source + solution
+│   ├── BarcodeScanControl/         # PCF source
+│   └── BarcodeScanControl.Solution/ # Importable Dataverse solution
 ├── ChoicePickerControl/            # feature folder grouping source + solution
 │   ├── ChoicePickerControl/        # PCF source
 │   └── ChoicePickerControl.Solution/ # Importable Dataverse solution

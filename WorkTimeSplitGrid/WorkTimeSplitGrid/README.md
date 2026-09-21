@@ -12,13 +12,16 @@ deletes the original.
 
 ### 🎯 Core functionality
 - **Master list** of Rounded Time Entries with a live search box. Each card
-  shows the composed title, a label-less chip row (**resource → project**), and
-  the total duration. The resource is `sst_resource_ref.name` (falling back to
-  the `sst_resource` text field); the project chip is the project number
-  (`sst_project_id.sst_projectnumber`). Entries on a **fixed-price project** get
-  a third, amber-accented **🏷️ Fixed price** chip (`hso_projecttype =
-  100000001`, read from the same `sst_Project_id` `$expand`) — so once a team
-  lead switches them into the list, they stay distinguishable at a glance.
+  has three lines: the composed title, a label-less chip row (**resource →
+  project number**), and a footer line with the **project name** chip on the
+  left and the total duration (*Total: xx h*) right-aligned. The resource is
+  `sst_resource_ref.name` (falling back to the `sst_resource` text field); the
+  project chips are the project number (`sst_project_id.sst_projectnumber`) and
+  the project name (`sst_project_id.msdyn_subject`). Entries on a
+  **fixed-price project** get an additional amber-accented **🏷️ Fixed price**
+  chip (`hso_projecttype = 100000001`, read from the same `sst_Project_id`
+  `$expand`) — so once a team lead switches them into the list, they stay
+  distinguishable at a glance.
 - **Composed entry title** (list + detail): `<type> am <date>` (e.g. *Arbeit am
   07.08.2024*). The date and the related project number
   (`sst_project_id.sst_projectnumber`) are fetched per page via one WebAPI
@@ -81,7 +84,7 @@ deletes the original.
   over the loaded set, so they're instant. The command bar shows **no record
   count** (it caused a layout shift on filter changes and isn't needed).
 - **Search-match highlight** — matching substrings are highlighted in the card
-  title and chips as you type.
+  title and chips as you type. The project-name chip is searched too.
 - **Info / diagnostics** — a small **ⓘ** button in the top row (next to the sort
   icon) opens a panel showing the control version, online status, session id, user
   and environment, plus the **buffered telemetry** of the current session. One

@@ -284,9 +284,20 @@ export const EntryList: React.FC<EntryListProps> = ({
                                     </span>
                                 )}
                             </div>
-                            <div className="wtsg-card-total">
-                                {strings.total}:{" "}
-                                <strong>{r.totalFormatted || "—"}</strong>
+                            <div className="wtsg-card-foot">
+                                {r.projectName &&
+                                    r.projectName !== r.project && (
+                                        <span
+                                            className="wtsg-chip wtsg-chip-project"
+                                            title={r.projectName}
+                                        >
+                                            {hl(r.projectName)}
+                                        </span>
+                                    )}
+                                <div className="wtsg-card-total">
+                                    {strings.total}:{" "}
+                                    <strong>{r.totalFormatted || "—"}</strong>
+                                </div>
                             </div>
                         </div>
                     );

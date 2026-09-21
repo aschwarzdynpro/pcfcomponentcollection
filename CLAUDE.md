@@ -40,7 +40,7 @@ Each control is a **feature folder** grouping PCF source + its Dataverse solutio
     └── src/Other/Solution.xml  # <Version> lives here
 ```
 
-Controls present: ChoicePickerControl, DataverseCrudComponent, FlagPhoneControl,
+Controls present: BarcodeScanControl, ChoicePickerControl, DataverseCrudComponent, FlagPhoneControl,
 FuzzyLookupControl, HoursDaysControl, KanbanBoard, MultiProgressControl,
 WorkTimeSplitGrid. `node_modules/`, `out/`, `generated/ManifestTypes.d.ts`, and
 `*.zip` are git-ignored.

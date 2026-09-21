@@ -338,6 +338,8 @@ export interface LoadedEntry {
     completed: boolean;
     project: string;
     projectId: string;
+    /** Project name (msdyn_project.msdyn_subject) — third chip line on the tile. */
+    projectName: string;
     resourceName: string;
     timereport: string;
     /** Booking number (bookableresourcebooking display value, e.g. S-120044). */
@@ -381,6 +383,11 @@ function mapLoadedEntry(e: Record<string, any>): LoadedEntry {
             ? String(e.sst_Project_id.sst_projectnumber ?? "")
             : "",
         projectId: String(e._sst_project_id_value ?? ""),
+        projectName:
+            (e.sst_Project_id
+                ? String(e.sst_Project_id.msdyn_subject ?? "")
+                : "") ||
+            String(e[`_sst_project_id_value${ENTRY_FMT}`] ?? ""),
         resourceName:
             (e.sst_resource_ref ? String(e.sst_resource_ref.name ?? "") : "") ||
             String(e[`_sst_resource_ref_value${ENTRY_FMT}`] ?? "") ||
@@ -461,7 +468,7 @@ export async function loadEntries(
         `?$select=sst_roundedtimeentriesid,sst_name,sst_type,sst_date,sst_duration,sst_resource,` +
         `sst_worksubtypecompleted,_sst_project_id_value,_sst_timereport_value,_sst_resource_ref_value,` +
         `_sst_bookableresourcebooking_value` +
-        `&$expand=sst_Project_id($select=sst_projectnumber,${PROJECT_TYPE.field}),` +
+        `&$expand=sst_Project_id($select=sst_projectnumber,msdyn_subject,${PROJECT_TYPE.field}),` +
         `sst_resource_ref($select=name)` +
         `&$filter=${filter}&$orderby=sst_date desc`;
 

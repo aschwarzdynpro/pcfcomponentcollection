@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="BarcodeScan" constructor="BarcodeScanControl" version="1.0.0" display-name-key="BarcodeScanControl_Display" description-key="BarcodeScanControl_Desc" control-type="standard">
+    <!-- Why this control exists: the first-party BarcodeReader exposes its
+         result through a DYNAMIC schema (Barcodes: Object + PropertyDependencies
+         on Text). Power Apps Studio resolves that schema only when the control
+         is inserted interactively; a canvas app loaded from YAML (pac canvas
+         pack) or a component imported from a library gets a field-less record
+         and the runtime fails with "expected object, got array". Everything
+         here is STATICALLY typed, so the value survives any round-trip. -->
+
+    <!-- Outputs — what the canvas app reads after OnChange. -->
+    <property name="value" display-name-key="value_Display" description-key="value_Desc" of-type="SingleLine.Text" usage="output" />
+    <!-- Bumped on every SUCCESSFUL scan, including a repeat of the same code —
+         otherwise `value` would not change and OnChange would not fire. -->
+    <property name="scanCount" display-name-key="scanCount_Display" description-key="scanCount_Desc" of-type="Whole.None" usage="output" />
+    <!-- Empty on success and on a plain user cancel; localized text otherwise. -->
+    <property name="errorMessage" display-name-key="errorMessage_Display" description-key="errorMessage_Desc" of-type="SingleLine.Text" usage="output" />
+
+    <!-- Inputs — appearance. Defaults live in index.ts (DEFAULTS). -->
+    <property name="buttonText" display-name-key="buttonText_Display" description-key="buttonText_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="fillColor" display-name-key="fillColor_Display" description-key="fillColor_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="textColor" display-name-key="textColor_Display" description-key="textColor_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="fontSize" display-name-key="fontSize_Display" description-key="fontSize_Desc" of-type="Whole.None" usage="input" required="false" />
+
+    <resources>
+      <code path="index.ts" order="1" />
+      <css path="css/BarcodeScanControl.css" order="1" />
+      <resx path="strings/BarcodeScanControl.1033.resx" version="1.0.0" />
+    </resources>
+
+    <!-- required="false" on purpose: with "true" the host refuses to render the
+         control wherever the feature is missing (Studio on the web, browser
+         player) and the maker only sees a generic "can't load". With "false"
+         the button renders everywhere and reports through errorMessage. -->
+    <feature-usage>
+      <uses-feature name="Device.getBarcodeValue" required="false" />
+    </feature-usage>
+  </control>
+</manifest>

@@ -123,6 +123,7 @@ function toEntryRow(
         totalFormatted: e.totalFormatted,
         completed: e.completed,
         project: e.project,
+        projectName: e.projectName,
         bookingNumber: e.bookingNumber,
         resourceName: e.resourceName,
         timereport: e.timereport,
@@ -218,7 +219,10 @@ function buildOfflineEntries(
             if (mode === "assign" && timereport) continue;
         }
 
+        // Dataset path: the lookup's formatted value is the project *name*
+        // (msdyn_subject); the number needs the expand → only online.
         const project = projectKnown ? fmt("sst_project_id") : "";
+        const projectName = project;
         const dateFmt = fmt(fields.date);
         const date = dateFmt ? dateFmt.split(" ")[0] : "";
         const totalRaw = get(fields.total);
@@ -240,6 +244,7 @@ function buildOfflineEntries(
                 (Number.isFinite(total) ? String(total) : ""),
             completed,
             project,
+            projectName,
             bookingNumber: fmt("sst_bookableresourcebooking"),
             resourceName,
             timereport,
@@ -571,6 +576,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 r.type.toLowerCase().includes(q) ||
                 r.date.toLowerCase().includes(q) ||
                 (r.project ?? "").toLowerCase().includes(q) ||
+                (r.projectName ?? "").toLowerCase().includes(q) ||
                 (r.resourceName ?? "").toLowerCase().includes(q)
             );
         });
