@@ -452,10 +452,10 @@
     top: 0;
     z-index: 1;
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px 10px;
-    padding: 6px 4px 6px 2px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 2px 10px;
     background: #fff;
     border-bottom: 1px solid #e1dfdd;
     font-size: 12px;
@@ -464,7 +464,7 @@
 
 .wtsg-day-label {
     font-weight: 600;
-    font-size: 13px;
+    font-size: 14px;
     color: #242424;
     white-space: nowrap;
 }
@@ -472,19 +472,19 @@
 .wtsg-day-sums {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px 6px;
-    margin-left: auto;
+    gap: 6px 8px;
 }
 
 .wtsg-day-sum {
     display: inline-flex;
     align-items: baseline;
-    gap: 3px;
-    padding: 1px 8px;
-    border-radius: 10px;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 12px;
     background: #f3f2f1;
     white-space: nowrap;
-    font-size: 11px;
+    font-size: 12px;
+    line-height: 16px;
     color: #424242;
 }
 
@@ -1349,17 +1349,24 @@
 .wtsg-mobile .wtsg-day-head {
     top: -10px;
     margin: 0 -10px;
-    padding: 8px 12px;
+    padding: 10px 12px 12px;
+    gap: 10px;
     font-size: 13px;
 }
 
 .wtsg-mobile .wtsg-day-label {
-    font-size: 14px;
+    font-size: 15px;
+}
+
+.wtsg-mobile .wtsg-day-sums {
+    gap: 8px 10px;
 }
 
 .wtsg-mobile .wtsg-day-sum {
-    font-size: 12px;
-    padding: 3px 10px;
+    font-size: 13px;
+    line-height: 18px;
+    padding: 5px 12px;
+    border-radius: 14px;
 }
 
 .wtsg-mobile .wtsg-day-cards {
@@ -1580,7 +1587,7 @@
 .wtsg-mobile.wtsg-landscape:not(.wtsg-assign) .wtsg-day-head {
     top: -8px;
     margin: 0 -6px 0 -8px;
-    padding: 6px 10px;
+    padding: 8px 10px 10px;
 }
 
 /* Re-add a separator between the two panes (mobile drops the panel border). */
