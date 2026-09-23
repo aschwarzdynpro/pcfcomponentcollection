@@ -62,6 +62,14 @@ interface BlockModel {
     distribution: EntryDistribution[];
 }
 
+/** Preview time: "06:25–15:27" (booking start – end of capture) when the
+ *  start is known, else just the capture end. */
+function timeRange(r: EntryRow, lang: Lang): string {
+    const end = timeOf(r.dateValue, lang);
+    const start = timeOf(r.startValue, lang);
+    return start && end ? `${start}–${end}` : start || end;
+}
+
 /** "08:31" from an ISO timestamp (empty when undated). */
 function timeOf(iso: string | undefined, lang: Lang): string {
     if (!iso) return "";
@@ -477,9 +485,9 @@ export const DaySplitPanel: React.FC<DaySplitPanelProps> = (props) => {
                                     return (
                                         <li key={r.id} className="wtsg-preview-item">
                                             <span className="wtsg-preview-entry">
-                                                {timeOf(r.dateValue, lang) && (
+                                                {timeRange(r, lang) && (
                                                     <span className="wtsg-preview-time">
-                                                        {timeOf(r.dateValue, lang)}
+                                                        {timeRange(r, lang)}
                                                     </span>
                                                 )}
                                                 <span className="wtsg-preview-type" title={r.type}>

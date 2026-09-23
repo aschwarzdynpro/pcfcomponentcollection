@@ -221,7 +221,13 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   ausgewiesen und nicht angefasst; der Einzel-Split bleibt für sie und zur
   Feinjustierung erhalten.
 - **Chronologisches Füllprinzip** (`daySplit.ts`): Die Einträge des Tages
-  werden in Zeitreihenfolge, die Subtypes in kanonischer Reihenfolge (Normal →
+  werden nach **Buchungsbeginn** (`sst_BookableResourceBooking.starttime`)
+  geordnet — in PROD verifiziert: `sst_date` ist das `endtime` der Buchung,
+  also nur das Erfassungsende, und dient nur noch als Fallback (z. B.
+  offline). Die Vorschau zeigt je Eintrag `Beginn–Ende`. Derselbe Expand
+  liefert die Ressource der Buchung als Fallback, wenn der Eintrag keine
+  `sst_resource_ref` / `sst_resource` hat. Die Einträge werden in dieser
+  Zeitreihenfolge, die Subtypes in kanonischer Reihenfolge (Normal →
   Überstunde → Nacht/Sonntag → Feiertag) durchlaufen; die Stunden jedes Subtyps
   werden von oben in die Einträge „eingegossen". Überstunden landen damit auf
   den letzten Einträgen des Tages, geschnitten wird nur an einer Grenze je

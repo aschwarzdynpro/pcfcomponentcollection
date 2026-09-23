@@ -138,6 +138,7 @@ function toEntryRow(
         project: e.project,
         projectName: e.projectName,
         bookingNumber: e.bookingNumber,
+        startValue: e.startValue || undefined,
         resourceName: e.resourceName,
         timereport: e.timereport,
         projectPresent: !!e.projectId,

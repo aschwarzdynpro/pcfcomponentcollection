@@ -207,7 +207,12 @@ deletes the original.
   Entries of any other type are listed as "not distributed" and left alone;
   the single-entry split remains available for them and for fine-tuning.
 - **Chronological fill** (`daySplit.ts`): the day's entries are walked in
-  time order and the subtypes in canonical order (Normal → Überstunde →
+  time order of their **booking start** (`sst_BookableResourceBooking.starttime`
+  — verified in PROD: `sst_date` is the booking `endtime`, i.e. the end of
+  the capture; it is only the fallback, e.g. offline). The preview shows
+  `start–end` per entry. The same expand also supplies the booking's resource
+  as fallback when the entry has no `sst_resource_ref` / `sst_resource`. The
+  entries are walked in that order and the subtypes in canonical order (Normal → Überstunde →
   Nacht/Sonntag → Feiertag), pouring each subtype's hours into the entries
   from the top. Overtime therefore lands on the last entries of the day, the
   cut happens at one boundary per subtype (quarter hours stay quarter hours),

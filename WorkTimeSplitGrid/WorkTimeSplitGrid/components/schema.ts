@@ -137,6 +137,20 @@ export const HOLIDAY = {
  * Verified live (UAT 2026-06-19): `sst_projecttype_fx` does NOT exist — the real
  * field is `hso_projecttype`; 100000001 = Festpreis.
  */
+/**
+ * Booking behind an entry — the source of the entry's START time. Verified in
+ * PROD (2026-09-24): `sst_date` on the Rounded Time Entry is the booking's
+ * `endtime` (end of the capture), not its start; the rounded entries aggregate
+ * the time entries per booking and type, so the booking `starttime` is the
+ * finest start available. Nav property name from metadata (PascalCase).
+ */
+export const BOOKING = {
+    nav: "sst_BookableResourceBooking",
+    start: "starttime",
+    /** Resource lookup on the booking — fallback when the entry has none. */
+    resourceValue: "_resource_value",
+} as const;
+
 export const PROJECT_TYPE = {
     /** Single-valued navigation property RTE → msdyn_project. */
     nav: "sst_Project_id",

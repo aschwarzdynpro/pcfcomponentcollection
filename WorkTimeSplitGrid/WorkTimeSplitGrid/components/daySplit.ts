@@ -36,11 +36,23 @@ export interface EntryDistribution {
 
 const r3 = (n: number): number => Math.round(n * 1000) / 1000;
 
-/** Chronological order: by ISO date, then by name for a stable tie-break
- *  (test data often carries identical timestamps). */
+/** Chronological key: the booking START (the real begin). `sst_date` is only
+ *  the end of the capture, so it is merely the fallback (offline path). */
+function startKey(r: EntryRow): number {
+    for (const iso of [r.startValue, r.dateValue]) {
+        if (!iso) continue;
+        const t = new Date(iso).getTime();
+        if (!isNaN(t)) return t;
+    }
+    return Number.MAX_SAFE_INTEGER;
+}
+
+/** Chronological order: by start, then by end, then by name for a stable
+ *  tie-break (test data often carries identical timestamps). */
 export function sortChronologically(rows: EntryRow[]): EntryRow[] {
     return [...rows].sort(
         (a, b) =>
+            startKey(a) - startKey(b) ||
             (a.dateValue ?? "").localeCompare(b.dateValue ?? "") ||
             a.name.localeCompare(b.name) ||
             a.id.localeCompare(b.id),

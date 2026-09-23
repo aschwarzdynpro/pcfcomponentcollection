@@ -11,6 +11,7 @@ import {
     WORKORDER_SET,
     PROJECT_SET,
     PROJECT_TYPE,
+    BOOKING,
     HOLIDAY,
     normalizeLabel,
     FieldConfig,
@@ -344,6 +345,8 @@ export interface LoadedEntry {
     timereport: string;
     /** Booking number (bookableresourcebooking display value, e.g. S-120044). */
     bookingNumber: string;
+    /** Booking start (ISO) — the entry's real start; `dateValue` is its end. */
+    startValue: string;
     /** Entry belongs to a fixed-price ("Festpreis") project → flagged in the list. */
     fixedPrice: boolean;
 }
@@ -391,11 +394,15 @@ function mapLoadedEntry(e: Record<string, any>): LoadedEntry {
         resourceName:
             (e.sst_resource_ref ? String(e.sst_resource_ref.name ?? "") : "") ||
             String(e[`_sst_resource_ref_value${ENTRY_FMT}`] ?? "") ||
-            String(e.sst_resource ?? ""),
+            String(e.sst_resource ?? "") ||
+            String(
+                e[BOOKING.nav]?.[`${BOOKING.resourceValue}${ENTRY_FMT}`] ?? "",
+            ),
         timereport: String(e._sst_timereport_value ?? ""),
         bookingNumber: String(
             e[`_sst_bookableresourcebooking_value${ENTRY_FMT}`] ?? "",
         ),
+        startValue: String(e[BOOKING.nav]?.[BOOKING.start] ?? ""),
         fixedPrice:
             e.sst_Project_id != null &&
             Number(e.sst_Project_id[PROJECT_TYPE.field]) ===
@@ -469,7 +476,8 @@ export async function loadEntries(
         `sst_worksubtypecompleted,_sst_project_id_value,_sst_timereport_value,_sst_resource_ref_value,` +
         `_sst_bookableresourcebooking_value` +
         `&$expand=sst_Project_id($select=sst_projectnumber,msdyn_subject,${PROJECT_TYPE.field}),` +
-        `sst_resource_ref($select=name)` +
+        `sst_resource_ref($select=name),` +
+        `${BOOKING.nav}($select=${BOOKING.start},${BOOKING.resourceValue})` +
         `&$filter=${filter}&$orderby=sst_date desc`;
 
     const out: LoadedEntry[] = [];
