@@ -463,10 +463,14 @@
 }
 
 .wtsg-day-label {
+    flex: 0 1 auto;
+    min-width: 0;
     font-weight: 600;
     font-size: 14px;
     color: #242424;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Always the second line: date (+ split button) above, sums below. */
@@ -548,14 +552,131 @@
     color: #fff;
 }
 
-/* Selected day (day split open): the whole group reads as selected. */
-.wtsg-day.selected .wtsg-day-head {
+/* Selected day scope (day split open): the header underline turns blue; the
+   cards of the scope are highlighted individually (they may sit under several
+   project headers). */
+.wtsg-day.selected > .wtsg-day-head,
+.wtsg-sub.selected > .wtsg-sub-head {
     border-bottom-color: #0f6cbd;
 }
 
-.wtsg-day.selected .wtsg-card {
-    border-left-color: #0f6cbd;
-    background: #eef6fc;
+/* Collapse chevron on every group header. */
+.wtsg-collapse {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: #616161;
+    cursor: pointer;
+}
+
+.wtsg-collapse:hover {
+    background: #f3f2f1;
+}
+
+.wtsg-collapse svg {
+    transition: transform 0.15s;
+}
+
+.wtsg-collapse.collapsed svg {
+    transform: rotate(-90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wtsg-collapse svg {
+        transition: none;
+    }
+}
+
+/* Header checkbox (assign mode) — the card checkbox look, as a button. */
+.wtsg-group-check {
+    padding: 0;
+    cursor: pointer;
+}
+
+/* ---- Second grouping level: compact, indented, not sticky ---- */
+.wtsg-sub {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-left: 10px;
+    padding-left: 8px;
+    border-left: 2px solid #edebe9;
+}
+
+.wtsg-sub-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    padding: 4px 0 6px;
+    border-bottom: 1px solid #edebe9;
+    font-size: 12px;
+    color: #616161;
+}
+
+.wtsg-sub-label {
+    flex: 0 1 auto;
+    min-width: 0;
+    font-weight: 600;
+    font-size: 13px;
+    color: #242424;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.wtsg-sub-sums {
+    flex: 1 1 100%;
+    padding-left: 30px;
+}
+
+.wtsg-sub-sums strong {
+    color: #242424;
+    font-weight: 600;
+}
+
+.wtsg-sub-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Day-split button on a level-2 header: a bit smaller. */
+.wtsg-sub-head .wtsg-day-split {
+    height: 24px;
+    font-size: 11px;
+}
+
+/* Editor hint when the day spans more projects than the clicked header. */
+.wtsg-panel-scope-note {
+    margin-top: 4px;
+    color: #8a6d00;
+}
+
+/* ---- Grouping controls (sub-bar) ---- */
+.wtsg-grouping {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.wtsg-grouping-label {
+    font-size: 12px;
+    color: #616161;
+}
+
+.wtsg-groupdd .wtsg-dd-trigger {
+    min-width: 110px;
+    height: 28px;
+    font-size: 12px;
 }
 
 /* ---- Day split editor (detail pane) ---- */
@@ -1538,6 +1659,12 @@
 
 .wtsg-mobile .wtsg-day-cards {
     gap: 10px;
+}
+
+/* Bigger collapse target on touch. */
+.wtsg-mobile .wtsg-collapse {
+    width: 32px;
+    height: 32px;
 }
 
 /* Touch-sized "split day" button; full-width sums line below. */

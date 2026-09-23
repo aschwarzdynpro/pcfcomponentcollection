@@ -22,17 +22,30 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   **🏷️ Festpreis** (`hso_projecttype = 100000001`, aus demselben
   `sst_Project_id`-`$expand`) — sobald die Teamleitung sie einblendet, bleiben
   sie damit auf einen Blick unterscheidbar.
-- **Tagesgruppen mit Tagessummen** — solange die Liste nach Datum sortiert ist
-  (Standard), werden die Karten je Kalendertag unter einer haftenden Kopfzeile
-  („Fr, 31.01.2025") gruppiert, die **Arbeit**, **Fahrzeit** und **Gesamt** des
-  Tages in Stunden als Pills zeigt. Die Kategorie ergibt sich per Präfix aus dem
-  `sst_type`-Text (`Arbeit`/`Work` → Arbeit, `Fahrzeit`/`Travel` → Fahrzeit,
-  Defaults in `schema.ts`); andere Typen zählen nur zur Gesamtsumme. Die Summen
-  werden clientseitig über die geladenen (gefilterten) Zeilen gebildet — Suche
-  und Zeitraum-Filter engen sie also mit ein. Bei Sortierung nach Projekt,
-  Ressource oder Dauer bleibt die Liste flach, damit diese Reihenfolge nicht
-  durch Datums-Kopfzeilen zerrissen wird. Mobil brechen die Summen unter das
-  Datum um; die Kopfzeile bleibt beim Scrollen oben stehen.
+- **Gruppierung mit Summen** (`grouping.ts`) — die Liste lässt sich nach
+  **Projekt**, **Ressource** und **Tag** gruppieren, unabhängig von der
+  Sortierung (die Sortierung ordnet die Karten innerhalb der innersten Gruppe):
+  - **Laptop:** bis zu **zwei Ebenen** über zwei Dropdowns in der Unterleiste
+    („Gruppieren … dann …"); Standard *Tag*. *Ressource* wird nur angeboten,
+    solange „Alle Stunden" aktiv ist (bei „Meine Stunden" gäbe es nur eine
+    Gruppe), und fällt beim Zurückschalten automatisch weg.
+  - **Mobil** (Monteur-Nutzung): eine Ebene, Umschalter **Tag | Projekt**.
+  - Jede Kopfzeile zeigt **Arbeit**, **Fahrzeit** und **Gesamt** der Gruppe.
+    Kopfzeilen der 1. Ebene haften beim Scrollen und zeigen Pills; die der
+    2. Ebene sind eingerückt und kompakt (Summen als Text, nicht haftend).
+    Jede Gruppe lässt sich einklappen.
+  - Reihenfolge der Gruppen: Tag folgt der Datums-Sortierrichtung (sonst
+    neueste zuerst), Projekt nach Nummer, Ressource alphabetisch; leere Werte
+    zuletzt als „(ohne Projekt)" / „(ohne Ressource)".
+  - Chips, die eine Gruppen-Kopfzeile wiederholen, werden auf den Karten
+    ausgeblendet (bei Gruppierung nach Projekt keine Projekt-Chips usw.).
+  - Die Kategorie ergibt sich per Präfix aus dem `sst_type`-Text
+    (`Arbeit`/`Work` → Arbeit, `Fahrzeit`/`Travel` → Fahrzeit, Defaults in
+    `schema.ts`); andere Typen zählen nur zur Gesamtsumme. Die Summen werden
+    clientseitig über die geladenen (gefilterten) Zeilen gebildet.
+  - **Modus Zuordnen:** jede Kopfzeile hat eine Checkbox (mit Teilauswahl-
+    Zustand), die alle Einträge der Gruppe auswählt — bei Gruppierung nach
+    Projekt ergibt ein Klick genau die Einträge eines Lieferscheins.
 - **Zusammengesetzter Titel** (Liste + Detail): `<sst_type> am <sst_date>`
   (z. B. „Arbeit am 07.08.2024"). `sst_date` und die Projektnummer des
   verknüpften Projekts (`sst_project_id.sst_projectnumber` auf `msdyn_project`)
@@ -188,13 +201,16 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   den Rest zum aktuellen Wert des Feldes (Aufteilung mit einem Klick abschließen).
 
 ### Tagesaufteilung
-- Jede Tages-Kopfzeile (datumssortierte Liste, Modus Aufteilen, online) hat
-  einen Button **„Tag aufteilen"**. Er öffnet statt eines einzelnen Eintrags
-  den Tages-Editor für die Gruppe (Tag, Ressource). Die Zuschlagsregeln
-  (8 h/Tag → Überstunde, Sonntag, Feiertag) gelten pro Person und Tag — deshalb
-  steckt die Ressource im Gruppenschlüssel: in der Teamleiter-Sicht „Alle
-  Stunden" bekommen zwei Personen am selben Tag getrennte Kopfzeilen
-  („Fr, 31.01.2025 · <Ressource>").
+- Der Button **„Tag aufteilen"** erscheint (Modus Aufteilen, online) an jeder
+  Gruppen-Kopfzeile, die genau einen Personentag festlegt: Der Pfad legt den
+  Tag fest, und die Person ist durch den Pfad bestimmt oder unter den
+  Einträgen der Gruppe eindeutig (z. B. *Tag*, *Ressource › Tag*, *Tag ›
+  Ressource* an der Ressource, *Projekt › Tag* am Tag).
+- Der Editor umfasst immer **alle offenen Einträge dieser Person an diesem
+  Tag** — projektübergreifend und unabhängig vom Suchbegriff —, weil die
+  Zuschlagsregeln (8 h/Tag → Überstunde, Sonntag, Feiertag) pro Person und Tag
+  gelten. Unter einer Projekt-Kopfzeile geöffnet, nennt der Editor die weiteren
+  Projekte des Tages. Alle Karten des Umfangs werden in der Liste markiert.
 - Der Editor zeigt **einen Block je Kategorie** — *Arbeit* und *Fahrzeit* —
   jeweils mit der Tagessumme der Kategorie und der Vereinigungsmenge der Work
   Subtypes der Einträge (per normalisiertem Namen, „Überstunde"/„Überstunden"

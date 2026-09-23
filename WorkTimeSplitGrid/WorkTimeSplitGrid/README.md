@@ -22,16 +22,29 @@ deletes the original.
   chip (`hso_projecttype = 100000001`, read from the same `sst_Project_id`
   `$expand`) — so once a team lead switches them into the list, they stay
   distinguishable at a glance.
-- **Day groups with per-day sums** — while the list is sorted by date (the
-  default), the cards are grouped under a sticky header per calendar day
-  (*Fr, 31.01.2025*) that shows the day's **Work**, **Travel** and **Total**
-  hours as pills. The category comes from the entry's `sst_type` text by
-  prefix (`Arbeit`/`Work` → work, `Fahrzeit`/`Travel` → travel, defaults in
-  `schema.ts`); other types count towards the total only. Sums are computed
-  client-side over the loaded (filtered) rows, so search/period filters narrow
-  them too. Sorting by project, resource or duration switches back to a flat
-  list so those orders aren't broken up by date headers. On mobile the sums
-  wrap below the date and the header stays pinned while scrolling.
+- **Grouping with sums** (`grouping.ts`) — the list can be grouped by
+  **project**, **resource** and **day**, independent of the sort order (the
+  sort orders the cards inside the innermost group):
+  - **Desktop:** up to **two levels** via two dropdowns in the sub-bar
+    (*Group by … then …*); default *Day*. *Resource* is only offered while
+    "all hours" is shown (with "my hours" it would be a single group) and
+    drops out automatically when switching back.
+  - **Mobile** (fitter use): one level, toggle **Day | Project**.
+  - Every header shows the group's **Work**, **Travel** and **Total** hours.
+    Level-1 headers are sticky with sum pills; level-2 headers are indented
+    and compact (text sums, not sticky). Every group can be collapsed.
+  - Group order: day follows the date sort direction (newest first
+    otherwise), project by number, resource alphabetically; empty values
+    last as *(no project)* / *(no resource)*.
+  - Card chips that repeat a group header are hidden (no project chips while
+    grouped by project, no resource chip while grouped by resource).
+  - The category comes from the entry's `sst_type` text by prefix
+    (`Arbeit`/`Work` → work, `Fahrzeit`/`Travel` → travel, defaults in
+    `schema.ts`); other types count towards the total only. Sums are
+    computed client-side over the loaded (filtered) rows.
+  - **Assign mode:** each header has a checkbox (with an indeterminate
+    state) that selects all entries of the group — grouped by project, one
+    click selects exactly one delivery note's worth of entries.
 - **Composed entry title** (list + detail): `<type> am <date>` (e.g. *Arbeit am
   07.08.2024*). The date and the related project number
   (`sst_project_id.sst_projectnumber`) are fetched per page via one WebAPI
@@ -176,12 +189,16 @@ deletes the original.
 - **Confirmation dialog** before the destructive save/delete.
 
 ### 📅 Day-level split
-- Every day header (date-sorted list, split mode, online) carries a
-  **Split day** button. It opens the day editor for that (day, resource)
-  group instead of a single entry — the surcharge rules (8 h/day → overtime,
-  Sunday, holiday) are per person and per day, which is why the group key
-  includes the resource: in the team-lead "all hours" view two people working
-  the same day get separate headers (`Fr, 31.01.2025 · <resource>`).
+- A **Split day** button appears on every group header (split mode, online)
+  that pins exactly one person-day: the path fixes the day, and the person
+  is fixed by the path or unique among the group's entries (e.g. *Day*,
+  *Resource › Day*, *Day › Resource* at the resource level, *Project › Day*
+  at the day level).
+- The editor always covers **all open entries of that person on that day** —
+  across projects and regardless of the search term — because the surcharge
+  rules (8 h/day → overtime, Sunday, holiday) are per person and per day.
+  Opened from below a project header, the editor says which other projects
+  the day also contains. All cards of the scope are highlighted in the list.
 - The editor shows **one block per category** — *Work* and *Travel* — each
   with the day's total for that category and the union of the entries' work
   subtypes (matched by normalized name, so "Überstunde"/"Überstunden" merge).
@@ -310,7 +327,7 @@ WorkTimeSplitGrid/
 │   ├── SplitPanel.tsx            # Right split editor + save + confirm dialog
 │   ├── DaySplitPanel.tsx         # Day-level editor (work/travel blocks, preview)
 │   ├── SubtypeRowEditor.tsx      # Shared subtype input row (arrow + stepper)
-│   ├── dayGroups.ts              # (day, resource) grouping + sums + formatting
+│   ├── grouping.ts               # 1–2 level grouping tree, sums, day-split scope
 │   ├── daySplit.ts               # Chronological fill of a day total into entries
 │   ├── Dropdown.tsx              # Custom, dependency-free sort dropdown
 │   ├── api.ts                    # WebAPI: load entries/subtypes + split-save + reports

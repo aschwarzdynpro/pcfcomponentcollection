@@ -118,6 +118,18 @@ export interface Strings {
     takeRemaining: string;
     /** Tooltip/aria for the star/AI pre-fill button. */
     suggest: string;
+    /** List grouping (desktop: 2 dropdowns; mobile: Day | Project). */
+    groupLabel: string;
+    groupThen: string;
+    groupNone: string;
+    groupDay: string;
+    groupNoProject: string;
+    groupNoResource: string;
+    groupSelectAll: string;
+    groupCollapse: string;
+    groupExpand: string;
+    /** Day split opened below a project that isn't the whole person-day. */
+    daySplitAlso: (projects: string) => string;
     /** Day-level split (list header button + editor). */
     daySplitButton: string;
     daySplitTitle: string;
@@ -227,6 +239,17 @@ export const STRINGS: Record<Lang, Strings> = {
         back: "Back",
         takeRemaining: "Use remaining",
         suggest: "Suggest distribution (date + duration)",
+        groupLabel: "Group by",
+        groupThen: "then",
+        groupNone: "None",
+        groupDay: "Day",
+        groupNoProject: "(no project)",
+        groupNoResource: "(no resource)",
+        groupSelectAll: "Select all in this group",
+        groupCollapse: "Collapse",
+        groupExpand: "Expand",
+        daySplitAlso: (projects) =>
+            `The whole day is split — also contains entries from: ${projects}`,
         daySplitButton: "Split day",
         daySplitTitle: "Day split",
         daySplitEntries: (n) => (n === 1 ? "1 entry" : `${n} entries`),
@@ -340,6 +363,17 @@ export const STRINGS: Record<Lang, Strings> = {
         back: "Zurück",
         takeRemaining: "Rest übernehmen",
         suggest: "Verteilung vorschlagen (Datum + Dauer)",
+        groupLabel: "Gruppieren",
+        groupThen: "dann",
+        groupNone: "Keine",
+        groupDay: "Tag",
+        groupNoProject: "(ohne Projekt)",
+        groupNoResource: "(ohne Ressource)",
+        groupSelectAll: "Alle in dieser Gruppe auswählen",
+        groupCollapse: "Einklappen",
+        groupExpand: "Aufklappen",
+        daySplitAlso: (projects) =>
+            `Es wird der ganze Tag aufgeteilt — enthält auch Einträge aus: ${projects}`,
         daySplitButton: "Tag aufteilen",
         daySplitTitle: "Tagesaufteilung",
         daySplitEntries: (n) => (n === 1 ? "1 Eintrag" : `${n} Einträge`),
@@ -455,6 +489,17 @@ export const STRINGS: Record<Lang, Strings> = {
         back: "Retour",
         takeRemaining: "Reporter le reste",
         suggest: "Proposer la répartition (date + durée)",
+        groupLabel: "Grouper par",
+        groupThen: "puis",
+        groupNone: "Aucun",
+        groupDay: "Jour",
+        groupNoProject: "(sans projet)",
+        groupNoResource: "(sans ressource)",
+        groupSelectAll: "Tout sélectionner dans ce groupe",
+        groupCollapse: "Réduire",
+        groupExpand: "Développer",
+        daySplitAlso: (projects) =>
+            `Toute la journée est répartie — contient aussi des entrées de : ${projects}`,
         daySplitButton: "Répartir la journée",
         daySplitTitle: "Répartition journalière",
         daySplitEntries: (n) => (n === 1 ? "1 entrée" : `${n} entrées`),

@@ -14,7 +14,7 @@ import {
     SplitInput,
 } from "./api";
 import { Logger } from "./telemetry";
-import { DayGroup, LOCALE, formatHours } from "./dayGroups";
+import { DayScope, LOCALE, formatHours } from "./grouping";
 import {
     DayBucket,
     EntryDistribution,
@@ -25,7 +25,8 @@ import {
 import { SubtypeRowEditor } from "./SubtypeRowEditor";
 
 export interface DaySplitPanelProps {
-    group: DayGroup;
+    /** All open entries of one person on one day (see DayScope). */
+    group: DayScope;
     fields: FieldConfig;
     webApi: ComponentFramework.WebApi;
     utils: ComponentFramework.Utility;
@@ -331,6 +332,11 @@ export const DaySplitPanel: React.FC<DaySplitPanelProps> = (props) => {
                         {t.daySplitTitle} · {t.daySplitEntries(editableRows.length)}
                         {projects ? ` · ${projects}` : ""}
                     </div>
+                    {group.note && (
+                        <div className="wtsg-panel-sub wtsg-panel-scope-note">
+                            {group.note}
+                        </div>
+                    )}
                 </div>
                 {canSuggest && (
                     <button

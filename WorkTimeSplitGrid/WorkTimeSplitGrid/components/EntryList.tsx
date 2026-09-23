@@ -1,7 +1,13 @@
 import * as React from "react";
 import { EntryRow, Lang } from "./types";
 import { Strings } from "./i18n";
-import { DayGroup, formatHours } from "./dayGroups";
+import {
+    GroupDim,
+    GroupNode,
+    formatHours,
+    nodeScopeKey,
+    rowScopeKey,
+} from "./grouping";
 
 export interface EntryListProps {
     rows: EntryRow[];
@@ -26,14 +32,18 @@ export interface EntryListProps {
     /** A pull-triggered refresh is in flight (shows the spinner). */
     refreshing?: boolean;
     onRefresh?: () => void;
-    /** Day groups (computed by the parent from `rows`): when set, the cards
-     *  render under sticky per-day headers with work / travel / total sums.
-     *  Only sensible while `rows` is in date order. */
-    groups?: DayGroup[] | null;
-    /** Day-level split: the header gets a "split day" button that selects the
-     *  whole group; `selectedDayKey` highlights the selected group. */
-    onSelectDay?: (key: string) => void;
+    /** Group tree (1–2 levels, computed by the parent from `rows`): when set,
+     *  the cards render under group headers with work / travel / total sums. */
+    groups?: GroupNode[] | null;
+    /** Active grouping dimensions — card chips repeating a group header are
+     *  hidden (e.g. no project chips while grouped by project). */
+    hiddenDims?: GroupDim[];
+    /** Day-level split: headers that pin one person-day get a "split day"
+     *  button; `selectedDayKey` (scope key) highlights the selected scope. */
+    onSelectDay?: (node: GroupNode) => void;
     selectedDayKey?: string | null;
+    /** Assign mode: header checkbox (de)selects every entry of the group. */
+    onToggleGroup?: (ids: string[], check: boolean) => void;
     /** UI language — drives the number formatting of the day sums. */
     lang?: Lang;
     strings: Strings;
@@ -103,11 +113,28 @@ export const EntryList: React.FC<EntryListProps> = ({
     refreshing,
     onRefresh,
     groups,
+    hiddenDims,
     onSelectDay,
     selectedDayKey,
+    onToggleGroup,
     lang = "de",
     strings,
 }) => {
+    const hideResource = !!hiddenDims?.includes("resource");
+    const hideProject = !!hiddenDims?.includes("project");
+
+    // Collapsed group keys (component state only — no web storage in PCF).
+    // Keys embed the grouping path, so a changed grouping starts expanded.
+    const [collapsed, setCollapsed] = React.useState<Set<string>>(
+        () => new Set(),
+    );
+    const toggleCollapsed = (key: string) =>
+        setCollapsed((prev) => {
+            const n = new Set(prev);
+            if (n.has(key)) n.delete(key);
+            else n.add(key);
+            return n;
+        });
     const activate = (id: string) => {
         if (selectable) onToggleCheck?.(id);
         else onSelect(id);
@@ -175,7 +202,12 @@ export const EntryList: React.FC<EntryListProps> = ({
                 role="option"
                 aria-selected={checked}
                 tabIndex={0}
-                className={`wtsg-card ${checked ? "selected" : ""}`}
+                className={`wtsg-card ${
+                    checked ||
+                    (!!selectedDayKey && rowScopeKey(r) === selectedDayKey)
+                        ? "selected"
+                        : ""
+                }`}
                 onClick={() => activate(r.id)}
                 onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
@@ -222,7 +254,7 @@ export const EntryList: React.FC<EntryListProps> = ({
                     )}
                 </div>
                 <div className="wtsg-card-meta">
-                    {r.resourceName && (
+                    {r.resourceName && !hideResource && (
                         <span
                             className="wtsg-chip"
                             title={r.resourceName}
@@ -230,7 +262,7 @@ export const EntryList: React.FC<EntryListProps> = ({
                             {hl(r.resourceName)}
                         </span>
                     )}
-                    {r.project && (
+                    {r.project && !hideProject && (
                         <span
                             className="wtsg-chip"
                             title={r.project}
@@ -250,6 +282,7 @@ export const EntryList: React.FC<EntryListProps> = ({
                 </div>
                 <div className="wtsg-card-foot">
                     {r.projectName &&
+                        !hideProject &&
                         r.projectName !== r.project && (
                             <span
                                 className="wtsg-chip wtsg-chip-project"
@@ -263,6 +296,147 @@ export const EntryList: React.FC<EntryListProps> = ({
                         <strong>{r.totalFormatted || "—"}</strong>
                     </div>
                 </div>
+            </div>
+        );
+    };
+
+    const hours = (n: number) => formatHours(n, lang, strings.hoursUnit);
+
+    /** Header checkbox (assign mode): all / some / none of the group checked. */
+    const groupCheck = (g: GroupNode) => {
+        const ids = g.rows.map((r) => r.id);
+        const n = ids.filter((id) => checkedIds?.has(id)).length;
+        const state = n === 0 ? "none" : n === ids.length ? "all" : "some";
+        return (
+            <button
+                type="button"
+                role="checkbox"
+                aria-checked={state === "all" ? true : state === "some" ? "mixed" : false}
+                className={`wtsg-check wtsg-group-check ${state !== "none" ? "checked" : ""}`}
+                title={strings.groupSelectAll}
+                aria-label={`${strings.groupSelectAll}: ${g.label}`}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleGroup!(ids, state !== "all");
+                }}
+            >
+                {state === "all" && (
+                    <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true">
+                        <path
+                            d="M3 8.5 6.5 12 13 4.5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </svg>
+                )}
+                {state === "some" && (
+                    <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true">
+                        <path d="M4 8h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                )}
+            </button>
+        );
+    };
+
+    /** One group (level 0: sticky header with sum pills; level 1: compact,
+     *  indented header with text sums) and its cards / sub-groups. */
+    const renderGroup = (g: GroupNode): React.ReactNode => {
+        const isCollapsed = collapsed.has(g.key);
+        const scopeKey = onSelectDay ? nodeScopeKey(g) : null;
+        const daySelected = !!scopeKey && scopeKey === selectedDayKey;
+        const canSplitDay =
+            !!scopeKey &&
+            g.rows.some(
+                (r) => !r.completed && (r.kind === "work" || r.kind === "travel"),
+            );
+        const top = g.depth === 0;
+        return (
+            <div
+                key={g.key}
+                className={`${top ? "wtsg-day" : "wtsg-sub"} ${daySelected ? "selected" : ""}`}
+                role="group"
+                aria-label={g.label}
+            >
+                <div className={top ? "wtsg-day-head" : "wtsg-sub-head"}>
+                    <button
+                        type="button"
+                        className={`wtsg-collapse ${isCollapsed ? "collapsed" : ""}`}
+                        aria-expanded={!isCollapsed}
+                        aria-label={isCollapsed ? strings.groupExpand : strings.groupCollapse}
+                        title={isCollapsed ? strings.groupExpand : strings.groupCollapse}
+                        onClick={() => toggleCollapsed(g.key)}
+                    >
+                        <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true">
+                            <path
+                                d="M4 6l4 4 4-4"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                        </svg>
+                    </button>
+                    {selectable && onToggleGroup && groupCheck(g)}
+                    <span
+                        className={top ? "wtsg-day-label" : "wtsg-sub-label"}
+                        title={g.label}
+                    >
+                        {g.label}
+                    </span>
+                    {canSplitDay && (
+                        <button
+                            type="button"
+                            className={`wtsg-day-split ${daySelected ? "active" : ""}`}
+                            onClick={() => onSelectDay!(g)}
+                            title={strings.daySplitButton}
+                            aria-pressed={daySelected}
+                        >
+                            <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+                                <path
+                                    d="M8 2v12M3 8h10M4.5 4.5l7 7M11.5 4.5l-7 7"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                />
+                            </svg>
+                            <span>{strings.daySplitButton}</span>
+                        </button>
+                    )}
+                    {top ? (
+                        <span className="wtsg-day-sums">
+                            <span className="wtsg-day-sum wtsg-day-sum-work">
+                                <span className="wtsg-day-sum-label">{strings.dayWork}</span>{" "}
+                                <strong>{hours(g.work)}</strong>
+                            </span>
+                            <span className="wtsg-day-sum wtsg-day-sum-travel">
+                                <span className="wtsg-day-sum-label">{strings.dayTravel}</span>{" "}
+                                <strong>{hours(g.travel)}</strong>
+                            </span>
+                            <span className="wtsg-day-sum wtsg-day-sum-total">
+                                <span className="wtsg-day-sum-label">{strings.total}</span>{" "}
+                                <strong>{hours(g.total)}</strong>
+                            </span>
+                        </span>
+                    ) : (
+                        <span className="wtsg-sub-sums">
+                            {strings.dayWork} <strong>{hours(g.work)}</strong> ·{" "}
+                            {strings.dayTravel} <strong>{hours(g.travel)}</strong> ·{" "}
+                            {strings.total} <strong>{hours(g.total)}</strong>
+                        </span>
+                    )}
+                </div>
+                {!isCollapsed && (
+                    <div className={top ? "wtsg-day-cards" : "wtsg-sub-cards"}>
+                        {g.children
+                            ? g.children.map(renderGroup)
+                            : g.rows.map(renderCard)}
+                    </div>
+                )}
             </div>
         );
     };
@@ -318,63 +492,7 @@ export const EntryList: React.FC<EntryListProps> = ({
                     </div>
                 )
             ) : groups ? (
-                groups.map((g) => {
-                    const daySelected = !!selectedDayKey && g.key === selectedDayKey;
-                    const canSplitDay =
-                        !!onSelectDay &&
-                        g.rows.some(
-                            (r) => !r.completed && (r.kind === "work" || r.kind === "travel"),
-                        );
-                    return (
-                    <div
-                        key={g.key}
-                        className={`wtsg-day ${daySelected ? "selected" : ""}`}
-                        role="group"
-                        aria-label={g.label}
-                    >
-                        <div className="wtsg-day-head">
-                            <span className="wtsg-day-label">{g.label}</span>
-                            {canSplitDay && (
-                                <button
-                                    type="button"
-                                    className={`wtsg-day-split ${daySelected ? "active" : ""}`}
-                                    onClick={() => onSelectDay!(g.key)}
-                                    title={strings.daySplitButton}
-                                    aria-pressed={daySelected}
-                                >
-                                    <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
-                                        <path
-                                            d="M8 2v12M3 8h10M4.5 4.5l7 7M11.5 4.5l-7 7"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="1.5"
-                                            strokeLinecap="round"
-                                        />
-                                    </svg>
-                                    <span>{strings.daySplitButton}</span>
-                                </button>
-                            )}
-                            <span className="wtsg-day-sums">
-                                <span className="wtsg-day-sum wtsg-day-sum-work">
-                                    <span className="wtsg-day-sum-label">{strings.dayWork}</span>{" "}
-                                    <strong>{formatHours(g.work, lang, strings.hoursUnit)}</strong>
-                                </span>
-                                <span className="wtsg-day-sum wtsg-day-sum-travel">
-                                    <span className="wtsg-day-sum-label">{strings.dayTravel}</span>{" "}
-                                    <strong>{formatHours(g.travel, lang, strings.hoursUnit)}</strong>
-                                </span>
-                                <span className="wtsg-day-sum wtsg-day-sum-total">
-                                    <span className="wtsg-day-sum-label">{strings.total}</span>{" "}
-                                    <strong>{formatHours(g.total, lang, strings.hoursUnit)}</strong>
-                                </span>
-                            </span>
-                        </div>
-                        <div className="wtsg-day-cards">
-                            {g.rows.map(renderCard)}
-                        </div>
-                    </div>
-                    );
-                })
+                groups.map(renderGroup)
             ) : (
                 rows.map(renderCard)
             )}
