@@ -128,6 +128,9 @@ export interface Strings {
     groupSelectAll: string;
     groupCollapse: string;
     groupExpand: string;
+    /** Info popover next to the grouping controls: how the day split works. */
+    daySplitInfoTitle: string;
+    daySplitInfoPoints: string[];
     /** Day split opened below a project that isn't the whole person-day. */
     daySplitAlso: (projects: string) => string;
     /** Day-level split (list header button + editor). */
@@ -248,6 +251,14 @@ export const STRINGS: Record<Lang, Strings> = {
         groupSelectAll: "Select all in this group",
         groupCollapse: "Collapse",
         groupExpand: "Expand",
+        daySplitInfoTitle: 'How "Split day" works',
+        daySplitInfoPoints: [
+            '"Split day" appears on headers that show exactly one day of one person — e.g. grouped by Day, Resource › Day or Day › Resource.',
+            "The whole day of that person is always split — across all projects and regardless of the search.",
+            "Work and travel time are distributed separately. ★ suggests a distribution from the 8-hour rule, Sunday and public holidays.",
+            "The hours are poured into the entries in chronological order: Normal first, overtime lands on the last entries of the day. Every entry keeps its own total.",
+            "A preview shows the result per entry before saving. The day is saved in one step — all entries or none.",
+        ],
         daySplitAlso: (projects) =>
             `The whole day is split — also contains entries from: ${projects}`,
         daySplitButton: "Split day",
@@ -372,6 +383,14 @@ export const STRINGS: Record<Lang, Strings> = {
         groupSelectAll: "Alle in dieser Gruppe auswählen",
         groupCollapse: "Einklappen",
         groupExpand: "Aufklappen",
+        daySplitInfoTitle: 'So funktioniert „Tag aufteilen"',
+        daySplitInfoPoints: [
+            '„Tag aufteilen" erscheint an Kopfzeilen, die genau einen Tag einer Person zeigen — z. B. bei Gruppierung Tag, Ressource › Tag oder Tag › Ressource.',
+            "Aufgeteilt wird immer der ganze Tag der Person — über alle Projekte und unabhängig von der Suche.",
+            "Arbeit und Fahrzeit werden getrennt verteilt. ★ schlägt eine Verteilung nach 8-Stunden-Regel, Sonntag und Feiertag vor.",
+            "Die Stunden werden chronologisch auf die Einträge verteilt: Normal zuerst, Überstunden landen auf den letzten Einträgen des Tages. Jeder Eintrag behält seine Gesamtzeit.",
+            "Eine Vorschau zeigt das Ergebnis je Eintrag vor dem Speichern. Gespeichert wird der Tag in einem Schritt — alle Einträge oder keiner.",
+        ],
         daySplitAlso: (projects) =>
             `Es wird der ganze Tag aufgeteilt — enthält auch Einträge aus: ${projects}`,
         daySplitButton: "Tag aufteilen",
@@ -498,6 +517,14 @@ export const STRINGS: Record<Lang, Strings> = {
         groupSelectAll: "Tout sélectionner dans ce groupe",
         groupCollapse: "Réduire",
         groupExpand: "Développer",
+        daySplitInfoTitle: "Fonctionnement de « Répartir la journée »",
+        daySplitInfoPoints: [
+            "« Répartir la journée » apparaît sur les en-têtes qui montrent exactement une journée d'une personne — p. ex. groupé par Jour, Ressource › Jour ou Jour › Ressource.",
+            "C'est toujours toute la journée de la personne qui est répartie — tous projets confondus et indépendamment de la recherche.",
+            "Le travail et le trajet sont répartis séparément. ★ propose une répartition selon la règle des 8 heures, le dimanche et les jours fériés.",
+            "Les heures sont versées dans les entrées par ordre chronologique : Normal d'abord, les heures supplémentaires sur les dernières entrées. Chaque entrée conserve son total.",
+            "Un aperçu montre le résultat par entrée avant l'enregistrement. La journée est enregistrée en une seule étape — toutes les entrées ou aucune.",
+        ],
         daySplitAlso: (projects) =>
             `Toute la journée est répartie — contient aussi des entrées de : ${projects}`,
         daySplitButton: "Répartir la journée",

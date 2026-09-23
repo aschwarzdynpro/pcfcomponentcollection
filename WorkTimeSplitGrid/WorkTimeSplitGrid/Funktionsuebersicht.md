@@ -26,7 +26,10 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   **Projekt**, **Ressource** und **Tag** gruppieren, unabhängig von der
   Sortierung (die Sortierung ordnet die Karten innerhalb der innersten Gruppe):
   - **Laptop:** bis zu **zwei Ebenen** über zwei Dropdowns in der Unterleiste
-    („Gruppieren … dann …"); Standard *Tag*. *Ressource* wird nur angeboten,
+    („Gruppieren … dann …"); Standard *Tag*. Das zweite Dropdown bleibt immer
+    an seinem Platz und ist nur ausgegraut, solange das erste auf *Keine*
+    steht (ruhiges Layout). Ein **ⓘ**-Button daneben (Modus Aufteilen) erklärt
+    in einem Popup, wie *Tag aufteilen* funktioniert. *Ressource* wird nur angeboten,
     solange „Alle Stunden" aktiv ist (bei „Meine Stunden" gäbe es nur eine
     Gruppe), und fällt beim Zurückschalten automatisch weg.
   - **Mobil** (Monteur-Nutzung): eine Ebene, Umschalter **Tag | Projekt**.

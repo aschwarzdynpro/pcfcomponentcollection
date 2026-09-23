@@ -679,6 +679,67 @@
     font-size: 12px;
 }
 
+/* Level 2 without a level 1: stays in place, greyed out (calm layout). */
+.wtsg-dd-trigger:disabled {
+    background: #f5f5f5;
+    border-color: #e1dfdd;
+    color: #a19f9d;
+    cursor: default;
+}
+
+.wtsg-grouping-label.disabled {
+    color: #a19f9d;
+}
+
+/* Info popover (how the day split works) next to the grouping controls. */
+.wtsg-info-pop {
+    position: relative;
+    display: inline-flex;
+}
+
+.wtsg-infobtn.wtsg-infobtn-sm {
+    width: 28px;
+    height: 28px;
+    border-radius: 14px;
+}
+
+.wtsg-infobtn.open {
+    border-color: #0f6cbd;
+    color: #0f6cbd;
+}
+
+.wtsg-info-pop-card {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 30;
+    width: 340px;
+    max-width: calc(100vw - 32px);
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid #e1dfdd;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+    font-size: 12px;
+    line-height: 1.45;
+    color: #424242;
+    white-space: normal;
+}
+
+.wtsg-info-pop-card h4 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: #242424;
+}
+
+.wtsg-info-pop-card ul {
+    margin: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
 /* ---- Day split editor (detail pane) ---- */
 .wtsg-block {
     margin-top: 14px;

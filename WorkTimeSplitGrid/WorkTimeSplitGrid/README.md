@@ -26,7 +26,9 @@ deletes the original.
   **project**, **resource** and **day**, independent of the sort order (the
   sort orders the cards inside the innermost group):
   - **Desktop:** up to **two levels** via two dropdowns in the sub-bar
-    (*Group by … then …*); default *Day*. *Resource* is only offered while
+    (*Group by … then …*); default *Day*. The second dropdown always stays
+    in place and is only greyed out while the first is *None* (calm layout).
+    An **ⓘ** button next to it (split mode) explains how *Split day* works. *Resource* is only offered while
     "all hours" is shown (with "my hours" it would be a single group) and
     drops out automatically when switching back.
   - **Mobile** (fitter use): one level, toggle **Day | Project**.

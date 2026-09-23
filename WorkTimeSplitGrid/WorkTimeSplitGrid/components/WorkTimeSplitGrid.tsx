@@ -12,6 +12,7 @@ import {
     rowScopeKey,
 } from "./grouping";
 import { Dropdown } from "./Dropdown";
+import { InfoPopover } from "./InfoPopover";
 import { CollapsibleActionBar } from "./CollapsibleActionBar";
 import { EntryRow, Lang, SubtypeRow } from "./types";
 import { STRINGS } from "./i18n";
@@ -1250,36 +1251,46 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                     ] as (GroupDim | "none")[]
                                 ).map((d) => ({ value: d, label: groupDimLabel(d) }))}
                             />
-                            {activeDims.length > 0 && (
-                                <>
-                                    <span className="wtsg-grouping-label">
-                                        {t.groupThen}
-                                    </span>
-                                    <Dropdown
-                                        className="wtsg-groupdd"
-                                        value={activeDims[1] ?? "none"}
-                                        ariaLabel={`${t.groupLabel} (2)`}
-                                        onChange={(v) =>
-                                            setGroupDims([
-                                                activeDims[0],
-                                                v as GroupDim | "none",
-                                            ])
-                                        }
-                                        options={(
-                                            [
-                                                "none",
-                                                "project",
-                                                ...(myHoursActive ? [] : ["resource"]),
-                                                "day",
-                                            ] as (GroupDim | "none")[]
-                                        )
-                                            .filter((d) => d !== activeDims[0])
-                                            .map((d) => ({
-                                                value: d,
-                                                label: groupDimLabel(d),
-                                            }))}
-                                    />
-                                </>
+                            <span
+                                className={`wtsg-grouping-label ${
+                                    activeDims.length === 0 ? "disabled" : ""
+                                }`}
+                            >
+                                {t.groupThen}
+                            </span>
+                            <Dropdown
+                                className="wtsg-groupdd"
+                                value={activeDims[1] ?? "none"}
+                                ariaLabel={`${t.groupLabel} (2)`}
+                                disabled={activeDims.length === 0}
+                                onChange={(v) => {
+                                    if (activeDims[0]) {
+                                        setGroupDims([
+                                            activeDims[0],
+                                            v as GroupDim | "none",
+                                        ]);
+                                    }
+                                }}
+                                options={(
+                                    [
+                                        "none",
+                                        "project",
+                                        ...(myHoursActive ? [] : ["resource"]),
+                                        "day",
+                                    ] as (GroupDim | "none")[]
+                                )
+                                    .filter((d) => d !== activeDims[0])
+                                    .map((d) => ({
+                                        value: d,
+                                        label: groupDimLabel(d),
+                                    }))}
+                            />
+                            {mode === "split" && (
+                                <InfoPopover
+                                    label={t.daySplitInfoTitle}
+                                    title={t.daySplitInfoTitle}
+                                    points={t.daySplitInfoPoints}
+                                />
                             )}
                         </div>
                     )}
