@@ -364,6 +364,11 @@ export interface LoadEntriesOptions {
      * "show fixed-price hours" switch; defaults to false (exclude).
      */
     includeFixedPrice?: boolean;
+    /**
+     * Period filter pushed to the server: only entries with `sst_date` on/after
+     * this instant (local start of today/week/month). null/undefined → no bound.
+     */
+    fromDate?: Date | null;
 }
 
 const ENTRY_FMT = "@OData.Community.Display.V1.FormattedValue";
@@ -464,8 +469,14 @@ export async function loadEntries(
         ? ""
         : ` and ${PROJECT_TYPE.nav}/${PROJECT_TYPE.field}` +
           ` ne ${PROJECT_TYPE.fixedPriceValue}`;
+    const fromDate = opts.fromDate;
+    const dateClause =
+        fromDate && !isNaN(fromDate.getTime())
+            ? ` and sst_date ge ${fromDate.toISOString()}`
+            : "";
     const filter =
         "_sst_project_id_value ne null" +
+        dateClause +
         projectTypeClause +
         modeClause +
         pauseClause +
@@ -782,103 +793,116 @@ export function serverErrorMessage(e: unknown): string {
     }
 }
 
-/** Build the $batch body with ONE transactional changeset for the split. */
 /** One prepared entry of a (day) split batch. */
 interface PreparedEntry {
     id: string;
     prep: SplitPrep;
 }
 
+/** One request inside a transactional $batch changeset. */
+interface BatchOp {
+    method: "POST" | "PATCH" | "DELETE";
+    /** Absolute URL, e.g. `${root}/sst_roundedtimeentrieses(<id>)`. */
+    url: string;
+    body?: unknown;
+}
+
 /**
- * Build ONE $batch with ONE changeset covering every prepared entry, so a day
- * split is all-or-nothing just like a single split. Pause updates are
- * de-duplicated across entries (several entries of a day usually share a work
- * order -> the same pause must not be patched twice in one changeset).
+ * Build a $batch body with ONE transactional changeset. Ops get Content-IDs
+ * 1..n in order, so a later op can reference an earlier create as `$<n>` (e.g.
+ * `"nav@odata.bind": "$1"`).
  */
-function buildSplitBatch(
-    root: string,
-    fields: FieldConfig,
-    items: PreparedEntry[],
-    batch: string,
-    cs: string,
-): string {
+function buildChangesetBody(ops: BatchOp[], batch: string, cs: string): string {
     const CRLF = "\r\n";
     const lines: string[] = [
         `--${batch}`,
         `Content-Type: multipart/mixed;boundary=${cs}`,
         "",
     ];
-    let cid = 1;
-    const pushOp = (method: string, url: string, body?: unknown): void => {
+    ops.forEach((op, i) => {
         lines.push(
             `--${cs}`,
             "Content-Type: application/http",
             "Content-Transfer-Encoding:binary",
-            `Content-ID: ${cid++}`,
+            `Content-ID: ${i + 1}`,
             "",
-            `${method} ${url} HTTP/1.1`,
+            `${op.method} ${op.url} HTTP/1.1`,
         );
-        if (body !== undefined) {
+        if (op.body !== undefined) {
             lines.push(
                 "Content-Type: application/json;type=entry",
                 "",
-                JSON.stringify(body),
+                JSON.stringify(op.body),
             );
         } else {
             lines.push("");
         }
-    };
-
-    const parentSet = `${root}/${PARENT.entitySet}`;
-    const childSet = `${root}/${CHILD.entitySet}`;
-    const originals = new Set(items.map((it) => it.id));
-    const pausesDone = new Set<string>();
-
-    for (const { id, prep } of items) {
-        // 1) child subtype value updates (cascade-deleted with the parent below)
-        for (const u of prep.subtypeUpdates) {
-            pushOp("PATCH", `${childSet}(${u.id})`, {
-                [CHILD.timeValue]: u.value,
-            });
-        }
-        // 2) create one split per subtype
-        for (const payload of prep.splitPayloads) {
-            pushOp("POST", parentSet, payload);
-        }
-        // 3) mark the original completed
-        pushOp("PATCH", `${parentSet}(${id})`, { [fields.completed]: true });
-        // 4) mark related pauses completed (once per pause; never an original
-        //    of this same batch - that one is deleted below anyway)
-        for (const pid of prep.pauseIds) {
-            if (pausesDone.has(pid) || originals.has(pid)) continue;
-            pausesDone.add(pid);
-            pushOp("PATCH", `${parentSet}(${pid})`, {
-                [fields.completed]: true,
-            });
-        }
-        // 5) delete the original (children cascade)
-        pushOp("DELETE", `${parentSet}(${id})`);
-    }
-
+    });
     lines.push(`--${cs}--`, `--${batch}--`, "");
     return lines.join(CRLF);
 }
 
 /**
- * Try the atomic $batch changeset. Returns "done" on success, "unavailable"
- * when the endpoint can't be reached/authorized (caller falls back), or throws
- * on a genuine data error (the changeset rolled back — data stays consistent).
+ * The split mutations of every prepared entry as ONE changeset, so a day split
+ * is all-or-nothing just like a single split. Pause updates are de-duplicated
+ * across entries (several entries of a day usually share a work order -> the
+ * same pause must not be patched twice in one changeset).
  */
-async function runSplitBatch(
+function buildSplitOps(
+    root: string,
     fields: FieldConfig,
     items: PreparedEntry[],
-): Promise<"done" | "unavailable"> {
+): BatchOp[] {
+    const ops: BatchOp[] = [];
+    const parentSet = `${root}/${PARENT.entitySet}`;
+    const childSet = `${root}/${CHILD.entitySet}`;
+    const originals = new Set(items.map((it) => it.id));
+    const pausesDone = new Set<string>();
+    const complete = { [fields.completed]: true };
+
+    for (const { id, prep } of items) {
+        // 1) child subtype value updates (cascade-deleted with the parent below)
+        for (const u of prep.subtypeUpdates) {
+            ops.push({
+                method: "PATCH",
+                url: `${childSet}(${u.id})`,
+                body: { [CHILD.timeValue]: u.value },
+            });
+        }
+        // 2) create one split per subtype
+        for (const payload of prep.splitPayloads) {
+            ops.push({ method: "POST", url: parentSet, body: payload });
+        }
+        // 3) mark the original completed
+        ops.push({ method: "PATCH", url: `${parentSet}(${id})`, body: complete });
+        // 4) mark related pauses completed (once per pause; never an original
+        //    of this same batch - that one is deleted below anyway)
+        for (const pid of prep.pauseIds) {
+            if (pausesDone.has(pid) || originals.has(pid)) continue;
+            pausesDone.add(pid);
+            ops.push({ method: "PATCH", url: `${parentSet}(${pid})`, body: complete });
+        }
+        // 5) delete the original (children cascade)
+        ops.push({ method: "DELETE", url: `${parentSet}(${id})` });
+    }
+    return ops;
+}
+
+/**
+ * POST a transactional changeset to $batch. Returns `{ ok: true, text }` with
+ * the response body on success, `{ ok: false }` when the endpoint can't be
+ * reached/authorized (caller falls back to context.webAPI), or throws on a
+ * genuine data error (the changeset rolled back — data stays consistent).
+ */
+async function runChangeset(
+    build: (root: string) => BatchOp[],
+): Promise<{ ok: true; text: string } | { ok: false }> {
     const root = apiRoot();
-    if (!root || typeof fetch === "undefined") return "unavailable";
-    const stamp = Date.now();
+    if (!root || typeof fetch === "undefined") return { ok: false };
+    const stamp = `${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
     const batch = `batch_wtsg_${stamp}`;
     const cs = `changeset_wtsg_${stamp}`;
-    const body = buildSplitBatch(root, fields, items, batch, cs);
+    const body = buildChangesetBody(build(root), batch, cs);
 
     let resp: Response;
     try {
@@ -894,21 +918,31 @@ async function runSplitBatch(
             body,
         });
     } catch {
-        return "unavailable"; // network / CSP → fall back to webAPI
+        return { ok: false }; // network / CSP → fall back to webAPI
     }
     // Endpoint / auth not usable here → fall back to the supported webAPI path.
-    if ([401, 403, 404, 405].indexOf(resp.status) !== -1) return "unavailable";
-    if (resp.ok) return "done";
-    // Changeset failed and rolled back → surface the data error (no fallback).
+    if ([401, 403, 404, 405].indexOf(resp.status) !== -1) return { ok: false };
     let text = "";
     try {
         text = await resp.text();
     } catch {
         /* ignore */
     }
+    // Defensive: a 200 envelope whose inner response failed is still a failure.
+    if (resp.ok && !/HTTP\/1\.1 [45]\d\d/.test(text)) return { ok: true, text };
+    // Changeset failed and rolled back → surface the data error (no fallback).
     throw new Error(
         parseBatchErrorMessage(text) || `Batch failed (${resp.status})`,
     );
+}
+
+/** Atomic (day) split via $batch: "done", or "unavailable" (caller falls back). */
+async function runSplitBatch(
+    fields: FieldConfig,
+    items: PreparedEntry[],
+): Promise<"done" | "unavailable"> {
+    const res = await runChangeset((root) => buildSplitOps(root, fields, items));
+    return res.ok ? "done" : "unavailable";
 }
 
 /** Best-effort delete of records created during a failed split (rollback). */
@@ -1191,10 +1225,131 @@ export interface CreateReportsResult {
     errorMessage?: string;
 }
 
+/** Max length of the delivery note's `sst_name` (Dataverse primary-name default). */
+const REPORT_NAME_MAX = 100;
+
+/**
+ * Delivery-note title: `Timereport <yyyy-MM-dd> / <resource names>` — the names
+ * of ALL distinct resources whose entries go onto that note (in selection
+ * order, comma-separated). Capped at the column length with an ellipsis so a
+ * large multi-resource selection can't make the create fail.
+ */
+export function buildReportName(dateStr: string, resourceNames: string[]): string {
+    const seen = new Set<string>();
+    const names: string[] = [];
+    for (const raw of resourceNames) {
+        const n = (raw ?? "").trim();
+        if (n && !seen.has(n.toLowerCase())) {
+            seen.add(n.toLowerCase());
+            names.push(n);
+        }
+    }
+    const full = `Timereport ${dateStr} / ${names.join(", ")}`.trim();
+    return full.length > REPORT_NAME_MAX
+        ? full.substring(0, REPORT_NAME_MAX - 1).trimEnd() + "…"
+        : full;
+}
+
+/** A project group of selected entries → one delivery note. */
+interface ReportGroup {
+    projectId: string;
+    projectName: string;
+    entryIds: string[];
+    woIds: Set<string>;
+    resourceNames: string[];
+}
+
+/** Create payload for a group's delivery note. */
+function reportPayload(
+    grp: ReportGroup,
+    reportName: string,
+): ComponentFramework.WebApi.Entity {
+    // Unambiguous work order (exactly one, and it is set) → carry it onto the
+    // note; mixed or missing → leave the lookup empty.
+    const woList = Array.from(grp.woIds);
+    const woId = woList.length === 1 && woList[0] ? woList[0] : null;
+    const payload: ComponentFramework.WebApi.Entity = {
+        [TIMEREPORT.name]: reportName,
+        [`${TIMEREPORT.projectNav}@odata.bind`]: `/${PROJECT_SET}(${grp.projectId})`,
+    };
+    if (woId) {
+        payload[`${TIMEREPORT.workorderNav}@odata.bind`] = `/${WORKORDER_SET}(${woId})`;
+    }
+    return payload;
+}
+
+/**
+ * Create a group's note AND link its entries in ONE $batch changeset — the note
+ * is referenced as `$1`, so either everything commits or nothing does (no
+ * orphaned / half-linked delivery notes). Returns the new note id ("" if it
+ * couldn't be read from the response), or null when $batch is unavailable.
+ */
+async function createReportAtomic(
+    grp: ReportGroup,
+    reportName: string,
+): Promise<string | null> {
+    const res = await runChangeset((root) => [
+        {
+            method: "POST",
+            url: `${root}/${TIMEREPORT.entitySet}`,
+            body: reportPayload(grp, reportName),
+        },
+        ...grp.entryIds.map(
+            (eid): BatchOp => ({
+                method: "PATCH",
+                url: `${root}/${PARENT.entitySet}(${eid})`,
+                body: { [`${TIMEREPORT.entryNav}@odata.bind`]: "$1" },
+            }),
+        ),
+    ]);
+    if (!res.ok) return null;
+    // The create's part carries `OData-EntityId: …/sst_timereportses(<id>)`.
+    const m = new RegExp(
+        `${TIMEREPORT.entitySet}\\(([0-9a-fA-F-]{36})\\)`,
+    ).exec(res.text);
+    return m ? m[1] : "";
+}
+
+/**
+ * Fallback when $batch is unavailable: create the note, then link the entries
+ * one by one via context.webAPI (not atomic — a failed link leaves that entry
+ * unassigned). Returns the note id and the linked entry ids.
+ */
+async function createReportSequential(
+    webApi: ComponentFramework.WebApi,
+    grp: ReportGroup,
+    reportName: string,
+    onLinkError: (e: unknown, entryId: string) => void,
+): Promise<{ reportId: string; linked: string[] }> {
+    const created = await webApi.createRecord(
+        TIMEREPORT.logicalName,
+        reportPayload(grp, reportName),
+    );
+    const linked: string[] = [];
+    for (const eid of grp.entryIds) {
+        try {
+            await webApi.updateRecord(PARENT.logicalName, eid, {
+                [`${TIMEREPORT.entryNav}@odata.bind`]: `/${TIMEREPORT.entitySet}(${created.id})`,
+            });
+            linked.push(eid);
+        } catch (e) {
+            onLinkError(e, eid);
+        }
+    }
+    return { reportId: created.id, linked };
+}
+
 /**
  * "Assign" mode action: create one delivery note (sst_timereports) **per project**
  * across the selected entries and link each entry to its project's note
  * (sst_TimeReport). 5 entries on 2 projects → 2 notes.
+ *
+ * Each note is created together with its entry links in ONE transactional $batch
+ * changeset (all-or-nothing per project). Only if $batch is unreachable in this
+ * host does it fall back to sequential context.webAPI calls.
+ *
+ * The note's `sst_name` is `Timereport <today> / <resource names>` with the names
+ * of all distinct resources on that note (see buildReportName).
  *
  * The work order is no longer the grouping key (it was until v1.23.x). It is
  * still written to the note's `sst_Arbeitsauftrag`, but only when every entry of
@@ -1205,9 +1360,7 @@ export interface CreateReportsResult {
  * Guard: if any selected entry already has a delivery note, nothing is created
  * (returns blocked=true). Entries without a project can't be assigned and are
  * counted as failures — in practice the "assign" filter already excludes them
- * (`_sst_project_id_value ne null`). The unused booking/resource retrieval from
- * the original script (its resource binding was commented out) is intentionally
- * omitted.
+ * (`_sst_project_id_value ne null`).
  */
 export async function createTimeReports(
     webApi: ComponentFramework.WebApi,
@@ -1226,7 +1379,7 @@ export async function createTimeReports(
                 .retrieveRecord(
                     PARENT.logicalName,
                     id,
-                    `?$select=${PROJECT_VALUE},${WORKORDER_VALUE},${TIMEREPORT.value}` +
+                    `?$select=${PROJECT_VALUE},${WORKORDER_VALUE},${TIMEREPORT.value},sst_resource` +
                         `&$expand=sst_resource_ref($select=name)`,
                 )
                 .then(
@@ -1253,15 +1406,7 @@ export async function createTimeReports(
     // orders seen in the group so the note's work-order lookup can be set when
     // — and only when — the group is unambiguous (entries without a work order
     // contribute "" and therefore also make the group ambiguous).
-    const byProject = new Map<
-        string,
-        {
-            projectId: string;
-            projectName: string;
-            entryIds: string[];
-            woIds: Set<string>;
-        }
-    >();
+    const byProject = new Map<string, ReportGroup>();
     let failed = 0;
     let firstError = "";
     for (const e of entries) {
@@ -1271,68 +1416,85 @@ export async function createTimeReports(
             continue;
         }
         const key = String(projRaw).replace(/[{}]/g, "");
-        const projectName = (e.rec[PROJECT_VALUE + fmt] as string) ?? "";
         if (!byProject.has(key)) {
             byProject.set(key, {
                 projectId: key,
-                projectName,
+                projectName: (e.rec[PROJECT_VALUE + fmt] as string) ?? "",
                 entryIds: [],
                 woIds: new Set<string>(),
+                resourceNames: [],
             });
         }
         const grp = byProject.get(key)!;
         grp.entryIds.push(e.id);
         const woRaw = e.rec[WORKORDER_VALUE];
         grp.woIds.add(woRaw ? String(woRaw).replace(/[{}]/g, "") : "");
+        grp.resourceNames.push(
+            String(e.rec.sst_resource_ref?.name ?? e.rec.sst_resource ?? ""),
+        );
     }
 
-    let assigned = 0;
-    const assignedIds: string[] = [];
-    const reports: CreatedReport[] = [];
-    // Name to match the parallel cloud flow:
-    //   concat('Timereport ', <date>, ' / ', <resource name>)
-    // date = today (local, yyyy-MM-dd); resource = the name of the resource on the
-    // FIRST selected booking entry (sst_resource_ref.name), like the flow's
-    // Get_Resource step.
+    // Date part of the name = today (local, yyyy-MM-dd), like the cloud flow.
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, "0");
     const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(
         now.getDate(),
     )}`;
-    let resourceName = "";
-    for (const e of entries) {
-        const rn = e.rec?.sst_resource_ref?.name;
-        if (rn) {
-            resourceName = String(rn);
-            break;
-        }
-    }
-    const reportName = `Timereport ${dateStr} / ${resourceName}`.trim();
+
+    let assigned = 0;
+    let reportsCreated = 0;
+    const assignedIds: string[] = [];
+    const reports: CreatedReport[] = [];
+    // Once $batch proved unavailable, don't retry it for the remaining groups.
+    let batchUsable = true;
 
     for (const grp of byProject.values()) {
-        // Unambiguous work order (exactly one, and it is set) → carry it onto the
-        // note; mixed or missing → leave the lookup empty.
-        const woList = Array.from(grp.woIds);
-        const woId = woList.length === 1 && woList[0] ? woList[0] : null;
-        let reportId: string;
+        const reportName = buildReportName(dateStr, grp.resourceNames);
+        let reportId = "";
+        let linked: string[] = [];
+        let mode = "batch";
         try {
-            const payload: ComponentFramework.WebApi.Entity = {
-                [TIMEREPORT.name]: reportName,
-                [`${TIMEREPORT.projectNav}@odata.bind`]: `/${PROJECT_SET}(${grp.projectId})`,
-            };
-            if (woId) {
-                payload[
-                    `${TIMEREPORT.workorderNav}@odata.bind`
-                ] = `/${WORKORDER_SET}(${woId})`;
+            const atomicId = batchUsable
+                ? await createReportAtomic(grp, reportName)
+                : null;
+            if (atomicId !== null) {
+                reportId = atomicId;
+                linked = grp.entryIds.slice();
+            } else {
+                batchUsable = false;
+                mode = "sequential";
+                const r = await createReportSequential(
+                    webApi,
+                    grp,
+                    reportName,
+                    (e, eid) => {
+                        failed += 1;
+                        if (!firstError) firstError = serverErrorMessage(e);
+                        logger.error("createReports.linkFailed", e, { entryId: eid });
+                    },
+                );
+                reportId = r.reportId;
+                linked = r.linked;
             }
-            const created = await webApi.createRecord(
-                TIMEREPORT.logicalName,
-                payload,
-            );
-            reportId = created.id;
-            // The delivery-note number is an autonumber (set synchronously on
-            // create); fetch it for the picker label. Best-effort.
-            let number = "";
+        } catch (e) {
+            // Changeset rolled back (or the sequential create failed) → nothing
+            // was written for this project; all of its entries fail.
+            failed += grp.entryIds.length;
+            if (!firstError) firstError = serverErrorMessage(e);
+            logger.error("createReports.reportFailed", e, {
+                projectId: grp.projectId,
+                entries: grp.entryIds.length,
+            });
+            continue;
+        }
+        reportsCreated += 1;
+        assigned += linked.length;
+        assignedIds.push(...linked);
+
+        // The delivery-note number is an autonumber (set synchronously on
+        // create); fetch it for the picker label. Best-effort.
+        let number = "";
+        if (reportId) {
             try {
                 const back: any = await webApi.retrieveRecord(
                     TIMEREPORT.logicalName,
@@ -1349,40 +1511,20 @@ export async function createTimeReports(
                 projectName: grp.projectName,
                 number,
             });
-            op.step("reportCreated", {
-                projectId: grp.projectId,
-                woId: woId ?? "(mixed)",
-                number,
-                entries: grp.entryIds.length,
-            });
-        } catch (e) {
-            failed += grp.entryIds.length; // report creation failed → its entries fail
-            if (!firstError) firstError = serverErrorMessage(e);
-            logger.error("createReports.reportFailed", e, {
-                projectId: grp.projectId,
-                entries: grp.entryIds.length,
-            });
-            continue;
         }
-        for (const eid of grp.entryIds) {
-            try {
-                await webApi.updateRecord(PARENT.logicalName, eid, {
-                    [`${TIMEREPORT.entryNav}@odata.bind`]: `/${TIMEREPORT.entitySet}(${reportId})`,
-                });
-                assigned += 1;
-                assignedIds.push(eid);
-            } catch (e) {
-                failed += 1;
-                if (!firstError) firstError = serverErrorMessage(e);
-                logger.error("createReports.linkFailed", e, { entryId: eid });
-            }
-        }
+        op.step("reportCreated", {
+            projectId: grp.projectId,
+            mode,
+            number,
+            entries: grp.entryIds.length,
+            linked: linked.length,
+        });
     }
 
-    op.ok({ reportsCreated: reports.length, assigned, failed });
+    op.ok({ reportsCreated, assigned, failed });
     return {
         blocked: false,
-        reportsCreated: reports.length,
+        reportsCreated,
         assigned,
         failed,
         assignedIds,

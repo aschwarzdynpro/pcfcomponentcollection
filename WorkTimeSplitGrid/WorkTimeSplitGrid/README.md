@@ -91,11 +91,15 @@ deletes the original.
   (`sst_Arbeitsauftrag`) is only set when **all** entries of that project group
   share the same work order, and left empty otherwise so dual-write never gets an
   arbitrary `WORKORDER`. The note's `sst_name` is **`Timereport <yyyy-MM-dd> /
-  <resource name>`** — matching the parallel cloud flow
-  (`concat('Timereport ', date, ' / ', resource.name)`; date = today (local ISO),
-  resource = the resource of the **first selected entry** (`sst_resource_ref.name`),
-  like the flow's `Get_Resource` step). Entries already assigned to a delivery note
-  are rejected.
+  <resource names>`** — date = today (local ISO), followed by the names of **all
+  distinct resources** whose entries go onto that note (`sst_resource_ref.name`,
+  falling back to `sst_resource`; selection order, comma-separated, capped at 100
+  characters with `…`). Entries already assigned to a delivery note are rejected.
+  Each note is created **together with its entry links in one transactional
+  `$batch` changeset** (the links reference the new note as `$1`) — per project
+  it's all-or-nothing, so a rejected link can no longer leave an empty or
+  half-linked delivery note behind. Only when `$batch` is unreachable in the host
+  does it fall back to sequential Web API calls.
   While the notes are being created a **progress overlay** blocks the list so
   the user can't keep clicking. (Ported from the Schulz `createTimeReport`
   ribbon command.)
@@ -111,8 +115,10 @@ deletes the original.
   This month**, by `sst_date`) sits in a sub-toolbar; sorting (**date
   newest/oldest, project, resource, duration**) is a compact **sort icon** in the
   top row next to the search box, opening a custom, dependency-free dropdown
-  (click-outside / Escape close, keyboard navigation). Both apply client-side
-  over the loaded set, so they're instant. The command bar shows **no record
+  (click-outside / Escape close, keyboard navigation). The period is applied
+  **server-side** (`sst_date ge <local start of today/week/month>` in the list
+  query), so narrowing it loads far less data for "All hours"; sorting is
+  client-side and instant. The command bar shows **no record
   count** (it caused a layout shift on filter changes and isn't needed).
 - **Search-match highlight** — matching substrings are highlighted in the card
   title and chips as you type. The project-name chip is searched too.
