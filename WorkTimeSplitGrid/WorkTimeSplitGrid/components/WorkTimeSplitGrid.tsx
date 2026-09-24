@@ -13,6 +13,7 @@ import {
 } from "./grouping";
 import { Dropdown } from "./Dropdown";
 import { InfoPopover } from "./InfoPopover";
+import { MobileToolbar } from "./MobileToolbar";
 import { CollapsibleActionBar } from "./CollapsibleActionBar";
 import { EntryRow, Lang, SubtypeRow } from "./types";
 import { STRINGS } from "./i18n";
@@ -1027,7 +1028,39 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         );
     }
 
-    const detailOpen = props.singlePane && mode === "split" && !!selected;
+    const detailOpen =
+        props.singlePane && mode === "split" && (!!selected || !!selectedDay);
+
+    // Phone toolbar: settings that differ from the defaults (filter badge) and
+    // the one-line summary of the active view.
+    const periodOptions = (
+        [
+            ["all", t.periodAll],
+            ["today", t.periodToday],
+            ["week", t.periodWeek],
+            ["month", t.periodMonth],
+        ] as [Period, string][]
+    ).map(([value, label]) => ({ value, label }));
+    const sortOptions = [
+        { value: "dateDesc", label: t.sortDateDesc },
+        { value: "dateAsc", label: t.sortDateAsc },
+        { value: "project", label: t.sortProject },
+        { value: "resource", label: t.sortResource },
+        { value: "durationDesc", label: t.sortDuration },
+    ];
+    const mobileActiveCount =
+        (period !== "all" ? 1 : 0) +
+        (mobileGroup !== "day" ? 1 : 0) +
+        (sortBy !== "dateDesc" ? 1 : 0) +
+        (!myHoursActive ? 1 : 0);
+    const mobileSummary = [
+        periodOptions.find((o) => o.value === period)?.label,
+        groupDimLabel(mobileGroup),
+        sortOptions.find((o) => o.value === sortBy)?.label,
+        !myHoursActive ? t.allHours : "",
+    ]
+        .filter(Boolean)
+        .join(" · ");
     // Phone in landscape → two-pane "cockpit": touch styling, but list + detail
     // side by side and a compact (non-collapsing) command bar.
     const landscape = props.isMobile && !props.singlePane;
@@ -1038,7 +1071,43 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 landscape ? "wtsg-landscape" : ""
             } ${mode === "assign" ? "wtsg-assign" : ""}`}
         >
-            {!detailOpen && (
+            {!detailOpen && (props.isMobile ? (
+                <MobileToolbar
+                    strings={t}
+                    search={search}
+                    onSearch={setSearch}
+                    mode={mode}
+                    onMode={switchMode}
+                    period={period}
+                    periodOptions={periodOptions}
+                    onPeriod={(v) => {
+                        setPeriod(v as Period);
+                        setSelectedId(null);
+                    }}
+                    group={mobileGroup}
+                    groupOptions={(["day", "project"] as const).map((d) => ({
+                        value: d,
+                        label: groupDimLabel(d),
+                    }))}
+                    onGroup={(v) => setMobileGroup(v as "day" | "project")}
+                    sort={sortBy}
+                    sortOptions={sortOptions}
+                    onSort={(v) => setSortBy(v as SortKey)}
+                    isAdmin={isAdmin}
+                    allHours={!myHoursActive}
+                    onToggleAllHours={() => {
+                        if (!isAdmin) return;
+                        setMyHoursOnly((v) => !v);
+                        setSelectedId(null);
+                    }}
+                    activeCount={mobileActiveCount}
+                    summary={mobileSummary}
+                    onInfo={() => {
+                        setCopied(false);
+                        setShowInfo(true);
+                    }}
+                />
+            ) : (
             <CollapsibleActionBar
                 enabled={props.singlePane}
                 summary={summaryText}
@@ -1297,7 +1366,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                     )}
                 </div>
             </CollapsibleActionBar>
-            )}
+            ))}
 
             {toast && (
                 <div
@@ -1341,6 +1410,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 onRefresh={refresh}
                                 groups={groups}
                                 hiddenDims={activeDims}
+                                compactHeads={props.isMobile}
                                 onSelectDay={effectiveOffline ? undefined : selectDay}
                                 selectedDayKey={selectedDayKey}
                                 lang={props.lang}
@@ -1414,6 +1484,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                         onRefresh={refresh}
                         groups={groups}
                         hiddenDims={activeDims}
+                        compactHeads={props.isMobile}
                         onToggleGroup={effectiveOffline ? undefined : toggleGroupCheck}
                         lang={props.lang}
                         strings={t}

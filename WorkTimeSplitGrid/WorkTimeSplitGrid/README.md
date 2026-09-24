@@ -252,12 +252,18 @@ deletes the original.
     needed since both panes are visible. Rotating the device switches between
     portrait single-pane and landscape cockpit live (driven by the allocated
     width/height; needs ≥ 640px width, so small phones stay single-pane).
-- **Collapsible filter bar (phone)** — the search + mode + period + sort bar
-  collapses (animated) to a **one-line summary** (`🔍 Zuordnen · Alle · Datum
-  (newest) ⌄`) via a *"Hide filters"* trigger, maximizing the visible list;
-  tap the summary to expand it again. The summary reflects the active filters
-  live and shows a search-active dot. Desktop is unaffected (bar always full).
+- **Phone toolbar + bottom sheet** (`MobileToolbar.tsx`) — the phone shows
+  only two rows: search · **filter button** (badge = settings that differ from
+  the defaults) · info, and the mode toggle · a one-line **summary** of the
+  active view (`Alle · Tag · Datum (neueste)`) · ⓘ (how the day split works).
+  Period, grouping (*Day | Project*), sort and the *all hours* switch open as
+  a **bottom sheet** with large chips and a *Done* button (tap outside / Esc
+  closes it). The sheet's overlay layout is inline so a stale cached
+  stylesheet can't push it into the page flow. Desktop keeps the full bar.
   Respects `prefers-reduced-motion`.
+- **Compact day header (phone)** — one line: date · `A 8 h · F 1 h · Σ 9 h`
+  (work/travel coloured, full words in the tooltip) · round icon-only
+  *Split day* button (40 px touch target).
 - Assign the same control to **Web + Tablet + Phone** when adding it to the
   view; no separate mobile build to maintain.
 

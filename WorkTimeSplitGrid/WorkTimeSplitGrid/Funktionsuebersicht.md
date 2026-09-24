@@ -331,13 +331,19 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
     Drehen wechselt das Control live zwischen Hochformat-Einspalter und
     Querformat-Cockpit (anhand der zugewiesenen Breite/Höhe; ab ≥ 640px Breite,
     kleine Phones bleiben einspaltig).
-- **Einklappbare Filterleiste (Phone)** — die Leiste aus Suche + Modus +
-  Zeitraum + Sortierung klappt (animiert) auf eine **einzeilige Zusammenfassung**
-  zusammen (`🔍 Zuordnen · Alle · Datum (neueste) ⌄`), per *„Filter
-  ausblenden"*-Zeile — so bleibt die Liste maximal sichtbar; Antippen der
-  Zusammenfassung klappt sie wieder aus. Die Zusammenfassung spiegelt die aktiven
-  Filter live wider und zeigt einen Such-Punkt. Desktop unverändert
-  (Leiste immer voll). Respektiert `prefers-reduced-motion`.
+- **Handy-Toolbar + Bottom Sheet** (`MobileToolbar.tsx`) — das Handy zeigt nur
+  zwei Zeilen: Suche · **Filter-Button** (Zähler = vom Standard abweichende
+  Einstellungen) · Info, sowie Modus-Schalter · einzeilige **Zusammenfassung**
+  der aktiven Ansicht (`Alle · Tag · Datum (neueste)`) · ⓘ (Erklärung
+  Tagesaufteilung). Zeitraum, Gruppierung (*Tag | Projekt*), Sortierung und der
+  Schalter *Alle Stunden* öffnen sich als **Bottom Sheet** mit großen Chips und
+  *Fertig*-Button (Tippen daneben / Esc schließt). Das Overlay-Layout ist inline,
+  damit ein veraltetes, gecachtes Stylesheet es nicht in den Seitenfluss
+  schiebt. Desktop behält die volle Leiste. Respektiert
+  `prefers-reduced-motion`.
+- **Kompakter Tageskopf (Handy)** — eine Zeile: Datum · `A 8 h · F 1 h · Σ 9 h`
+  (Arbeit/Fahrzeit farbig, ausgeschrieben im Tooltip) · runder Icon-Button
+  *Tag aufteilen* (40 px Tippfläche).
 - Beim Hinzufügen zur View dasselbe Control **Web + Tablet + Phone** zuweisen —
   kein separater Mobil-Build zu pflegen.
 

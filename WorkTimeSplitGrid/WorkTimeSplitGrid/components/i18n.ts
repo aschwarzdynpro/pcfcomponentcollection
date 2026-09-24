@@ -118,6 +118,12 @@ export interface Strings {
     takeRemaining: string;
     /** Tooltip/aria for the star/AI pre-fill button. */
     suggest: string;
+    /** Mobile bottom sheet (period / grouping / sort / scope). */
+    sheetTitle: string;
+    sheetDone: string;
+    /** Abbreviations for the compact mobile day header ("A 8 · F 1 · Σ 9 h"). */
+    dayWorkShort: string;
+    dayTravelShort: string;
     /** List grouping (desktop: 2 dropdowns; mobile: Day | Project). */
     groupLabel: string;
     groupThen: string;
@@ -242,6 +248,10 @@ export const STRINGS: Record<Lang, Strings> = {
         back: "Back",
         takeRemaining: "Use remaining",
         suggest: "Suggest distribution (date + duration)",
+        sheetTitle: "Filters & view",
+        sheetDone: "Done",
+        dayWorkShort: "W",
+        dayTravelShort: "T",
         groupLabel: "Group by",
         groupThen: "then",
         groupNone: "None",
@@ -374,6 +384,10 @@ export const STRINGS: Record<Lang, Strings> = {
         back: "Zurück",
         takeRemaining: "Rest übernehmen",
         suggest: "Verteilung vorschlagen (Datum + Dauer)",
+        sheetTitle: "Filter & Ansicht",
+        sheetDone: "Fertig",
+        dayWorkShort: "A",
+        dayTravelShort: "F",
         groupLabel: "Gruppieren",
         groupThen: "dann",
         groupNone: "Keine",
@@ -508,6 +522,10 @@ export const STRINGS: Record<Lang, Strings> = {
         back: "Retour",
         takeRemaining: "Reporter le reste",
         suggest: "Proposer la répartition (date + durée)",
+        sheetTitle: "Filtres et affichage",
+        sheetDone: "Terminé",
+        dayWorkShort: "T",
+        dayTravelShort: "Tj",
         groupLabel: "Grouper par",
         groupThen: "puis",
         groupNone: "Aucun",

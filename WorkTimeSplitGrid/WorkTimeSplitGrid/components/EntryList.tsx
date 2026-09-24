@@ -44,6 +44,8 @@ export interface EntryListProps {
     selectedDayKey?: string | null;
     /** Assign mode: header checkbox (de)selects every entry of the group. */
     onToggleGroup?: (ids: string[], check: boolean) => void;
+    /** Phone: one-line level-0 header (text sums, icon-only split button). */
+    compactHeads?: boolean;
     /** UI language — drives the number formatting of the day sums. */
     lang?: Lang;
     strings: Strings;
@@ -117,6 +119,7 @@ export const EntryList: React.FC<EntryListProps> = ({
     onSelectDay,
     selectedDayKey,
     onToggleGroup,
+    compactHeads,
     lang = "de",
     strings,
 }) => {
@@ -353,6 +356,22 @@ export const EntryList: React.FC<EntryListProps> = ({
                 (r) => !r.completed && (r.kind === "work" || r.kind === "travel"),
             );
         const top = g.depth === 0;
+        const compact = top && !!compactHeads;
+        const splitIcon = (
+            <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+                <path
+                    d="M8 2v12M3 8h10M4.5 4.5l7 7M11.5 4.5l-7 7"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                />
+            </svg>
+        );
+        const sumsTitle =
+            `${strings.dayWork} ${hours(g.work)} · ` +
+            `${strings.dayTravel} ${hours(g.travel)} · ` +
+            `${strings.total} ${hours(g.total)}`;
         return (
             <div
                 key={g.key}
@@ -360,7 +379,13 @@ export const EntryList: React.FC<EntryListProps> = ({
                 role="group"
                 aria-label={g.label}
             >
-                <div className={top ? "wtsg-day-head" : "wtsg-sub-head"}>
+                <div
+                    className={
+                        top
+                            ? `wtsg-day-head ${compact ? "wtsg-day-head-compact" : ""}`
+                            : "wtsg-sub-head"
+                    }
+                >
                     <button
                         type="button"
                         className={`wtsg-collapse ${isCollapsed ? "collapsed" : ""}`}
@@ -387,27 +412,35 @@ export const EntryList: React.FC<EntryListProps> = ({
                     >
                         {g.label}
                     </span>
+                    {compact && (
+                        <span className="wtsg-day-sums-compact" title={sumsTitle}>
+                            <span className="wtsg-dsc-w">
+                                {strings.dayWorkShort} {hours(g.work)}
+                            </span>
+                            {" · "}
+                            <span className="wtsg-dsc-t">
+                                {strings.dayTravelShort} {hours(g.travel)}
+                            </span>
+                            {" · "}
+                            <strong>Σ {hours(g.total)}</strong>
+                        </span>
+                    )}
                     {canSplitDay && (
                         <button
                             type="button"
-                            className={`wtsg-day-split ${daySelected ? "active" : ""}`}
+                            className={`wtsg-day-split ${compact ? "wtsg-day-split-icon" : ""} ${
+                                daySelected ? "active" : ""
+                            }`}
                             onClick={() => onSelectDay!(g)}
                             title={strings.daySplitButton}
+                            aria-label={strings.daySplitButton}
                             aria-pressed={daySelected}
                         >
-                            <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
-                                <path
-                                    d="M8 2v12M3 8h10M4.5 4.5l7 7M11.5 4.5l-7 7"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="1.5"
-                                    strokeLinecap="round"
-                                />
-                            </svg>
-                            <span>{strings.daySplitButton}</span>
+                            {splitIcon}
+                            {!compact && <span>{strings.daySplitButton}</span>}
                         </button>
                     )}
-                    {top ? (
+                    {compact ? null : top ? (
                         <span className="wtsg-day-sums">
                             <span className="wtsg-day-sum wtsg-day-sum-work">
                                 <span className="wtsg-day-sum-label">{strings.dayWork}</span>{" "}
