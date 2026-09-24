@@ -439,6 +439,9 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 resourceUserId: myHoursActive ? currentUserId || null : null,
                 pauseValue: fields.pauseValue,
                 includeFixedPrice,
+                // Period → server-side lower bound on sst_date (less data for
+                // "today/week/month"); the client filter below stays exact.
+                fromDate: periodStart(period),
             });
         // Don't trust isOffline() as a hard gate — it can report a false
         // "offline" on a cold start even when the device is online. Attempt the
@@ -509,6 +512,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         mode,
         myHoursActive,
         includeFixedPrice,
+        period,
         roleChecked,
         currentUserId,
         props.webApi,
@@ -596,7 +600,9 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         (offlineEntries?.length ?? 0) === 0;
 
     // Period filter + free-text search (title, type, date, project number,
-    // resource name) + sorting — all client-side over the source entries.
+    // resource name) + sorting over the source entries. Online the period is
+    // also applied server-side (loadEntries `fromDate`); it is re-applied here
+    // for the offline dataset and so the boundary is exact either way.
     const displayRows = React.useMemo(() => {
         const all = sourceEntries ?? [];
         const q = search.trim().toLowerCase();
@@ -802,10 +808,15 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     // selected entry; until then the panel shows a progress indicator (no flicker).
     const subtypesMatched = !!selectedId && subtypesEntryId === selectedId;
 
+    // One timer for the toast: a new toast cancels the previous hide-timer, so
+    // it isn't cut short by an older toast's (shorter) timeout.
+    const toastTimer = React.useRef<number | undefined>(undefined);
     const flashToast = React.useCallback((msg: string, durationMs = 4000) => {
+        window.clearTimeout(toastTimer.current);
         setToast(msg);
-        window.setTimeout(() => setToast(null), durationMs);
+        toastTimer.current = window.setTimeout(() => setToast(null), durationMs);
     }, []);
+    React.useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
     // Assemble the debug/info blob (version + context + buffered telemetry).
     const buildDebugText = (): string => {

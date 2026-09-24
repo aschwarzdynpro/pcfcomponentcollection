@@ -90,18 +90,23 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
     (`sst_deliverynotenumberassembly_str`, mit dem Projekt als Unterzeile)
     auflistet, sodass der Benutzer wählt, welchen er öffnet.
   Beide erstellen **je Projekt** einen Lieferschein (`sst_timereports`,
-  `sst_name` = „Timereport <yyyy-MM-dd> / <Ressourcenname>" — deckungsgleich mit dem
-  parallelen Cloud Flow (`concat('Timereport ', date, ' / ', resource.name)`),
-  Datum = heute (lokal, ISO), Ressource = Name der Ressource des **ersten
-  ausgewählten Eintrags** (`sst_resource_ref.name`, analog zum `Get_Resource`-Schritt
-  des Flows); Projekt → `sst_Projekt` → msdyn_project)
+  `sst_name` = „Timereport <yyyy-MM-dd> / <Ressourcennamen>" — Datum = heute
+  (lokal, ISO), danach die Namen **aller unterschiedlichen Ressourcen**, deren
+  Zeiten auf diesem Lieferschein landen (`sst_resource_ref.name`, Fallback
+  `sst_resource`; in Auswahlreihenfolge, kommagetrennt, max. 100 Zeichen mit „…");
+  Projekt → `sst_Projekt` → msdyn_project)
   und verknüpfen jeden ausgewählten Eintrag via `sst_TimeReport` mit dem
   Lieferschein seines Projekts — 5 Zeiten auf 2 Projekten ergeben also
   **2 Lieferscheine**. Der **Arbeitsauftrag** (`sst_Arbeitsauftrag`) wird nur
   gesetzt, wenn **alle** Zeiten der Projektgruppe denselben Arbeitsauftrag haben;
   bei gemischten Gruppen bleibt er leer, damit über Dual Write kein willkürlicher
   `WORKORDER` nach AX geht. Bereits zugeordnete Einträge werden
-  abgewiesen. Während der Erstellung blendet sich ein **Fortschritts-Overlay**
+  abgewiesen. Jeder Lieferschein wird **zusammen mit den Verknüpfungen seiner
+  Einträge in einem transaktionalen `$batch`-Changeset** angelegt (Verweis auf
+  den neuen Lieferschein per `$1`) — je Projekt alles-oder-nichts, es bleiben also
+  keine leeren oder halb verknüpften Lieferscheine mehr zurück. Nur wenn `$batch`
+  im Host nicht erreichbar ist, wird auf sequenzielle Web-API-Aufrufe
+  zurückgefallen. Während der Erstellung blendet sich ein **Fortschritts-Overlay**
   über die Liste, damit der Benutzer nicht weiterklickt und sieht, dass im
   Hintergrund etwas passiert. (Portiert aus dem Schulz-Ribbon-Command
   `createTimeReport`.)
@@ -119,8 +124,10 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   Sortierung (**Datum neueste/älteste, Projekt, Ressource, Dauer**) ist ein
   kompaktes **Sortier-Icon** in der oberen Zeile neben dem Suchfeld und öffnet ein
   eigenes, bibliotheksfreies Dropdown (schließt per Klick-außerhalb / Esc,
-  Tastatur-Navigation). Beide wirken clientseitig auf die geladene Menge — also
-  sofort. Die Befehlsleiste zeigt **keine Datensatz-Anzahl** (sie verursachte
+  Tastatur-Navigation). Der Zeitraum wird **serverseitig** angewendet
+  (`sst_date ge <lokaler Beginn von heute/Woche/Monat>` in der Listenabfrage) —
+  bei „Alle Stunden" werden so deutlich weniger Daten geladen; die Sortierung
+  wirkt clientseitig und sofort. Die Befehlsleiste zeigt **keine Datensatz-Anzahl** (sie verursachte
   beim Filterwechsel einen Layout-Sprung und wird nicht benötigt).
 - **Treffer-Hervorhebung** — passende Teilstrings werden beim Tippen im
   Karten-Titel und in den Chips hervorgehoben.
