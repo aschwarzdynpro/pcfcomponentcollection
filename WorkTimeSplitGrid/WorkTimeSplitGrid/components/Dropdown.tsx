@@ -14,6 +14,8 @@ export interface DropdownProps {
     className?: string;
     /** When set, the trigger renders just this icon (compact, no value/chevron). */
     icon?: React.ReactNode;
+    /** Greyed out + not openable (keeps its place in the layout). */
+    disabled?: boolean;
 }
 
 /**
@@ -28,6 +30,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
     ariaLabel,
     className,
     icon,
+    disabled,
 }) => {
     const [open, setOpen] = React.useState(false);
     const rootRef = React.useRef<HTMLDivElement>(null);
@@ -52,7 +55,13 @@ export const Dropdown: React.FC<DropdownProps> = ({
         setOpen(false);
     };
 
+    // A disabled dropdown must not stay open (e.g. disabled while open).
+    React.useEffect(() => {
+        if (disabled) setOpen(false);
+    }, [disabled]);
+
     const onKeyDown = (e: React.KeyboardEvent) => {
+        if (disabled) return;
         if (e.key === "Escape") {
             if (open) {
                 e.stopPropagation();
@@ -93,6 +102,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                 aria-expanded={open}
                 aria-label={ariaLabel}
                 title={icon ? ariaLabel : undefined}
+                disabled={disabled}
                 onClick={() => setOpen((v) => !v)}
             >
                 {icon ?? (

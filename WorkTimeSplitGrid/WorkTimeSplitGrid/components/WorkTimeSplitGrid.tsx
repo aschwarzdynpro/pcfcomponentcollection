@@ -1,11 +1,23 @@
 import * as React from "react";
 import { EntryList } from "./EntryList";
 import { SplitPanel } from "./SplitPanel";
+import { DaySplitPanel } from "./DaySplitPanel";
+import {
+    DayScope,
+    GroupDim,
+    GroupNode,
+    buildGroups,
+    dayLabel,
+    nodeScopeKey,
+    rowScopeKey,
+} from "./grouping";
 import { Dropdown } from "./Dropdown";
+import { InfoPopover } from "./InfoPopover";
+import { MobileToolbar } from "./MobileToolbar";
 import { CollapsibleActionBar } from "./CollapsibleActionBar";
 import { EntryRow, Lang, SubtypeRow } from "./types";
 import { STRINGS } from "./i18n";
-import { FieldConfig, ADMIN_ROLES, TIMEREPORT } from "./schema";
+import { FieldConfig, ADMIN_ROLES, TIMEREPORT, classifyType } from "./schema";
 import {
     loadSubtypes,
     userHasAnyRole,
@@ -111,6 +123,7 @@ export interface WorkTimeSplitGridProps {
 /** Map a server-loaded entry to a master-list row with the composed title. */
 function toEntryRow(
     e: LoadedEntry,
+    fields: FieldConfig,
     title: (type: string, date: string) => string,
 ): EntryRow {
     return {
@@ -119,12 +132,14 @@ function toEntryRow(
         date: e.date,
         dateValue: e.dateValue,
         type: e.type,
+        kind: classifyType(e.type, fields),
         total: e.total,
         totalFormatted: e.totalFormatted,
         completed: e.completed,
         project: e.project,
         projectName: e.projectName,
         bookingNumber: e.bookingNumber,
+        startValue: e.startValue || undefined,
         resourceName: e.resourceName,
         timereport: e.timereport,
         projectPresent: !!e.projectId,
@@ -238,6 +253,7 @@ function buildOfflineEntries(
             date,
             dateValue: toIso(get(fields.date)),
             type,
+            kind: classifyType(type, fields),
             total: Number.isFinite(total) ? total : 0,
             totalFormatted:
                 fmt(fields.total) ||
@@ -264,6 +280,24 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const [period, setPeriod] = React.useState<Period>("all");
     const [sortBy, setSortBy] = React.useState<SortKey>("dateDesc");
     const [selectedId, setSelectedId] = React.useState<string | null>(null);
+    // Day-level split: the selected person-day scope ("<day>|<resource>") plus
+    // the project of the header it was opened from (for the "also contains"
+    // hint) — mutually exclusive with `selectedId` (one detail pane).
+    const [daySel, setDaySel] = React.useState<{
+        key: string;
+        fromProject?: string;
+    } | null>(null);
+    const selectedDayKey = daySel?.key ?? null;
+    // List grouping. Desktop: up to two of project / resource / day; mobile
+    // (fitter use): exactly one of day / project. Session state only.
+    const [groupDims, setGroupDims] = React.useState<
+        [GroupDim | "none", GroupDim | "none"]
+    >(["day", "none"]);
+    const [mobileGroup, setMobileGroup] = React.useState<
+        "none" | "day" | "project"
+    >(
+        "day",
+    );
     // Assign mode multi-selection + in-flight "create delivery notes" state.
     const [checkedIds, setCheckedIds] = React.useState<Set<string>>(
         () => new Set(),
@@ -445,7 +479,9 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                     setEffectiveOffline(true); // confirmed offline → block
                     return;
                 }
-                setEntries(loaded.map((e) => toEntryRow(e, t.title)));
+                setEntries(
+                    loaded.map((e) => toEntryRow(e, fields, t.title)),
+                );
                 setEffectiveOffline(false); // the live query answered → online
             },
             (err) => {
@@ -583,6 +619,111 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         return sortRows(filtered, sortBy);
     }, [sourceEntries, search, period, sortBy]);
 
+    // Effective grouping: resource only on desktop and only while "all hours"
+    // is shown (with "my hours" it would always be a single group); level 2
+    // must differ from level 1 and needs a level 1.
+    const activeDims = React.useMemo((): GroupDim[] => {
+        if (props.isMobile) return mobileGroup === "none" ? [] : [mobileGroup];
+        const ok = (d: GroupDim | "none"): d is GroupDim =>
+            d !== "none" && (d !== "resource" || !myHoursActive);
+        const [a, b] = groupDims;
+        if (!ok(a)) return ok(b) ? [b] : [];
+        return ok(b) && b !== a ? [a, b] : [a];
+    }, [props.isMobile, mobileGroup, groupDims, myHoursActive]);
+
+    const groups = React.useMemo(
+        () =>
+            buildGroups(
+                displayRows,
+                activeDims,
+                props.lang,
+                { noProject: t.groupNoProject, noResource: t.groupNoResource },
+                sortBy === "dateAsc",
+            ),
+        [displayRows, activeDims, props.lang, t, sortBy],
+    );
+
+    // Day-split scope: ALL loaded open entries of that person on that day —
+    // across projects and ignoring the search term, so a day is never split
+    // partially (8 h rule, Sunday and holiday are per person per day).
+    const selectedDay = React.useMemo((): DayScope | null => {
+        if (!daySel) return null;
+        const rows = (sourceEntries ?? []).filter(
+            (r) => rowScopeKey(r) === daySel.key,
+        );
+        if (rows.length === 0) return null;
+        const first = rows[0];
+        const resources = new Set(
+            (sourceEntries ?? []).map((r) => (r.resourceName ?? "").trim()),
+        );
+        const resName = (first.resourceName ?? "").trim();
+        const label =
+            dayLabel(first, props.lang) +
+            (resources.size > 1 && resName ? ` · ${resName}` : "");
+        const others = Array.from(
+            new Set(
+                rows
+                    .map((r) => (r.project || r.projectName || "").trim())
+                    .filter((pr) => pr && pr !== daySel.fromProject),
+            ),
+        );
+        return {
+            key: daySel.key,
+            label,
+            dateIso: first.dateValue ?? "",
+            rows,
+            note:
+                daySel.fromProject !== undefined && others.length
+                    ? t.daySplitAlso(others.join(", "))
+                    : undefined,
+        };
+    }, [daySel, sourceEntries, props.lang, t]);
+    // A day selection that no longer exists (rows gone after a save) is
+    // dropped so the pane falls back to the hint.
+    React.useEffect(() => {
+        if (daySel && !selectedDay) setDaySel(null);
+    }, [daySel, selectedDay]);
+
+    const selectEntry = React.useCallback((id: string | null) => {
+        setSelectedId(id);
+        if (id) setDaySel(null);
+    }, []);
+    const selectDay = React.useCallback((node: GroupNode) => {
+        const key = nodeScopeKey(node);
+        if (!key) return;
+        setDaySel((cur) =>
+            cur?.key === key ? null : { key, fromProject: node.project },
+        );
+        setSelectedId(null);
+    }, []);
+
+    // Assign mode: header checkbox (de)selects all entries of a group.
+    const toggleGroupCheck = React.useCallback(
+        (ids: string[], check: boolean) => {
+            setCheckedIds((prev) => {
+                const n = new Set(prev);
+                for (const id of ids) {
+                    if (check) n.add(id);
+                    else n.delete(id);
+                }
+                return n;
+            });
+        },
+        [],
+    );
+
+    const groupDimLabel = React.useCallback(
+        (d: GroupDim | "none"): string =>
+            d === "day"
+                ? t.groupDay
+                : d === "project"
+                  ? t.sortProject
+                  : d === "resource"
+                    ? t.sortResource
+                    : t.groupNone,
+        [t],
+    );
+
     // Compact one-liner of the active filters for the collapsed mobile bar:
     // "<search> · <mode> · <period> · <sort>" (search part only when set).
     const summaryText = React.useMemo(() => {
@@ -602,10 +743,15 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             resource: t.sortResource,
             durationDesc: t.sortDuration,
         };
-        const core = [modeLabel, periodLabel, sortLabels[sortBy]].join(" · ");
+        const groupPart = activeDims.length
+            ? `${t.groupLabel}: ${activeDims.map(groupDimLabel).join(" › ")}`
+            : "";
+        const core = [modeLabel, periodLabel, sortLabels[sortBy], groupPart]
+            .filter(Boolean)
+            .join(" · ");
         const q = search.trim();
         return q ? `„${q}" · ${core}` : core;
-    }, [mode, period, sortBy, search, t]);
+    }, [mode, period, sortBy, search, t, activeDims, groupDimLabel]);
 
     const selected = React.useMemo(
         () => displayRows.find((r) => r.id === selectedId) ?? null,
@@ -717,9 +863,23 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         setSubtypes(null);
     }, [selectedId, removeEntries, flashToast, t.saveSucceeded]);
 
+    // Day split saved: drop the split entries locally; when the fallback path
+    // stopped part-way (`failedId`), the panel already showed the partial
+    // message — reload from the server so the list reflects the true state.
+    const handleDaySaved = React.useCallback(
+        (savedIds: string[], failedId?: string) => {
+            if (!failedId) flashToast(t.daySplitSaved(savedIds.length));
+            if (savedIds.length) removeEntries(savedIds);
+            setDaySel(null);
+            if (failedId) refresh();
+        },
+        [removeEntries, flashToast, t, refresh],
+    );
+
     const switchMode = React.useCallback((m: Mode) => {
         setMode(m);
         setSelectedId(null);
+        setDaySel(null);
         setCheckedIds(new Set());
     }, []);
 
@@ -870,7 +1030,39 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         );
     }
 
-    const detailOpen = props.singlePane && mode === "split" && !!selected;
+    const detailOpen =
+        props.singlePane && mode === "split" && (!!selected || !!selectedDay);
+
+    // Phone toolbar: settings that differ from the defaults (filter badge) and
+    // the one-line summary of the active view.
+    const periodOptions = (
+        [
+            ["all", t.periodAll],
+            ["today", t.periodToday],
+            ["week", t.periodWeek],
+            ["month", t.periodMonth],
+        ] as [Period, string][]
+    ).map(([value, label]) => ({ value, label }));
+    const sortOptions = [
+        { value: "dateDesc", label: t.sortDateDesc },
+        { value: "dateAsc", label: t.sortDateAsc },
+        { value: "project", label: t.sortProject },
+        { value: "resource", label: t.sortResource },
+        { value: "durationDesc", label: t.sortDuration },
+    ];
+    const mobileActiveCount =
+        (period !== "all" ? 1 : 0) +
+        (mobileGroup !== "day" ? 1 : 0) +
+        (sortBy !== "dateDesc" ? 1 : 0) +
+        (!myHoursActive ? 1 : 0);
+    const mobileSummary = [
+        periodOptions.find((o) => o.value === period)?.label,
+        mobileGroup === "none" ? t.groupOff : groupDimLabel(mobileGroup),
+        sortOptions.find((o) => o.value === sortBy)?.label,
+        !myHoursActive ? t.allHours : "",
+    ]
+        .filter(Boolean)
+        .join(" · ");
     // Phone in landscape → two-pane "cockpit": touch styling, but list + detail
     // side by side and a compact (non-collapsing) command bar.
     const landscape = props.isMobile && !props.singlePane;
@@ -881,7 +1073,44 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                 landscape ? "wtsg-landscape" : ""
             } ${mode === "assign" ? "wtsg-assign" : ""}`}
         >
-            {!detailOpen && (
+            {!detailOpen && (props.isMobile ? (
+                <MobileToolbar
+                    strings={t}
+                    search={search}
+                    onSearch={setSearch}
+                    mode={mode}
+                    onMode={switchMode}
+                    period={period}
+                    periodOptions={periodOptions}
+                    onPeriod={(v) => {
+                        setPeriod(v as Period);
+                        setSelectedId(null);
+                    }}
+                    group={mobileGroup}
+                    groupOptions={(["none", "day", "project"] as const).map(
+                        (d) => ({ value: d, label: groupDimLabel(d) }),
+                    )}
+                    onGroup={(v) =>
+                        setMobileGroup(v as "none" | "day" | "project")
+                    }
+                    sort={sortBy}
+                    sortOptions={sortOptions}
+                    onSort={(v) => setSortBy(v as SortKey)}
+                    isAdmin={isAdmin}
+                    allHours={!myHoursActive}
+                    onToggleAllHours={() => {
+                        if (!isAdmin) return;
+                        setMyHoursOnly((v) => !v);
+                        setSelectedId(null);
+                    }}
+                    activeCount={mobileActiveCount}
+                    summary={mobileSummary}
+                    onInfo={() => {
+                        setCopied(false);
+                        setShowInfo(true);
+                    }}
+                />
+            ) : (
             <CollapsibleActionBar
                 enabled={props.singlePane}
                 summary={summaryText}
@@ -1052,9 +1281,74 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                             </button>
                         ))}
                     </div>
+                    <div className="wtsg-grouping">
+                            <span className="wtsg-grouping-label">
+                                {t.groupLabel}
+                            </span>
+                            <Dropdown
+                                className="wtsg-groupdd"
+                                value={activeDims[0] ?? "none"}
+                                ariaLabel={t.groupLabel}
+                                onChange={(v) =>
+                                    setGroupDims(([, b]) => [
+                                        v as GroupDim | "none",
+                                        v === "none" || b === v ? "none" : b,
+                                    ])
+                                }
+                                options={(
+                                    [
+                                        "none",
+                                        "project",
+                                        ...(myHoursActive ? [] : ["resource"]),
+                                        "day",
+                                    ] as (GroupDim | "none")[]
+                                ).map((d) => ({ value: d, label: groupDimLabel(d) }))}
+                            />
+                            <span
+                                className={`wtsg-grouping-label ${
+                                    activeDims.length === 0 ? "disabled" : ""
+                                }`}
+                            >
+                                {t.groupThen}
+                            </span>
+                            <Dropdown
+                                className="wtsg-groupdd"
+                                value={activeDims[1] ?? "none"}
+                                ariaLabel={`${t.groupLabel} (2)`}
+                                disabled={activeDims.length === 0}
+                                onChange={(v) => {
+                                    if (activeDims[0]) {
+                                        setGroupDims([
+                                            activeDims[0],
+                                            v as GroupDim | "none",
+                                        ]);
+                                    }
+                                }}
+                                options={(
+                                    [
+                                        "none",
+                                        "project",
+                                        ...(myHoursActive ? [] : ["resource"]),
+                                        "day",
+                                    ] as (GroupDim | "none")[]
+                                )
+                                    .filter((d) => d !== activeDims[0])
+                                    .map((d) => ({
+                                        value: d,
+                                        label: groupDimLabel(d),
+                                    }))}
+                            />
+                            {mode === "split" && (
+                                <InfoPopover
+                                    label={t.daySplitInfoTitle}
+                                    title={t.daySplitInfoTitle}
+                                    points={t.daySplitInfoPoints}
+                                />
+                            )}
+                        </div>
                 </div>
             </CollapsibleActionBar>
-            )}
+            ))}
 
             {toast && (
                 <div
@@ -1080,11 +1374,11 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             >
                 {mode === "split" ? (
                     <>
-                        {(!props.singlePane || !selected) && (
+                        {(!props.singlePane || (!selected && !selectedDay)) && (
                             <EntryList
                                 rows={displayRows}
                                 selectedId={selectedId}
-                                onSelect={setSelectedId}
+                                onSelect={selectEntry}
                                 emptyMessage={
                                     search.trim()
                                         ? t.noResultsSearch
@@ -1096,10 +1390,33 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 enablePull={props.isMobile}
                                 refreshing={refreshing}
                                 onRefresh={refresh}
+                                groups={groups}
+                                hiddenDims={activeDims}
+                                compactHeads={props.isMobile}
+                                onSelectDay={effectiveOffline ? undefined : selectDay}
+                                selectedDayKey={selectedDayKey}
+                                lang={props.lang}
                                 strings={t}
                             />
                         )}
-                        {(!props.singlePane || !!selected) && (
+                        {selectedDay ? (
+                            <DaySplitPanel
+                                group={selectedDay}
+                                fields={fields}
+                                webApi={props.webApi}
+                                utils={props.utils}
+                                disabled={props.disabled}
+                                isMobile={props.isMobile}
+                                singlePane={props.singlePane}
+                                isOffline={effectiveOffline}
+                                showSuggest={props.showSuggest}
+                                lang={props.lang}
+                                logger={props.logger}
+                                onBack={() => setDaySel(null)}
+                                onSaved={handleDaySaved}
+                                onError={(msg) => flashToast(msg, 9000)}
+                            />
+                        ) : (!props.singlePane || !!selected) && (
                             <SplitPanel
                                 entry={selected}
                                 subtypes={subtypesMatched ? subtypes : null}
@@ -1122,6 +1439,11 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 onSubtypesChange={setSubtypes}
                                 onSaved={handleSaved}
                                 onError={(msg) => flashToast(msg, 9000)}
+                                hint={
+                                    groups && !effectiveOffline
+                                        ? t.selectHintDay
+                                        : undefined
+                                }
                             />
                         )}
                     </>
@@ -1142,6 +1464,11 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                         enablePull={props.isMobile}
                         refreshing={refreshing}
                         onRefresh={refresh}
+                        groups={groups}
+                        hiddenDims={activeDims}
+                        compactHeads={props.isMobile}
+                        onToggleGroup={effectiveOffline ? undefined : toggleGroupCheck}
+                        lang={props.lang}
                         strings={t}
                     />
                 )}

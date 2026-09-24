@@ -96,6 +96,11 @@ export interface Strings {
     errLoadSubtypes: string;
     noSubtypes: string;
     total: string;
+    /** Per-day summary labels in the master list ("Work 6.5 h · Travel 1 h"). */
+    dayWork: string;
+    dayTravel: string;
+    /** Duration unit suffix for the day sums ("h"). */
+    hoursUnit: string;
     distributed: string;
     remaining: string;
     save: string;
@@ -113,6 +118,44 @@ export interface Strings {
     takeRemaining: string;
     /** Tooltip/aria for the star/AI pre-fill button. */
     suggest: string;
+    /** Mobile bottom sheet (period / grouping / sort / scope). */
+    sheetTitle: string;
+    sheetDone: string;
+    /** Abbreviations for the compact mobile day header ("A 8 · F 1 · Σ 9 h"). */
+    dayWorkShort: string;
+    dayTravelShort: string;
+    /** List grouping (desktop: 2 dropdowns; mobile: Day | Project). */
+    groupLabel: string;
+    groupThen: string;
+    groupNone: string;
+    /** Summary text when grouping is switched off ("no grouping"). */
+    groupOff: string;
+    groupDay: string;
+    groupNoProject: string;
+    groupNoResource: string;
+    groupSelectAll: string;
+    groupCollapse: string;
+    groupExpand: string;
+    /** Info popover next to the grouping controls: how the day split works. */
+    daySplitInfoTitle: string;
+    daySplitInfoPoints: string[];
+    /** Day split opened below a project that isn't the whole person-day. */
+    daySplitAlso: (projects: string) => string;
+    /** Day-level split (list header button + editor). */
+    daySplitButton: string;
+    daySplitTitle: string;
+    daySplitEntries: (n: number) => string;
+    /** Entries of the day whose type is neither work nor travel. */
+    daySplitOther: (n: number) => string;
+    daySplitNoEntries: string;
+    daySplitPreview: string;
+    /** An entry lacks the subtype row the user assigned hours to. */
+    daySplitMissingSubtype: (entry: string, subtype: string) => string;
+    daySplitConfirmBody: (entries: number, splits: number) => string;
+    daySplitSaved: (n: number) => string;
+    daySplitPartial: (saved: number, total: number) => string;
+    /** Hint in the empty detail pane (split mode). */
+    selectHintDay: string;
     /** Composed list/detail title: "<type> am <date>". */
     title: (type: string, date: string) => string;
 }
@@ -187,6 +230,9 @@ export const STRINGS: Record<Lang, Strings> = {
         errLoadSubtypes: "Could not load the work subtypes.",
         noSubtypes: "No work subtypes found for this entry.",
         total: "Total",
+        dayWork: "Work",
+        dayTravel: "Travel",
+        hoursUnit: "h",
         distributed: "Distributed",
         remaining: "Remaining",
         save: "Save split",
@@ -204,6 +250,48 @@ export const STRINGS: Record<Lang, Strings> = {
         back: "Back",
         takeRemaining: "Use remaining",
         suggest: "Suggest distribution (date + duration)",
+        sheetTitle: "Filters & view",
+        sheetDone: "Done",
+        dayWorkShort: "W",
+        dayTravelShort: "T",
+        groupLabel: "Group by",
+        groupThen: "then",
+        groupNone: "None",
+        groupOff: "No grouping",
+        groupDay: "Day",
+        groupNoProject: "(no project)",
+        groupNoResource: "(no resource)",
+        groupSelectAll: "Select all in this group",
+        groupCollapse: "Collapse",
+        groupExpand: "Expand",
+        daySplitInfoTitle: 'How "Split day" works',
+        daySplitInfoPoints: [
+            '"Split day" appears on headers that show exactly one day of one person — e.g. grouped by Day, Resource › Day or Day › Resource.',
+            "The whole day of that person is always split — across all projects and regardless of the search.",
+            "Work and travel time are distributed separately. ★ suggests a distribution from the 8-hour rule, Sunday and public holidays.",
+            "The hours are poured into the entries in chronological order: Normal first, overtime lands on the last entries of the day. Every entry keeps its own total.",
+            "A preview shows the result per entry before saving. The day is saved in one step — all entries or none.",
+        ],
+        daySplitAlso: (projects) =>
+            `The whole day is split — also contains entries from: ${projects}`,
+        daySplitButton: "Split day",
+        daySplitTitle: "Day split",
+        daySplitEntries: (n) => (n === 1 ? "1 entry" : `${n} entries`),
+        daySplitOther: (n) =>
+            n === 1
+                ? "1 entry of another type is not distributed."
+                : `${n} entries of another type are not distributed.`,
+        daySplitNoEntries: "No open work / travel entries on this day.",
+        daySplitPreview: "Preview per entry",
+        daySplitMissingSubtype: (entry, subtype) =>
+            `"${entry}" has no subtype "${subtype}".`,
+        daySplitConfirmBody: (entries, splits) =>
+            `${entries} entries will be replaced by ${splits} split records and deleted. Continue?`,
+        daySplitSaved: (n) =>
+            n === 1 ? "1 entry split." : `${n} entries split.`,
+        daySplitPartial: (saved, total) =>
+            `Only ${saved} of ${total} entries were split — the list has been refreshed.`,
+        selectHintDay: "Select an entry or a day to distribute its hours.",
         title: (type, date) => {
             let s = type || "—";
             if (date) s += ` on ${date}`;
@@ -279,6 +367,9 @@ export const STRINGS: Record<Lang, Strings> = {
         errLoadSubtypes: "Die Work Subtypes konnten nicht geladen werden.",
         noSubtypes: "Für diesen Eintrag wurden keine Work Subtypes gefunden.",
         total: "Gesamt",
+        dayWork: "Arbeit",
+        dayTravel: "Fahrzeit",
+        hoursUnit: "h",
         distributed: "Verteilt",
         remaining: "Rest",
         save: "Aufteilung speichern",
@@ -296,6 +387,50 @@ export const STRINGS: Record<Lang, Strings> = {
         back: "Zurück",
         takeRemaining: "Rest übernehmen",
         suggest: "Verteilung vorschlagen (Datum + Dauer)",
+        sheetTitle: "Filter & Ansicht",
+        sheetDone: "Fertig",
+        dayWorkShort: "A",
+        dayTravelShort: "F",
+        groupLabel: "Gruppieren",
+        groupThen: "dann",
+        groupNone: "Keine",
+        groupOff: "Ohne Gruppierung",
+        groupDay: "Tag",
+        groupNoProject: "(ohne Projekt)",
+        groupNoResource: "(ohne Ressource)",
+        groupSelectAll: "Alle in dieser Gruppe auswählen",
+        groupCollapse: "Einklappen",
+        groupExpand: "Aufklappen",
+        daySplitInfoTitle: 'So funktioniert „Tag aufteilen"',
+        daySplitInfoPoints: [
+            '„Tag aufteilen" erscheint an Kopfzeilen, die genau einen Tag einer Person zeigen — z. B. bei Gruppierung Tag, Ressource › Tag oder Tag › Ressource.',
+            "Aufgeteilt wird immer der ganze Tag der Person — über alle Projekte und unabhängig von der Suche.",
+            "Arbeit und Fahrzeit werden getrennt verteilt. ★ schlägt eine Verteilung nach 8-Stunden-Regel, Sonntag und Feiertag vor.",
+            "Die Stunden werden chronologisch auf die Einträge verteilt: Normal zuerst, Überstunden landen auf den letzten Einträgen des Tages. Jeder Eintrag behält seine Gesamtzeit.",
+            "Eine Vorschau zeigt das Ergebnis je Eintrag vor dem Speichern. Gespeichert wird der Tag in einem Schritt — alle Einträge oder keiner.",
+        ],
+        daySplitAlso: (projects) =>
+            `Es wird der ganze Tag aufgeteilt — enthält auch Einträge aus: ${projects}`,
+        daySplitButton: "Tag aufteilen",
+        daySplitTitle: "Tagesaufteilung",
+        daySplitEntries: (n) => (n === 1 ? "1 Eintrag" : `${n} Einträge`),
+        daySplitOther: (n) =>
+            n === 1
+                ? "1 Eintrag mit anderem Typ wird nicht verteilt."
+                : `${n} Einträge mit anderem Typ werden nicht verteilt.`,
+        daySplitNoEntries:
+            "Keine offenen Arbeits-/Fahrzeit-Einträge an diesem Tag.",
+        daySplitPreview: "Vorschau je Eintrag",
+        daySplitMissingSubtype: (entry, subtype) =>
+            `„${entry}" hat keinen Subtyp „${subtype}".`,
+        daySplitConfirmBody: (entries, splits) =>
+            `${entries} Einträge werden durch ${splits} Split-Datensätze ersetzt und gelöscht. Fortfahren?`,
+        daySplitSaved: (n) =>
+            n === 1 ? "1 Eintrag aufgeteilt." : `${n} Einträge aufgeteilt.`,
+        daySplitPartial: (saved, total) =>
+            `Nur ${saved} von ${total} Einträgen aufgeteilt — die Liste wurde aktualisiert.`,
+        selectHintDay:
+            "Eintrag oder Tag wählen, um die Stunden aufzuteilen.",
         title: (type, date) => {
             let s = type || "—";
             if (date) s += ` am ${date}`;
@@ -371,6 +506,9 @@ export const STRINGS: Record<Lang, Strings> = {
         errLoadSubtypes: "Impossible de charger les sous-types de travail.",
         noSubtypes: "Aucun sous-type de travail pour cette entrée.",
         total: "Total",
+        dayWork: "Travail",
+        dayTravel: "Trajet",
+        hoursUnit: "h",
         distributed: "Réparti",
         remaining: "Restant",
         save: "Enregistrer la répartition",
@@ -388,6 +526,50 @@ export const STRINGS: Record<Lang, Strings> = {
         back: "Retour",
         takeRemaining: "Reporter le reste",
         suggest: "Proposer la répartition (date + durée)",
+        sheetTitle: "Filtres et affichage",
+        sheetDone: "Terminé",
+        dayWorkShort: "T",
+        dayTravelShort: "Tj",
+        groupLabel: "Grouper par",
+        groupThen: "puis",
+        groupNone: "Aucun",
+        groupOff: "Sans groupement",
+        groupDay: "Jour",
+        groupNoProject: "(sans projet)",
+        groupNoResource: "(sans ressource)",
+        groupSelectAll: "Tout sélectionner dans ce groupe",
+        groupCollapse: "Réduire",
+        groupExpand: "Développer",
+        daySplitInfoTitle: "Fonctionnement de « Répartir la journée »",
+        daySplitInfoPoints: [
+            "« Répartir la journée » apparaît sur les en-têtes qui montrent exactement une journée d'une personne — p. ex. groupé par Jour, Ressource › Jour ou Jour › Ressource.",
+            "C'est toujours toute la journée de la personne qui est répartie — tous projets confondus et indépendamment de la recherche.",
+            "Le travail et le trajet sont répartis séparément. ★ propose une répartition selon la règle des 8 heures, le dimanche et les jours fériés.",
+            "Les heures sont versées dans les entrées par ordre chronologique : Normal d'abord, les heures supplémentaires sur les dernières entrées. Chaque entrée conserve son total.",
+            "Un aperçu montre le résultat par entrée avant l'enregistrement. La journée est enregistrée en une seule étape — toutes les entrées ou aucune.",
+        ],
+        daySplitAlso: (projects) =>
+            `Toute la journée est répartie — contient aussi des entrées de : ${projects}`,
+        daySplitButton: "Répartir la journée",
+        daySplitTitle: "Répartition journalière",
+        daySplitEntries: (n) => (n === 1 ? "1 entrée" : `${n} entrées`),
+        daySplitOther: (n) =>
+            n === 1
+                ? "1 entrée d'un autre type n'est pas répartie."
+                : `${n} entrées d'un autre type ne sont pas réparties.`,
+        daySplitNoEntries:
+            "Aucune entrée travail / trajet ouverte pour cette journée.",
+        daySplitPreview: "Aperçu par entrée",
+        daySplitMissingSubtype: (entry, subtype) =>
+            `« ${entry} » n'a pas de sous-type « ${subtype} ».`,
+        daySplitConfirmBody: (entries, splits) =>
+            `${entries} entrées seront remplacées par ${splits} enregistrements répartis puis supprimées. Continuer ?`,
+        daySplitSaved: (n) =>
+            n === 1 ? "1 entrée répartie." : `${n} entrées réparties.`,
+        daySplitPartial: (saved, total) =>
+            `Seules ${saved} entrées sur ${total} ont été réparties — la liste a été actualisée.`,
+        selectHintDay:
+            "Sélectionnez une entrée ou une journée pour répartir ses heures.",
         title: (type, date) => {
             let s = type || "—";
             if (date) s += ` le ${date}`;

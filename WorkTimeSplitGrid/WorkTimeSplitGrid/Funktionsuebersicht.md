@@ -22,6 +22,40 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   **🏷️ Festpreis** (`hso_projecttype = 100000001`, aus demselben
   `sst_Project_id`-`$expand`) — sobald die Teamleitung sie einblendet, bleiben
   sie damit auf einen Blick unterscheidbar.
+- **Gruppierung mit Summen** (`grouping.ts`) — die Liste lässt sich nach
+  **Projekt**, **Ressource** und **Tag** gruppieren, unabhängig von der
+  Sortierung (die Sortierung ordnet die Karten innerhalb der innersten Gruppe):
+  - **Laptop:** bis zu **zwei Ebenen** über zwei Dropdowns in der Unterleiste
+    („Gruppieren … dann …"); Standard *Tag*. Das zweite Dropdown bleibt immer
+    an seinem Platz und ist nur ausgegraut, solange das erste auf *Keine*
+    steht (ruhiges Layout). Ein **ⓘ**-Button daneben (Modus Aufteilen) erklärt
+    in einem Popup, wie *Tag aufteilen* funktioniert. *Ressource* wird nur angeboten,
+    solange „Alle Stunden" aktiv ist (bei „Meine Stunden" gäbe es nur eine
+    Gruppe), und fällt beim Zurückschalten automatisch weg.
+  - **Mobil** (Monteur-Nutzung): eine Ebene — **Keine | Tag | Projekt** (im
+    Filter-Sheet).
+  - **Tage werden je Person getrennt:** Haben mehrere Personen am selben Tag
+    gebucht und die Gruppierung hat keine Ressourcen-Ebene, bekommt der Tag
+    je Person eine eigene Kopfzeile („Mi, 07.08.2024 · <Ressource>") — die
+    Tagesaufteilung arbeitet pro Personentag, so bietet jede Kopfzeile
+    *Tag aufteilen* an. Bei nur einer Person (z. B. „Meine Stunden") bleibt
+    die Kopfzeile ein reines Datum.
+  - Jede Kopfzeile zeigt **Arbeit**, **Fahrzeit** und **Gesamt** der Gruppe.
+    Kopfzeilen der 1. Ebene haften beim Scrollen und zeigen Pills; die der
+    2. Ebene sind eingerückt und kompakt (Summen als Text, nicht haftend).
+    Jede Gruppe lässt sich einklappen.
+  - Reihenfolge der Gruppen: Tag folgt der Datums-Sortierrichtung (sonst
+    neueste zuerst), Projekt nach Nummer, Ressource alphabetisch; leere Werte
+    zuletzt als „(ohne Projekt)" / „(ohne Ressource)".
+  - Chips, die eine Gruppen-Kopfzeile wiederholen, werden auf den Karten
+    ausgeblendet (bei Gruppierung nach Projekt keine Projekt-Chips usw.).
+  - Die Kategorie ergibt sich per Präfix aus dem `sst_type`-Text
+    (`Arbeit`/`Work` → Arbeit, `Fahrzeit`/`Travel` → Fahrzeit, Defaults in
+    `schema.ts`); andere Typen zählen nur zur Gesamtsumme. Die Summen werden
+    clientseitig über die geladenen (gefilterten) Zeilen gebildet.
+  - **Modus Zuordnen:** jede Kopfzeile hat eine Checkbox (mit Teilauswahl-
+    Zustand), die alle Einträge der Gruppe auswählt — bei Gruppierung nach
+    Projekt ergibt ein Klick genau die Einträge eines Lieferscheins.
 - **Zusammengesetzter Titel** (Liste + Detail): `<sst_type> am <sst_date>`
   (z. B. „Arbeit am 07.08.2024"). `sst_date` und die Projektnummer des
   verknüpften Projekts (`sst_project_id.sst_projectnumber` auf `msdyn_project`)
@@ -176,6 +210,57 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   erscheint neben **jedem** Subtype-Feld ein kleines Pfeil-Icon; ein Klick addiert
   den Rest zum aktuellen Wert des Feldes (Aufteilung mit einem Klick abschließen).
 
+### Tagesaufteilung
+- Der Button **„Tag aufteilen"** erscheint (Modus Aufteilen, online) an jeder
+  Gruppen-Kopfzeile, die genau einen Personentag festlegt: Der Pfad legt den
+  Tag fest, und die Person ist durch den Pfad bestimmt oder unter den
+  Einträgen der Gruppe eindeutig (z. B. *Tag*, *Ressource › Tag*, *Tag ›
+  Ressource* an der Ressource, *Projekt › Tag* am Tag).
+- Der Editor umfasst immer **alle offenen Einträge dieser Person an diesem
+  Tag** — projektübergreifend und unabhängig vom Suchbegriff —, weil die
+  Zuschlagsregeln (8 h/Tag → Überstunde, Sonntag, Feiertag) pro Person und Tag
+  gelten. Unter einer Projekt-Kopfzeile geöffnet, nennt der Editor die weiteren
+  Projekte des Tages. Alle Karten des Umfangs werden in der Liste markiert.
+- Der Editor zeigt **einen Block je Kategorie** — *Arbeit* und *Fahrzeit* —
+  jeweils mit der Tagessumme der Kategorie und der Vereinigungsmenge der Work
+  Subtypes der Einträge (per normalisiertem Namen, „Überstunde"/„Überstunden"
+  fallen zusammen). Einträge anderer Typen werden als „nicht verteilt"
+  ausgewiesen und nicht angefasst; der Einzel-Split bleibt für sie und zur
+  Feinjustierung erhalten.
+- **Chronologisches Füllprinzip** (`daySplit.ts`): Die Einträge des Tages
+  werden nach **Buchungsbeginn** (`sst_BookableResourceBooking.starttime`)
+  geordnet — in PROD verifiziert: `sst_date` ist das `endtime` der Buchung,
+  also nur das Erfassungsende, und dient nur noch als Fallback (z. B.
+  offline). Die Vorschau zeigt je Eintrag `Beginn–Ende`. Derselbe Expand
+  liefert die Ressource der Buchung als Fallback, wenn der Eintrag keine
+  `sst_resource_ref` / `sst_resource` hat. Die Einträge werden in dieser
+  Zeitreihenfolge, die Subtypes in kanonischer Reihenfolge (Normal →
+  Überstunde → Nacht/Sonntag → Feiertag) durchlaufen; die Stunden jedes Subtyps
+  werden von oben in die Einträge „eingegossen". Überstunden landen damit auf
+  den letzten Einträgen des Tages, geschnitten wird nur an einer Grenze je
+  Subtyp (Viertelstunden bleiben Viertelstunden), und **jeder Eintrag behält
+  exakt seine Gesamtdauer** — der Save-Guard je Eintrag bleibt gültig. Eine
+  aufklappbare **Vorschau je Eintrag** zeigt das Ergebnis live.
+- ★ **Vorschlag** arbeitet auf der Tagessumme (Feiertag / Sonntag / 8-h-Regel)
+  — der eigentliche Grund für die Tagesebene: pro Eintrag würden drei
+  4-h-Einträge jeweils „Normal 4 h" vorgeschlagen, obwohl 4 h des Tages
+  Überstunden sind.
+- Speichern nur, wenn jeder Block vollständig verteilt ist (Rest = 0) und jeder
+  Eintrag die Subtype-Zeilen besitzt, die Stunden erhalten (sonst werden die
+  fehlenden benannt und Speichern bleibt gesperrt).
+- **Gespeichert als EIN `$batch`-Changeset** für alle Einträge des Tages
+  (dieselbe Mutation wie der Einzel-Split je Eintrag; Pausen-Updates werden
+  über Einträge mit gleichem Work Order dedupliziert) — ganz oder gar nicht.
+  Ist `$batch` im Host nicht verfügbar, laufen die Einträge nacheinander über
+  die kompensierende Sequenz; ein Fehler mittendrin meldet „Nur x von y
+  Einträgen aufgeteilt" und lädt die Liste neu — die vorderen Einträge sind
+  dann korrekt weg, der Rest bleibt offen.
+- Mobil: Der Tages-Editor ist ein Vollbild-Panel wie der Einzel-Split
+  (Zurück-Header, haftender Speichern-Button, −/+-Stepper, Vorschau
+  standardmäßig eingeklappt).
+- Offline: Der Button ist ausgeblendet (die Aufteilung ist eine
+  Server-Transaktion).
+
 ### Speichern (Aufteilung)
 - Der Button **„Aufteilung speichern"** ist nur aktiv, wenn die Summe der
   verteilten Stunden der Gesamtdauer (`sst_duration`) entspricht und der Eintrag
@@ -253,13 +338,19 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
     Drehen wechselt das Control live zwischen Hochformat-Einspalter und
     Querformat-Cockpit (anhand der zugewiesenen Breite/Höhe; ab ≥ 640px Breite,
     kleine Phones bleiben einspaltig).
-- **Einklappbare Filterleiste (Phone)** — die Leiste aus Suche + Modus +
-  Zeitraum + Sortierung klappt (animiert) auf eine **einzeilige Zusammenfassung**
-  zusammen (`🔍 Zuordnen · Alle · Datum (neueste) ⌄`), per *„Filter
-  ausblenden"*-Zeile — so bleibt die Liste maximal sichtbar; Antippen der
-  Zusammenfassung klappt sie wieder aus. Die Zusammenfassung spiegelt die aktiven
-  Filter live wider und zeigt einen Such-Punkt. Desktop unverändert
-  (Leiste immer voll). Respektiert `prefers-reduced-motion`.
+- **Handy-Toolbar + Bottom Sheet** (`MobileToolbar.tsx`) — das Handy zeigt nur
+  zwei Zeilen: Suche · **Filter-Button** (Zähler = vom Standard abweichende
+  Einstellungen) · Info, sowie Modus-Schalter · einzeilige **Zusammenfassung**
+  der aktiven Ansicht (`Alle · Tag · Datum (neueste)`) · ⓘ (Erklärung
+  Tagesaufteilung). Zeitraum, Gruppierung (*Tag | Projekt*), Sortierung und der
+  Schalter *Alle Stunden* öffnen sich als **Bottom Sheet** mit großen Chips und
+  *Fertig*-Button in der Titelzeile (Tippen daneben / Esc schließt). Das Overlay-Layout ist inline,
+  damit ein veraltetes, gecachtes Stylesheet es nicht in den Seitenfluss
+  schiebt. Desktop behält die volle Leiste. Respektiert
+  `prefers-reduced-motion`.
+- **Kompakter Tageskopf (Handy)** — eine Zeile: Datum · `A 8 h · F 1 h · Σ 9 h`
+  (Arbeit/Fahrzeit farbig, ausgeschrieben im Tooltip) · runder Icon-Button
+  *Tag aufteilen* (40 px Tippfläche).
 - Beim Hinzufügen zur View dasselbe Control **Web + Tablet + Phone** zuweisen —
   kein separater Mobil-Build zu pflegen.
 

@@ -4,7 +4,6 @@ import { STRINGS } from "./i18n";
 import { FieldConfig, EPSILON } from "./schema";
 import {
     parseNumber,
-    formatNumber,
     saveSplit,
     suggestSplit,
     isHolidayForEntry,
@@ -12,9 +11,7 @@ import {
     SplitInput,
 } from "./api";
 import { Logger } from "./telemetry";
-
-/** Mobile stepper increment (hours). */
-const STEP = 0.25;
+import { SubtypeRowEditor } from "./SubtypeRowEditor";
 
 export interface SplitPanelProps {
     entry: EntryRow | null;
@@ -38,6 +35,8 @@ export interface SplitPanelProps {
     onSubtypesChange: (rows: SubtypeRow[]) => void;
     onSaved: () => void;
     onError: (msg: string) => void;
+    /** Empty-pane hint override (e.g. "select an entry or a day"). */
+    hint?: string;
 }
 
 export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
@@ -109,14 +108,6 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
         !saving &&
         (subtypes?.length ?? 0) > 0;
 
-    /** Mobile +/− stepper: adjust a subtype by ±STEP, floored at 0. */
-    const stepValue = (id: string, current: string, delta: number) => {
-        const parsed = parseNumber(current);
-        const base = Number.isNaN(parsed) ? 0 : parsed;
-        const next = Math.max(0, Math.round((base + delta) * 1000) / 1000);
-        handleValueChange(id, formatNumber(next));
-    };
-
     const doSave = async () => {
         if (!entry || !subtypes) return;
         setConfirming(false);
@@ -147,7 +138,7 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
     if (!entry) {
         return (
             <div className="wtsg-panel wtsg-panel-empty">
-                <p>{t.selectHint}</p>
+                <p>{props.hint ?? t.selectHint}</p>
             </div>
         );
     }
@@ -260,115 +251,21 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
                 <div className="wtsg-panel-error">{t.noSubtypes}</div>
             ) : (
                 <div className="wtsg-rows">
-                    {subtypes!.map((s) => {
-                        const invalid = Number.isNaN(parseNumber(s.value));
-                        const editable =
-                            !entry.completed && !props.disabled && !saving;
-                        // Offer "use remaining" on every row while time is left.
-                        const showFill = editable && remaining > EPSILON;
-                        return (
-                            <label key={s.id} className="wtsg-rowitem">
-                                <span className="wtsg-rowname">{s.name}</span>
-                                <span className="wtsg-rowfill">
-                                    {showFill && (
-                                        <button
-                                            type="button"
-                                            className="wtsg-fillbtn"
-                                            title={`${t.takeRemaining} (${round(remaining)})`}
-                                            aria-label={`${t.takeRemaining} (${round(remaining)})`}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                const cur = parseNumber(s.value);
-                                                const base = Number.isNaN(cur)
-                                                    ? 0
-                                                    : cur;
-                                                handleValueChange(
-                                                    s.id,
-                                                    formatNumber(base + remaining),
-                                                );
-                                            }}
-                                        >
-                                            <svg
-                                                width="16"
-                                                height="16"
-                                                viewBox="0 0 16 16"
-                                                aria-hidden="true"
-                                            >
-                                                <path
-                                                    d="M2.5 8h8M7.5 4.5 11 8l-3.5 3.5M13 3.5v9"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="1.6"
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                />
-                                            </svg>
-                                        </button>
-                                    )}
-                                </span>
-                                {(() => {
-                                    const input = (
-                                        <input
-                                            type="text"
-                                            inputMode="decimal"
-                                            className={`wtsg-rowinput ${invalid ? "invalid" : ""}`}
-                                            value={s.value}
-                                            placeholder="0"
-                                            disabled={
-                                                entry.completed ||
-                                                props.disabled ||
-                                                saving
-                                            }
-                                            onChange={(e) =>
-                                                handleValueChange(
-                                                    s.id,
-                                                    e.target.value,
-                                                )
-                                            }
-                                        />
-                                    );
-                                    if (!props.isMobile) return input;
-                                    const cur = parseNumber(s.value);
-                                    return (
-                                        <div className="wtsg-stepper">
-                                            <button
-                                                type="button"
-                                                className="wtsg-step"
-                                                aria-label={`−${STEP}`}
-                                                disabled={
-                                                    !editable ||
-                                                    Number.isNaN(cur) ||
-                                                    cur <= 0
-                                                }
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    stepValue(s.id, s.value, -STEP);
-                                                }}
-                                            >
-                                                −
-                                            </button>
-                                            {input}
-                                            <button
-                                                type="button"
-                                                className="wtsg-step"
-                                                aria-label={`+${STEP}`}
-                                                disabled={!editable}
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    stepValue(s.id, s.value, STEP);
-                                                }}
-                                            >
-                                                +
-                                            </button>
-                                        </div>
-                                    );
-                                })()}
-                            </label>
-                        );
-                    })}
+                    {subtypes!.map((s) => (
+                        <SubtypeRowEditor
+                            key={s.id}
+                            id={s.id}
+                            name={s.name}
+                            value={s.value}
+                            editable={
+                                !entry.completed && !props.disabled && !saving
+                            }
+                            isMobile={props.isMobile}
+                            remaining={remaining}
+                            takeRemainingLabel={t.takeRemaining}
+                            onChange={handleValueChange}
+                        />
+                    ))}
                 </div>
             )}
 

@@ -1,3 +1,5 @@
+import type { TimeKind } from "./schema";
+
 export type Lang = "de" | "en" | "fr";
 
 /** A Rounded Time Entry flattened for the master list. */
@@ -7,10 +9,15 @@ export interface EntryRow {
     name: string;
     /** Formatted date for display. */
     date: string;
-    /** Raw sst_date (ISO) for period filtering + date sorting. */
+    /** Raw sst_date (ISO) for period filtering + date sorting. NOTE: this is
+     *  the END of the capture (= booking endtime), not the start. */
     dateValue?: string;
+    /** Booking start (ISO) — the entry's real start (online path only). */
+    startValue?: string;
     /** Type text (Arbeit / Fahrzeit / …). */
     type: string;
+    /** Coarse category of `type` (work / travel / other) for the day sums. */
+    kind?: TimeKind;
     /** Total duration as a number (for the split guard). */
     total: number;
     /** Formatted total for display. */

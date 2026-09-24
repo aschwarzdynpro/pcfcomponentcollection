@@ -11,6 +11,7 @@ import {
     WORKORDER_SET,
     PROJECT_SET,
     PROJECT_TYPE,
+    BOOKING,
     HOLIDAY,
     normalizeLabel,
     FieldConfig,
@@ -46,7 +47,7 @@ async function entitySetFor(
 }
 
 /** Sort subtype rows into the canonical surcharge order. */
-function sortSubtypes<T extends { name: string }>(rows: T[]): T[] {
+export function sortSubtypes<T extends { name: string }>(rows: T[]): T[] {
     const rank = (n: string) => {
         // Keyword match (not equality) — see SUBTYPE_ORDER: the naming differs
         // per environment ("Überstunde" / "Überstunden").
@@ -344,6 +345,8 @@ export interface LoadedEntry {
     timereport: string;
     /** Booking number (bookableresourcebooking display value, e.g. S-120044). */
     bookingNumber: string;
+    /** Booking start (ISO) — the entry's real start; `dateValue` is its end. */
+    startValue: string;
     /** Entry belongs to a fixed-price ("Festpreis") project → flagged in the list. */
     fixedPrice: boolean;
 }
@@ -391,11 +394,15 @@ function mapLoadedEntry(e: Record<string, any>): LoadedEntry {
         resourceName:
             (e.sst_resource_ref ? String(e.sst_resource_ref.name ?? "") : "") ||
             String(e[`_sst_resource_ref_value${ENTRY_FMT}`] ?? "") ||
-            String(e.sst_resource ?? ""),
+            String(e.sst_resource ?? "") ||
+            String(
+                e[BOOKING.nav]?.[`${BOOKING.resourceValue}${ENTRY_FMT}`] ?? "",
+            ),
         timereport: String(e._sst_timereport_value ?? ""),
         bookingNumber: String(
             e[`_sst_bookableresourcebooking_value${ENTRY_FMT}`] ?? "",
         ),
+        startValue: String(e[BOOKING.nav]?.[BOOKING.start] ?? ""),
         fixedPrice:
             e.sst_Project_id != null &&
             Number(e.sst_Project_id[PROJECT_TYPE.field]) ===
@@ -469,7 +476,8 @@ export async function loadEntries(
         `sst_worksubtypecompleted,_sst_project_id_value,_sst_timereport_value,_sst_resource_ref_value,` +
         `_sst_bookableresourcebooking_value` +
         `&$expand=sst_Project_id($select=sst_projectnumber,msdyn_subject,${PROJECT_TYPE.field}),` +
-        `sst_resource_ref($select=name)` +
+        `sst_resource_ref($select=name),` +
+        `${BOOKING.nav}($select=${BOOKING.start},${BOOKING.resourceValue})` +
         `&$filter=${filter}&$orderby=sst_date desc`;
 
     const out: LoadedEntry[] = [];
@@ -580,6 +588,8 @@ async function prepareSplit(
     id: string,
     subtypes: SplitInput[],
     logger: Logger,
+    /** Pre-resolved worktype maps (day split: resolve once for N entries). */
+    worktypesIn?: WorktypeMaps,
 ): Promise<SplitPrep> {
     const lookupSelects = PARENT_LOOKUPS.map((l) => l.value).join(",");
     const selects = [
@@ -608,7 +618,7 @@ async function prepareSplit(
     // Work type ("Zeiterfassungsart") per split via the composite (paytype,
     // timetype) key. timetype comes from the original's sst_timetype_opt, else
     // its sst_type text matched to the option label.
-    const worktypes = await resolveWorktypes(webApi);
+    const worktypes = worktypesIn ?? (await resolveWorktypes(webApi));
     const originalTimetypeRaw = original[ENTRY_TIMETYPE];
     const timetypeValue: number | null =
         originalTimetypeRaw != null
@@ -773,11 +783,22 @@ export function serverErrorMessage(e: unknown): string {
 }
 
 /** Build the $batch body with ONE transactional changeset for the split. */
+/** One prepared entry of a (day) split batch. */
+interface PreparedEntry {
+    id: string;
+    prep: SplitPrep;
+}
+
+/**
+ * Build ONE $batch with ONE changeset covering every prepared entry, so a day
+ * split is all-or-nothing just like a single split. Pause updates are
+ * de-duplicated across entries (several entries of a day usually share a work
+ * order -> the same pause must not be patched twice in one changeset).
+ */
 function buildSplitBatch(
     root: string,
     fields: FieldConfig,
-    id: string,
-    prep: SplitPrep,
+    items: PreparedEntry[],
     batch: string,
     cs: string,
 ): string {
@@ -810,23 +831,34 @@ function buildSplitBatch(
 
     const parentSet = `${root}/${PARENT.entitySet}`;
     const childSet = `${root}/${CHILD.entitySet}`;
+    const originals = new Set(items.map((it) => it.id));
+    const pausesDone = new Set<string>();
 
-    // 1) child subtype value updates (cascade-deleted with the parent below)
-    for (const u of prep.subtypeUpdates) {
-        pushOp("PATCH", `${childSet}(${u.id})`, { [CHILD.timeValue]: u.value });
+    for (const { id, prep } of items) {
+        // 1) child subtype value updates (cascade-deleted with the parent below)
+        for (const u of prep.subtypeUpdates) {
+            pushOp("PATCH", `${childSet}(${u.id})`, {
+                [CHILD.timeValue]: u.value,
+            });
+        }
+        // 2) create one split per subtype
+        for (const payload of prep.splitPayloads) {
+            pushOp("POST", parentSet, payload);
+        }
+        // 3) mark the original completed
+        pushOp("PATCH", `${parentSet}(${id})`, { [fields.completed]: true });
+        // 4) mark related pauses completed (once per pause; never an original
+        //    of this same batch - that one is deleted below anyway)
+        for (const pid of prep.pauseIds) {
+            if (pausesDone.has(pid) || originals.has(pid)) continue;
+            pausesDone.add(pid);
+            pushOp("PATCH", `${parentSet}(${pid})`, {
+                [fields.completed]: true,
+            });
+        }
+        // 5) delete the original (children cascade)
+        pushOp("DELETE", `${parentSet}(${id})`);
     }
-    // 2) create one split per subtype
-    for (const payload of prep.splitPayloads) {
-        pushOp("POST", parentSet, payload);
-    }
-    // 3) mark the original completed
-    pushOp("PATCH", `${parentSet}(${id})`, { [fields.completed]: true });
-    // 4) mark related pauses completed
-    for (const pid of prep.pauseIds) {
-        pushOp("PATCH", `${parentSet}(${pid})`, { [fields.completed]: true });
-    }
-    // 5) delete the original (children cascade)
-    pushOp("DELETE", `${parentSet}(${id})`);
 
     lines.push(`--${cs}--`, `--${batch}--`, "");
     return lines.join(CRLF);
@@ -839,15 +871,14 @@ function buildSplitBatch(
  */
 async function runSplitBatch(
     fields: FieldConfig,
-    id: string,
-    prep: SplitPrep,
+    items: PreparedEntry[],
 ): Promise<"done" | "unavailable"> {
     const root = apiRoot();
     if (!root || typeof fetch === "undefined") return "unavailable";
     const stamp = Date.now();
     const batch = `batch_wtsg_${stamp}`;
     const cs = `changeset_wtsg_${stamp}`;
-    const body = buildSplitBatch(root, fields, id, prep, batch, cs);
+    const body = buildSplitBatch(root, fields, items, batch, cs);
 
     let resp: Response;
     try {
@@ -1017,7 +1048,7 @@ export async function saveSplit(
 
         // Primary: atomic $batch changeset.
         stage = "atomicBatch";
-        const result = await runSplitBatch(fields, id, prep);
+        const result = await runSplitBatch(fields, [{ id, prep }]);
         if (result === "done") {
             op.ok({ created: prep.activeCount, mode: "batch" });
             return { created: prep.activeCount };
@@ -1030,6 +1061,106 @@ export async function saveSplit(
         await saveSplitCompensating(webApi, fields, id, prep, op, logger);
         op.ok({ created: prep.activeCount, mode: "compensate" });
         return { created: prep.activeCount };
+    } catch (e) {
+        op.fail(e, { stage });
+        throw e;
+    }
+}
+
+/** One entry of a day split: the entry id + its per-subtype distribution. */
+export interface DaySplitItem {
+    id: string;
+    subtypes: SplitInput[];
+}
+
+export interface DaySaveResult {
+    /** Entries that were split (deleted + replaced by their splits). */
+    savedIds: string[];
+    /** Splits created in total. */
+    created: number;
+    /**
+     * Fallback path only: the entry that failed after `savedIds` had already
+     * been committed one by one. Undefined when everything went through.
+     */
+    failedId?: string;
+}
+
+/**
+ * Persist a DAY split: the same mutation as `saveSplit` for every entry of the
+ * day, committed as ONE atomic $batch changeset (all entries or none). If the
+ * $batch endpoint isn't usable in this host, the entries fall back to the
+ * per-entry compensating sequence in order - then a failure mid-way leaves the
+ * earlier entries split and the rest untouched, which the result reports
+ * (`savedIds` / `failedId`) so the caller can refresh + tell the user.
+ */
+export async function saveDaySplit(
+    webApi: ComponentFramework.WebApi,
+    utils: ComponentFramework.Utility,
+    fields: FieldConfig,
+    items: DaySplitItem[],
+    logger: Logger = NOOP_LOGGER,
+): Promise<DaySaveResult> {
+    const clean = items
+        .map((it) => ({ ...it, id: it.id.replace(/[{}]/g, "") }))
+        .filter((it) => it.subtypes.some((s) => s.value > 0));
+    const op = logger.op("daySplitSave", { entries: clean.length });
+    let stage = "prepare";
+    try {
+        const worktypes = await resolveWorktypes(webApi);
+        const prepared: PreparedEntry[] = [];
+        for (const it of clean) {
+            const prep = await prepareSplit(
+                webApi,
+                utils,
+                fields,
+                it.id,
+                it.subtypes,
+                logger,
+                worktypes,
+            );
+            prepared.push({ id: it.id, prep });
+        }
+        const created = prepared.reduce((a, p) => a + p.prep.activeCount, 0);
+        op.step("prepared", { entries: prepared.length, created });
+
+        stage = "atomicBatch";
+        const result = await runSplitBatch(fields, prepared);
+        if (result === "done") {
+            op.ok({ entries: prepared.length, created, mode: "batch" });
+            return { savedIds: prepared.map((p) => p.id), created };
+        }
+
+        op.step("batchUnavailable");
+        stage = "compensate";
+        const savedIds: string[] = [];
+        let createdSoFar = 0;
+        for (const p of prepared) {
+            try {
+                await saveSplitCompensating(
+                    webApi,
+                    fields,
+                    p.id,
+                    p.prep,
+                    op,
+                    logger,
+                );
+                savedIds.push(p.id);
+                createdSoFar += p.prep.activeCount;
+            } catch (e) {
+                op.fail(e, {
+                    stage,
+                    savedIds: savedIds.length,
+                    failedId: p.id,
+                });
+                return { savedIds, created: createdSoFar, failedId: p.id };
+            }
+        }
+        op.ok({
+            entries: savedIds.length,
+            created: createdSoFar,
+            mode: "compensate",
+        });
+        return { savedIds, created: createdSoFar };
     } catch (e) {
         op.fail(e, { stage });
         throw e;

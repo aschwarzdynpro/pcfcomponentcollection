@@ -22,6 +22,37 @@ deletes the original.
   chip (`hso_projecttype = 100000001`, read from the same `sst_Project_id`
   `$expand`) — so once a team lead switches them into the list, they stay
   distinguishable at a glance.
+- **Grouping with sums** (`grouping.ts`) — the list can be grouped by
+  **project**, **resource** and **day**, independent of the sort order (the
+  sort orders the cards inside the innermost group):
+  - **Desktop:** up to **two levels** via two dropdowns in the sub-bar
+    (*Group by … then …*); default *Day*. The second dropdown always stays
+    in place and is only greyed out while the first is *None* (calm layout).
+    An **ⓘ** button next to it (split mode) explains how *Split day* works. *Resource* is only offered while
+    "all hours" is shown (with "my hours" it would be a single group) and
+    drops out automatically when switching back.
+  - **Mobile** (fitter use): one level — **None | Day | Project** (in the
+    filter bottom sheet).
+  - **Days are split per person:** when several people booked the same day
+    and the grouping has no resource level, that day gets one header per
+    person (`Mi, 07.08.2024 · <resource>`) — the day split works per
+    person-day, so every header can offer *Split day*. With one person (e.g.
+    "my hours") the header stays a plain date.
+  - Every header shows the group's **Work**, **Travel** and **Total** hours.
+    Level-1 headers are sticky with sum pills; level-2 headers are indented
+    and compact (text sums, not sticky). Every group can be collapsed.
+  - Group order: day follows the date sort direction (newest first
+    otherwise), project by number, resource alphabetically; empty values
+    last as *(no project)* / *(no resource)*.
+  - Card chips that repeat a group header are hidden (no project chips while
+    grouped by project, no resource chip while grouped by resource).
+  - The category comes from the entry's `sst_type` text by prefix
+    (`Arbeit`/`Work` → work, `Fahrzeit`/`Travel` → travel, defaults in
+    `schema.ts`); other types count towards the total only. Sums are
+    computed client-side over the loaded (filtered) rows.
+  - **Assign mode:** each header has a checkbox (with an indeterminate
+    state) that selects all entries of the group — grouped by project, one
+    click selects exactly one delivery note's worth of entries.
 - **Composed entry title** (list + detail): `<type> am <date>` (e.g. *Arbeit am
   07.08.2024*). The date and the related project number
   (`sst_project_id.sst_projectnumber`) are fetched per page via one WebAPI
@@ -165,6 +196,50 @@ deletes the original.
   so a split never leaves duplicates or an orphaned original.
 - **Confirmation dialog** before the destructive save/delete.
 
+### 📅 Day-level split
+- A **Split day** button appears on every group header (split mode, online)
+  that pins exactly one person-day: the path fixes the day, and the person
+  is fixed by the path or unique among the group's entries (e.g. *Day*,
+  *Resource › Day*, *Day › Resource* at the resource level, *Project › Day*
+  at the day level).
+- The editor always covers **all open entries of that person on that day** —
+  across projects and regardless of the search term — because the surcharge
+  rules (8 h/day → overtime, Sunday, holiday) are per person and per day.
+  Opened from below a project header, the editor says which other projects
+  the day also contains. All cards of the scope are highlighted in the list.
+- The editor shows **one block per category** — *Work* and *Travel* — each
+  with the day's total for that category and the union of the entries' work
+  subtypes (matched by normalized name, so "Überstunde"/"Überstunden" merge).
+  Entries of any other type are listed as "not distributed" and left alone;
+  the single-entry split remains available for them and for fine-tuning.
+- **Chronological fill** (`daySplit.ts`): the day's entries are walked in
+  time order of their **booking start** (`sst_BookableResourceBooking.starttime`
+  — verified in PROD: `sst_date` is the booking `endtime`, i.e. the end of
+  the capture; it is only the fallback, e.g. offline). The preview shows
+  `start–end` per entry. The same expand also supplies the booking's resource
+  as fallback when the entry has no `sst_resource_ref` / `sst_resource`. The
+  entries are walked in that order and the subtypes in canonical order (Normal → Überstunde →
+  Nacht/Sonntag → Feiertag), pouring each subtype's hours into the entries
+  from the top. Overtime therefore lands on the last entries of the day, the
+  cut happens at one boundary per subtype (quarter hours stay quarter hours),
+  and **every entry keeps exactly its own total** — the per-entry save guard
+  still holds. A collapsible **preview per entry** shows the outcome live.
+- ★ **Suggestion** works on the day total (holiday / Sunday / 8 h rule) — the
+  main reason for day-level splitting: per entry, three 4 h entries would each
+  be suggested as "Normal 4 h" although 4 h of the day are overtime.
+- Save guard: every block must be fully distributed (remaining = 0) and every
+  entry must own the subtype rows that receive hours (otherwise the missing
+  ones are named and the save stays disabled).
+- **Saved as ONE `$batch` changeset** for all entries of the day (same
+  mutation as the single split per entry; pause updates de-duplicated across
+  entries sharing a work order) — all or nothing. If `$batch` is unavailable
+  in the host, the entries fall back to the per-entry compensating sequence in
+  order; a failure mid-way reports "only x of y entries split" and reloads the
+  list, so the earlier entries are correctly gone and the rest stay open.
+- Mobile: the day editor is a full-screen pane like the single split (back
+  header, sticky save button, −/+ steppers, preview collapsed by default).
+- Offline: the button is hidden (the split is a server transaction).
+
 ### 📱 Adaptive (desktop + mobile)
 - **One control, three layouts**, chosen at runtime from
   `context.client.getFormFactor()` (with an allocated-width fallback) and the
@@ -183,12 +258,18 @@ deletes the original.
     needed since both panes are visible. Rotating the device switches between
     portrait single-pane and landscape cockpit live (driven by the allocated
     width/height; needs ≥ 640px width, so small phones stay single-pane).
-- **Collapsible filter bar (phone)** — the search + mode + period + sort bar
-  collapses (animated) to a **one-line summary** (`🔍 Zuordnen · Alle · Datum
-  (newest) ⌄`) via a *"Hide filters"* trigger, maximizing the visible list;
-  tap the summary to expand it again. The summary reflects the active filters
-  live and shows a search-active dot. Desktop is unaffected (bar always full).
+- **Phone toolbar + bottom sheet** (`MobileToolbar.tsx`) — the phone shows
+  only two rows: search · **filter button** (badge = settings that differ from
+  the defaults) · info, and the mode toggle · a one-line **summary** of the
+  active view (`Alle · Tag · Datum (neueste)`) · ⓘ (how the day split works).
+  Period, grouping (*Day | Project*), sort and the *all hours* switch open as
+  a **bottom sheet** with large chips and a *Done* button in its header row (tap outside / Esc
+  closes it). The sheet's overlay layout is inline so a stale cached
+  stylesheet can't push it into the page flow. Desktop keeps the full bar.
   Respects `prefers-reduced-motion`.
+- **Compact day header (phone)** — one line: date · `A 8 h · F 1 h · Σ 9 h`
+  (work/travel coloured, full words in the tooltip) · round icon-only
+  *Split day* button (40 px touch target).
 - Assign the same control to **Web + Tablet + Phone** when adding it to the
   view; no separate mobile build to maintain.
 
@@ -263,6 +344,10 @@ WorkTimeSplitGrid/
 │   ├── WorkTimeSplitGrid.tsx      # Master/detail shell, toolbar, toggle, state
 │   ├── EntryList.tsx              # Left master list (highlight + pull-to-refresh)
 │   ├── SplitPanel.tsx            # Right split editor + save + confirm dialog
+│   ├── DaySplitPanel.tsx         # Day-level editor (work/travel blocks, preview)
+│   ├── SubtypeRowEditor.tsx      # Shared subtype input row (arrow + stepper)
+│   ├── grouping.ts               # 1–2 level grouping tree, sums, day-split scope
+│   ├── daySplit.ts               # Chronological fill of a day total into entries
 │   ├── Dropdown.tsx              # Custom, dependency-free sort dropdown
 │   ├── api.ts                    # WebAPI: load entries/subtypes + split-save + reports
 │   ├── schema.ts                 # Single source of truth for logical names

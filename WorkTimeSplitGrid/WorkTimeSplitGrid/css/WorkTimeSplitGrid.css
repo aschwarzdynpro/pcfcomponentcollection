@@ -440,6 +440,430 @@
 
 /* Empty-state (no entries / no search matches) — margin:auto centers it while
    keeping any pull-to-refresh indicator pinned to the top. */
+/* ---- Day groups (date-sorted list): sticky header with per-day sums ---- */
+.wtsg-day {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.wtsg-day-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 2px 10px;
+    background: #fff;
+    border-bottom: 1px solid #e1dfdd;
+    font-size: 12px;
+    color: #616161;
+}
+
+.wtsg-day-label {
+    flex: 0 1 auto;
+    min-width: 0;
+    font-weight: 600;
+    font-size: 14px;
+    color: #242424;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Always the second line: date (+ split button) above, sums below. */
+.wtsg-day-sums {
+    flex: 1 1 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+}
+
+.wtsg-day-sum {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: #f3f2f1;
+    white-space: nowrap;
+    font-size: 12px;
+    line-height: 16px;
+    color: #424242;
+}
+
+.wtsg-day-sum strong {
+    font-weight: 600;
+    color: #242424;
+}
+
+.wtsg-day-sum-work {
+    background: #e8f1fa;
+}
+
+.wtsg-day-sum-travel {
+    background: #e9f5ee;
+}
+
+.wtsg-day-sum-total {
+    background: #f3f2f1;
+}
+
+.wtsg-day-sum-total strong {
+    font-weight: 700;
+}
+
+.wtsg-day-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* "Split day" button in the day header (split mode, online). Sits between the
+   date and the sums; the sums keep their own line below via flex-wrap. */
+.wtsg-day-split {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 26px;
+    padding: 0 10px;
+    margin-left: auto;
+    border: 1px solid #c8c6c4;
+    border-radius: 13px;
+    background: #fff;
+    color: #0f6cbd;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.1s, border-color 0.1s;
+}
+
+.wtsg-day-split:hover {
+    background: #eef6fc;
+    border-color: #0f6cbd;
+}
+
+.wtsg-day-split.active {
+    background: #0f6cbd;
+    border-color: #0f6cbd;
+    color: #fff;
+}
+
+/* Selected day scope (day split open): the header underline turns blue; the
+   cards of the scope are highlighted individually (they may sit under several
+   project headers). */
+.wtsg-day.selected > .wtsg-day-head,
+.wtsg-sub.selected > .wtsg-sub-head {
+    border-bottom-color: #0f6cbd;
+}
+
+/* Collapse chevron on every group header. */
+.wtsg-collapse {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: #616161;
+    cursor: pointer;
+}
+
+.wtsg-collapse:hover {
+    background: #f3f2f1;
+}
+
+.wtsg-collapse svg {
+    transition: transform 0.15s;
+}
+
+.wtsg-collapse.collapsed svg {
+    transform: rotate(-90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wtsg-collapse svg {
+        transition: none;
+    }
+}
+
+/* Header checkbox (assign mode) — the card checkbox look, as a button. */
+.wtsg-group-check {
+    padding: 0;
+    cursor: pointer;
+}
+
+/* ---- Second grouping level: compact, indented, not sticky ---- */
+.wtsg-sub {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-left: 10px;
+    padding-left: 8px;
+    border-left: 2px solid #edebe9;
+}
+
+.wtsg-sub-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    padding: 4px 0 6px;
+    border-bottom: 1px solid #edebe9;
+    font-size: 12px;
+    color: #616161;
+}
+
+.wtsg-sub-label {
+    flex: 0 1 auto;
+    min-width: 0;
+    font-weight: 600;
+    font-size: 13px;
+    color: #242424;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.wtsg-sub-sums {
+    flex: 1 1 100%;
+    padding-left: 30px;
+}
+
+.wtsg-sub-sums strong {
+    color: #242424;
+    font-weight: 600;
+}
+
+.wtsg-sub-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Day-split button on a level-2 header: a bit smaller. */
+.wtsg-sub-head .wtsg-day-split {
+    height: 24px;
+    font-size: 11px;
+}
+
+/* Editor hint when the day spans more projects than the clicked header. */
+.wtsg-panel-scope-note {
+    margin-top: 4px;
+    color: #8a6d00;
+}
+
+/* ---- Grouping controls (sub-bar) ---- */
+.wtsg-grouping {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.wtsg-grouping-label {
+    font-size: 12px;
+    color: #616161;
+}
+
+.wtsg-groupdd .wtsg-dd-trigger {
+    min-width: 110px;
+    height: 28px;
+    font-size: 12px;
+}
+
+/* Level 2 without a level 1: stays in place, greyed out (calm layout). */
+.wtsg-dd-trigger:disabled {
+    background: #f5f5f5;
+    border-color: #e1dfdd;
+    color: #a19f9d;
+    cursor: default;
+}
+
+.wtsg-grouping-label.disabled {
+    color: #a19f9d;
+}
+
+/* Info popover (how the day split works) next to the grouping controls. */
+.wtsg-info-pop {
+    position: relative;
+    display: inline-flex;
+}
+
+.wtsg-infobtn.wtsg-infobtn-sm {
+    width: 28px;
+    height: 28px;
+    border-radius: 14px;
+}
+
+.wtsg-infobtn.open {
+    border-color: #0f6cbd;
+    color: #0f6cbd;
+}
+
+.wtsg-info-pop-card {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 30;
+    width: 340px;
+    max-width: calc(100vw - 32px);
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid #e1dfdd;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+    font-size: 12px;
+    line-height: 1.45;
+    color: #424242;
+    white-space: normal;
+}
+
+.wtsg-info-pop-card h4 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: #242424;
+}
+
+.wtsg-info-pop-card ul {
+    margin: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* ---- Day split editor (detail pane) ---- */
+.wtsg-block {
+    margin-top: 14px;
+    padding: 10px 12px 4px;
+    border: 1px solid #e1dfdd;
+    border-left: 3px solid #c8c6c4;
+    border-radius: 6px;
+    background: #fff;
+}
+
+.wtsg-block-work {
+    border-left-color: #0f6cbd;
+}
+
+.wtsg-block-travel {
+    border-left-color: #2e8b57;
+}
+
+.wtsg-block-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+    margin-bottom: 8px;
+}
+
+.wtsg-block-title {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.wtsg-block-meta {
+    margin-left: auto;
+    font-size: 12px;
+    color: #616161;
+}
+
+.wtsg-block-meta strong {
+    color: #242424;
+}
+
+.wtsg-block .wtsg-summary-block {
+    margin-top: 10px;
+    padding: 8px 0;
+    gap: 16px;
+    border-top: 1px solid #edebe9;
+}
+
+/* Per-entry preview of the poured distribution. */
+.wtsg-preview {
+    margin-top: 14px;
+    font-size: 12px;
+}
+
+.wtsg-preview summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #424242;
+    user-select: none;
+}
+
+.wtsg-preview-list {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.wtsg-preview-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    background: #faf9f8;
+}
+
+.wtsg-preview-entry {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    min-width: 0;
+    color: #616161;
+}
+
+.wtsg-preview-time {
+    font-variant-numeric: tabular-nums;
+    color: #242424;
+    font-weight: 600;
+}
+
+.wtsg-preview-type {
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.wtsg-preview-total {
+    white-space: nowrap;
+}
+
+.wtsg-preview-arrow {
+    color: #a19f9d;
+}
+
+.wtsg-preview-parts {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.wtsg-preview-part {
+    background: #e8f1fa;
+    max-width: none;
+}
+
+.wtsg-preview-empty {
+    color: #a19f9d;
+}
+
 .wtsg-empty-state {
     margin: auto;
     display: flex;
@@ -1268,6 +1692,272 @@
     padding-right: 10px;
 }
 
+/* Day headers: cancel the list's 10px padding so the sticky header sits flush
+   at the top; sums wrap below the date on narrow screens with touch-friendly
+   pills. */
+.wtsg-mobile .wtsg-day-head {
+    top: -10px;
+    margin: 0 -10px;
+    padding: 10px 12px 12px;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.wtsg-mobile .wtsg-day-label {
+    font-size: 15px;
+}
+
+.wtsg-mobile .wtsg-day-sums {
+    gap: 8px 10px;
+}
+
+.wtsg-mobile .wtsg-day-sum {
+    font-size: 13px;
+    line-height: 18px;
+    padding: 5px 12px;
+    border-radius: 14px;
+}
+
+.wtsg-mobile .wtsg-day-cards {
+    gap: 10px;
+}
+
+/* ---- Phone toolbar + bottom sheet ---- */
+.wtsg-mtoolbar {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 10px;
+    border-bottom: 1px solid #e1dfdd;
+    background: #fff;
+}
+
+.wtsg-mrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.wtsg-mrow .wtsg-toggle {
+    flex: 0 0 auto;
+}
+
+.wtsg-msummary {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 8px 0;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 13px;
+    color: #616161;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.wtsg-filterbtn.active {
+    border-color: #0f6cbd;
+    color: #0f6cbd;
+}
+
+.wtsg-filterbadge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: #0f6cbd;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 18px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.wtsg-sheet {
+    animation: wtsg-sheet-in 0.18s ease-out;
+}
+
+@keyframes wtsg-sheet-in {
+    from {
+        transform: translateY(24px);
+        opacity: 0.6;
+    }
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wtsg-sheet {
+        animation: none;
+    }
+}
+
+.wtsg-sheet-grip {
+    width: 40px;
+    height: 4px;
+    margin: 0 auto 2px;
+    border-radius: 2px;
+    background: #c8c6c4;
+}
+
+.wtsg-sheet-title {
+    margin: 0;
+    font-size: 16px;
+    color: #242424;
+}
+
+.wtsg-sheet-section {
+    margin-top: 12px;
+}
+
+.wtsg-sheet-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #616161;
+}
+
+.wtsg-sheet-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.wtsg-sheet-chip {
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid #c8c6c4;
+    border-radius: 19px;
+    background: #fff;
+    color: #242424;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.wtsg-sheet-chip.active {
+    background: #0f6cbd;
+    border-color: #0f6cbd;
+    color: #fff;
+}
+
+.wtsg-sheet-switchrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.wtsg-sheet-switchrow .wtsg-sheet-label {
+    margin: 0;
+}
+
+/* Header-row "Done" (text button, 44 px touch target). */
+.wtsg-sheet-done {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0 6px 0 12px;
+    border: none;
+    background: none;
+    color: #0f6cbd;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* ---- Compact day header (phone): date · text sums · icon split button ---- */
+.wtsg-mobile .wtsg-day-head.wtsg-day-head-compact {
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 4px 8px 4px 6px;
+}
+
+.wtsg-day-sums-compact {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 12px;
+    color: #616161;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.wtsg-day-sums-compact strong {
+    color: #242424;
+    font-weight: 700;
+}
+
+.wtsg-dsc-w {
+    color: #0f6cbd;
+}
+
+.wtsg-dsc-t {
+    color: #2e8b57;
+}
+
+.wtsg-mobile .wtsg-day-split.wtsg-day-split-icon {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    margin-left: 0;
+    border-radius: 20px;
+    justify-content: center;
+}
+
+/* Bigger collapse target on touch. */
+.wtsg-mobile .wtsg-collapse {
+    width: 32px;
+    height: 32px;
+}
+
+/* Touch-sized "split day" button; full-width sums line below. */
+.wtsg-mobile .wtsg-day-split {
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 18px;
+    font-size: 13px;
+}
+
+.wtsg-mobile .wtsg-block {
+    margin-top: 12px;
+    padding: 12px 14px 6px;
+}
+
+.wtsg-mobile .wtsg-block-title {
+    font-size: 16px;
+}
+
+.wtsg-mobile .wtsg-block-meta {
+    font-size: 13px;
+}
+
+.wtsg-mobile .wtsg-block .wtsg-summary-block {
+    padding: 10px 0;
+}
+
+.wtsg-mobile .wtsg-preview {
+    font-size: 13px;
+    margin: 12px 0 8px;
+}
+
+.wtsg-mobile .wtsg-preview summary {
+    padding: 8px 0;
+}
+
+.wtsg-mobile .wtsg-preview-item {
+    padding: 8px 10px;
+}
+
 /* Bigger, finger-friendly cards */
 .wtsg-mobile .wtsg-card {
     padding: 14px 16px;
@@ -1476,6 +2166,13 @@
     max-width: 460px;
     padding: 8px;
     padding-right: 6px;
+}
+
+/* Landscape list padding is 8px (right 6px) → realign the sticky day header. */
+.wtsg-mobile.wtsg-landscape:not(.wtsg-assign) .wtsg-day-head {
+    top: -8px;
+    margin: 0 -6px 0 -8px;
+    padding: 8px 10px 10px;
 }
 
 /* Re-add a separator between the two panes (mobile drops the panel border). */
