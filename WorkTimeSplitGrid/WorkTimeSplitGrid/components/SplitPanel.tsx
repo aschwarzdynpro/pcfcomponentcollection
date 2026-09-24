@@ -1,4 +1,5 @@
 import * as React from "react";
+import { MODAL_LAYER } from "./layers";
 import { EntryRow, Lang, SubtypeRow } from "./types";
 import { STRINGS } from "./i18n";
 import { FieldConfig, EPSILON } from "./schema";
@@ -307,7 +308,12 @@ export const SplitPanel: React.FC<SplitPanelProps> = (props) => {
                 )}
 
             {confirming && (
-                <div className="wtsg-modal" role="dialog" aria-modal="true">
+                <div
+                    className="wtsg-modal"
+                    style={MODAL_LAYER}
+                    role="dialog"
+                    aria-modal="true"
+                >
                     <div className="wtsg-modal-card">
                         <h4>{t.confirmTitle}</h4>
                         <p>{t.confirmBody(entry.name, activeCount)}</p>

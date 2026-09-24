@@ -1,4 +1,5 @@
 import * as React from "react";
+import { MODAL_LAYER } from "./layers";
 import { EntryList } from "./EntryList";
 import { SplitPanel } from "./SplitPanel";
 import { DaySplitPanel } from "./DaySplitPanel";
@@ -1539,6 +1540,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             {reportPicker && (
                 <div
                     className="wtsg-modal"
+                    style={MODAL_LAYER}
                     role="dialog"
                     aria-modal="true"
                     aria-label={t.pickReportTitle(reportPicker.length)}
@@ -1609,6 +1611,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
             {showInfo && (
                 <div
                     className="wtsg-modal"
+                    style={MODAL_LAYER}
                     role="dialog"
                     aria-modal="true"
                     aria-label={t.infoTitle}

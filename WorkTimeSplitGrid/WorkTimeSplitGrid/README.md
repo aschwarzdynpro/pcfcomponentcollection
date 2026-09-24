@@ -353,6 +353,7 @@ WorkTimeSplitGrid/
 │   ├── DaySplitPanel.tsx         # Day-level editor (work/travel blocks, preview)
 │   ├── SubtypeRowEditor.tsx      # Shared subtype input row (arrow + stepper)
 │   ├── grouping.ts               # 1–2 level grouping tree, sums, day-split scope
+│   ├── layers.ts                 # z-index order of overlays (modal layer inline)
 │   ├── daySplit.ts               # Chronological fill of a day total into entries
 │   ├── Dropdown.tsx              # Custom, dependency-free sort dropdown
 │   ├── api.ts                    # WebAPI: load entries/subtypes + split-save + reports
