@@ -52,14 +52,26 @@ const BACKDROP_STYLE: React.CSSProperties = {
     justifyContent: "flex-end",
 };
 
+// Generous bottom padding: the host's bottom command bar ("Diagramm
+// anzeigen / Anzeigen als / …") overlaps the control's lower edge, and the
+// control can't measure it — the last row must stay clear of it.
 const SHEET_STYLE: React.CSSProperties = {
     background: "#fff",
     borderRadius: "14px 14px 0 0",
     boxShadow: "0 -6px 24px rgba(0, 0, 0, 0.18)",
-    padding: "8px 16px 16px",
+    padding: "6px 16px 40px",
     maxHeight: "85%",
     overflowY: "auto",
     boxSizing: "border-box",
+};
+
+// "Done" sits in the header row (iOS sheet pattern), so it is never hidden
+// behind the host's bottom bar.
+const HEAD_STYLE: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
 };
 
 /** Row of selectable chips (single choice). */
@@ -222,7 +234,16 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = (p) => {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="wtsg-sheet-grip" aria-hidden="true" />
-                        <h4 className="wtsg-sheet-title">{t.sheetTitle}</h4>
+                        <div className="wtsg-sheet-head" style={HEAD_STYLE}>
+                            <h4 className="wtsg-sheet-title">{t.sheetTitle}</h4>
+                            <button
+                                type="button"
+                                className="wtsg-sheet-done"
+                                onClick={() => setOpen(false)}
+                            >
+                                {t.sheetDone}
+                            </button>
+                        </div>
                         <ChipGroup
                             label={t.periodLabel}
                             value={p.period}
@@ -263,13 +284,6 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = (p) => {
                                 </span>
                             </button>
                         </div>
-                        <button
-                            type="button"
-                            className="wtsg-save wtsg-sheet-done"
-                            onClick={() => setOpen(false)}
-                        >
-                            {t.sheetDone}
-                        </button>
                     </div>
                 </div>
             )}

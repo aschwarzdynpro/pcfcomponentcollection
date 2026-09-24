@@ -1805,19 +1805,19 @@
 .wtsg-sheet-grip {
     width: 40px;
     height: 4px;
-    margin: 0 auto 10px;
+    margin: 0 auto 2px;
     border-radius: 2px;
     background: #c8c6c4;
 }
 
 .wtsg-sheet-title {
-    margin: 0 0 4px;
+    margin: 0;
     font-size: 16px;
     color: #242424;
 }
 
 .wtsg-sheet-section {
-    margin-top: 14px;
+    margin-top: 12px;
 }
 
 .wtsg-sheet-label {
@@ -1835,7 +1835,7 @@
 }
 
 .wtsg-sheet-chip {
-    height: 38px;
+    height: 36px;
     padding: 0 14px;
     border: 1px solid #c8c6c4;
     border-radius: 19px;
@@ -1861,11 +1861,17 @@
     margin: 0;
 }
 
+/* Header-row "Done" (text button, 44 px touch target). */
 .wtsg-sheet-done {
-    width: 100%;
-    height: 48px;
-    margin-top: 20px;
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0 6px 0 12px;
+    border: none;
+    background: none;
+    color: #0f6cbd;
     font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
 }
 
 /* ---- Compact day header (phone): date · text sums · icon split button ---- */

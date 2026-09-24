@@ -257,7 +257,7 @@ deletes the original.
   the defaults) · info, and the mode toggle · a one-line **summary** of the
   active view (`Alle · Tag · Datum (neueste)`) · ⓘ (how the day split works).
   Period, grouping (*Day | Project*), sort and the *all hours* switch open as
-  a **bottom sheet** with large chips and a *Done* button (tap outside / Esc
+  a **bottom sheet** with large chips and a *Done* button in its header row (tap outside / Esc
   closes it). The sheet's overlay layout is inline so a stale cached
   stylesheet can't push it into the page flow. Desktop keeps the full bar.
   Respects `prefers-reduced-motion`.

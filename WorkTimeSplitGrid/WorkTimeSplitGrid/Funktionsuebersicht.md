@@ -337,7 +337,7 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   der aktiven Ansicht (`Alle · Tag · Datum (neueste)`) · ⓘ (Erklärung
   Tagesaufteilung). Zeitraum, Gruppierung (*Tag | Projekt*), Sortierung und der
   Schalter *Alle Stunden* öffnen sich als **Bottom Sheet** mit großen Chips und
-  *Fertig*-Button (Tippen daneben / Esc schließt). Das Overlay-Layout ist inline,
+  *Fertig*-Button in der Titelzeile (Tippen daneben / Esc schließt). Das Overlay-Layout ist inline,
   damit ein veraltetes, gecachtes Stylesheet es nicht in den Seitenfluss
   schiebt. Desktop behält die volle Leiste. Respektiert
   `prefers-reduced-motion`.
