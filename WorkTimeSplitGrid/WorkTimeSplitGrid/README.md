@@ -273,9 +273,10 @@ deletes the original.
   closes it). The sheet's overlay layout is inline so a stale cached
   stylesheet can't push it into the page flow. Desktop keeps the full bar.
   Respects `prefers-reduced-motion`.
-- **Compact day header (phone)** — one line: date · `A 8 h · F 1 h · Σ 9 h`
-  (work/travel coloured, full words in the tooltip) · round icon-only
-  *Split day* button (40 px touch target).
+- **Compact day header (phone)** — two lines: date (· person) with the round
+  icon-only *Split day* button (40 px touch target) on the first, and
+  `A 8 h · F 1 h · Σ 9 h` (work/travel coloured, full words in the tooltip)
+  on the second, aligned under the label — the sums are never cut off.
 - Assign the same control to **Web + Tablet + Phone** when adding it to the
   view; no separate mobile build to maintain.
 

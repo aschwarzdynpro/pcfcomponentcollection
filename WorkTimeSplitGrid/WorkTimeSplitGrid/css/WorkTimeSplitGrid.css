@@ -1877,21 +1877,37 @@
     cursor: pointer;
 }
 
-/* ---- Compact day header (phone): date · text sums · icon split button ---- */
+/* ---- Compact day header (phone), two lines:
+        ⌄ [☐] Date · person …                 (✱)
+              A 0,25 h · F 0 h · Σ 0,25 h
+   The label takes the free width of line 1 (ellipsis only for very long
+   names), the sums get their own full line and are never cut off. ---- */
 .wtsg-mobile .wtsg-day-head.wtsg-day-head-compact {
-    flex-wrap: nowrap;
-    gap: 8px;
-    padding: 4px 8px 4px 6px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 8px;
+    padding: 4px 8px 6px 6px;
+}
+
+.wtsg-day-head-compact .wtsg-day-label {
+    flex: 1 1 0;
 }
 
 .wtsg-day-sums-compact {
-    flex: 1 1 auto;
+    flex: 1 1 100%;
     min-width: 0;
+    /* align under the label: collapse button (32 px) + gap (8 px) */
+    padding-left: 40px;
+    box-sizing: border-box;
     font-size: 12px;
+    line-height: 18px;
     color: #616161;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+}
+
+/* Assign mode: the header checkbox (18 px + 8 px gap) shifts the label. */
+.wtsg-assign .wtsg-day-sums-compact {
+    padding-left: 66px;
 }
 
 .wtsg-day-sums-compact strong {
