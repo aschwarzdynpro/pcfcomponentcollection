@@ -128,6 +128,8 @@ export interface Strings {
     groupLabel: string;
     groupThen: string;
     groupNone: string;
+    /** Summary text when grouping is switched off ("no grouping"). */
+    groupOff: string;
     groupDay: string;
     groupNoProject: string;
     groupNoResource: string;
@@ -255,6 +257,7 @@ export const STRINGS: Record<Lang, Strings> = {
         groupLabel: "Group by",
         groupThen: "then",
         groupNone: "None",
+        groupOff: "No grouping",
         groupDay: "Day",
         groupNoProject: "(no project)",
         groupNoResource: "(no resource)",
@@ -391,6 +394,7 @@ export const STRINGS: Record<Lang, Strings> = {
         groupLabel: "Gruppieren",
         groupThen: "dann",
         groupNone: "Keine",
+        groupOff: "Ohne Gruppierung",
         groupDay: "Tag",
         groupNoProject: "(ohne Projekt)",
         groupNoResource: "(ohne Ressource)",
@@ -529,6 +533,7 @@ export const STRINGS: Record<Lang, Strings> = {
         groupLabel: "Grouper par",
         groupThen: "puis",
         groupNone: "Aucun",
+        groupOff: "Sans groupement",
         groupDay: "Jour",
         groupNoProject: "(sans projet)",
         groupNoResource: "(sans ressource)",

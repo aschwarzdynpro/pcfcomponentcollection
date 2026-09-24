@@ -293,7 +293,9 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     const [groupDims, setGroupDims] = React.useState<
         [GroupDim | "none", GroupDim | "none"]
     >(["day", "none"]);
-    const [mobileGroup, setMobileGroup] = React.useState<"day" | "project">(
+    const [mobileGroup, setMobileGroup] = React.useState<
+        "none" | "day" | "project"
+    >(
         "day",
     );
     // Assign mode multi-selection + in-flight "create delivery notes" state.
@@ -621,7 +623,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     // is shown (with "my hours" it would always be a single group); level 2
     // must differ from level 1 and needs a level 1.
     const activeDims = React.useMemo((): GroupDim[] => {
-        if (props.isMobile) return [mobileGroup];
+        if (props.isMobile) return mobileGroup === "none" ? [] : [mobileGroup];
         const ok = (d: GroupDim | "none"): d is GroupDim =>
             d !== "none" && (d !== "resource" || !myHoursActive);
         const [a, b] = groupDims;
@@ -1055,7 +1057,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
         (!myHoursActive ? 1 : 0);
     const mobileSummary = [
         periodOptions.find((o) => o.value === period)?.label,
-        groupDimLabel(mobileGroup),
+        mobileGroup === "none" ? t.groupOff : groupDimLabel(mobileGroup),
         sortOptions.find((o) => o.value === sortBy)?.label,
         !myHoursActive ? t.allHours : "",
     ]
@@ -1085,11 +1087,12 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                         setSelectedId(null);
                     }}
                     group={mobileGroup}
-                    groupOptions={(["day", "project"] as const).map((d) => ({
-                        value: d,
-                        label: groupDimLabel(d),
-                    }))}
-                    onGroup={(v) => setMobileGroup(v as "day" | "project")}
+                    groupOptions={(["none", "day", "project"] as const).map(
+                        (d) => ({ value: d, label: groupDimLabel(d) }),
+                    )}
+                    onGroup={(v) =>
+                        setMobileGroup(v as "none" | "day" | "project")
+                    }
                     sort={sortBy}
                     sortOptions={sortOptions}
                     onSort={(v) => setSortBy(v as SortKey)}
@@ -1278,27 +1281,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                             </button>
                         ))}
                     </div>
-                    {props.isMobile ? (
-                        <div
-                            className="wtsg-toggle wtsg-period wtsg-grouptoggle"
-                            role="tablist"
-                            aria-label={t.groupLabel}
-                        >
-                            {(["day", "project"] as const).map((d) => (
-                                <button
-                                    key={d}
-                                    type="button"
-                                    role="tab"
-                                    aria-selected={mobileGroup === d}
-                                    className={mobileGroup === d ? "active" : ""}
-                                    onClick={() => setMobileGroup(d)}
-                                >
-                                    {groupDimLabel(d)}
-                                </button>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="wtsg-grouping">
+                    <div className="wtsg-grouping">
                             <span className="wtsg-grouping-label">
                                 {t.groupLabel}
                             </span>
@@ -1363,7 +1346,6 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
                                 />
                             )}
                         </div>
-                    )}
                 </div>
             </CollapsibleActionBar>
             ))}

@@ -164,19 +164,66 @@ function buildLevel(
     const values = Array.from(byValue.keys()).sort((a, b) =>
         compareGroups(dim, a, b, dayAscending),
     );
-    return values.map((v) => {
-        const groupRows = byValue.get(v)!;
+
+    // A day is always split per person when several people booked it and the
+    // grouping doesn't separate people anyway (no resource dimension): the
+    // day split works per person-day (8 h rule), so a mixed day header could
+    // never offer "Split day". One person → one header, label unchanged.
+    const splitDayByPerson =
+        dim === "day" &&
+        !dims.includes("resource") &&
+        parent?.resource === undefined;
+
+    type Slot = { value: string; rows: EntryRow[]; resource?: string };
+    const slots: Slot[] = [];
+    for (const v of values) {
+        const list = byValue.get(v)!;
+        if (!splitDayByPerson) {
+            slots.push({ value: v, rows: list });
+            continue;
+        }
+        const byRes = new Map<string, EntryRow[]>();
+        for (const r of list) {
+            const rk = resourceKey(r);
+            const l = byRes.get(rk);
+            if (l) l.push(r);
+            else byRes.set(rk, [r]);
+        }
+        if (byRes.size <= 1) {
+            slots.push({ value: v, rows: list });
+            continue;
+        }
+        const resKeys = Array.from(byRes.keys()).sort((a, b) =>
+            compareGroups("resource", a, b, true),
+        );
+        for (const rk of resKeys) {
+            slots.push({ value: v, rows: byRes.get(rk)!, resource: rk });
+        }
+    }
+
+    return slots.map(({ value: v, rows: groupRows, resource: slotRes }) => {
         const first = groupRows[0];
-        const key = `${parent ? parent.key + "|" : ""}${dim}:${v}`;
+        const key =
+            `${parent ? parent.key + "|" : ""}${dim}:${v}` +
+            (slotRes !== undefined ? `|person:${slotRes}` : "");
+        const baseLabel = labelOf(dim, first, lang, labels);
         const node: GroupNode = {
             key,
             dim,
             depth,
-            label: labelOf(dim, first, lang, labels),
+            label:
+                slotRes !== undefined
+                    ? `${baseLabel} · ${first.resourceName?.trim() || labels.noResource}`
+                    : baseLabel,
             rows: groupRows,
             children: null,
             day: dim === "day" ? v : parent?.day,
-            resource: dim === "resource" ? v : parent?.resource,
+            resource:
+                dim === "resource"
+                    ? v
+                    : slotRes !== undefined
+                      ? slotRes
+                      : parent?.resource,
             project: dim === "project" ? v : parent?.project,
             dateIso: first.dateValue ?? "",
             ...sums(groupRows),

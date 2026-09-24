@@ -31,7 +31,13 @@ deletes the original.
     An **ⓘ** button next to it (split mode) explains how *Split day* works. *Resource* is only offered while
     "all hours" is shown (with "my hours" it would be a single group) and
     drops out automatically when switching back.
-  - **Mobile** (fitter use): one level, toggle **Day | Project**.
+  - **Mobile** (fitter use): one level — **None | Day | Project** (in the
+    filter bottom sheet).
+  - **Days are split per person:** when several people booked the same day
+    and the grouping has no resource level, that day gets one header per
+    person (`Mi, 07.08.2024 · <resource>`) — the day split works per
+    person-day, so every header can offer *Split day*. With one person (e.g.
+    "my hours") the header stays a plain date.
   - Every header shows the group's **Work**, **Travel** and **Total** hours.
     Level-1 headers are sticky with sum pills; level-2 headers are indented
     and compact (text sums, not sticky). Every group can be collapsed.

@@ -32,7 +32,14 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
     in einem Popup, wie *Tag aufteilen* funktioniert. *Ressource* wird nur angeboten,
     solange „Alle Stunden" aktiv ist (bei „Meine Stunden" gäbe es nur eine
     Gruppe), und fällt beim Zurückschalten automatisch weg.
-  - **Mobil** (Monteur-Nutzung): eine Ebene, Umschalter **Tag | Projekt**.
+  - **Mobil** (Monteur-Nutzung): eine Ebene — **Keine | Tag | Projekt** (im
+    Filter-Sheet).
+  - **Tage werden je Person getrennt:** Haben mehrere Personen am selben Tag
+    gebucht und die Gruppierung hat keine Ressourcen-Ebene, bekommt der Tag
+    je Person eine eigene Kopfzeile („Mi, 07.08.2024 · <Ressource>") — die
+    Tagesaufteilung arbeitet pro Personentag, so bietet jede Kopfzeile
+    *Tag aufteilen* an. Bei nur einer Person (z. B. „Meine Stunden") bleibt
+    die Kopfzeile ein reines Datum.
   - Jede Kopfzeile zeigt **Arbeit**, **Fahrzeit** und **Gesamt** der Gruppe.
     Kopfzeilen der 1. Ebene haften beim Scrollen und zeigen Pills; die der
     2. Ebene sind eingerückt und kompakt (Summen als Text, nicht haftend).
