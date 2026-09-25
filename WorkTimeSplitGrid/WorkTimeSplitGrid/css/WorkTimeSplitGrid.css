@@ -1910,6 +1910,24 @@
     padding-left: 66px;
 }
 
+/* Phone readability: the group header is the list's main orientation, so it
+   gets a larger date/person line and 15 px sums (was 15 / 12 px). */
+.wtsg-mobile .wtsg-day-head-compact .wtsg-day-label {
+    font-size: 17px;
+    line-height: 24px;
+}
+
+.wtsg-mobile .wtsg-day-sums-compact {
+    font-size: 15px;
+    line-height: 22px;
+    color: #424242;
+}
+
+.wtsg-mobile .wtsg-dsc-w,
+.wtsg-mobile .wtsg-dsc-t {
+    font-weight: 600;
+}
+
 .wtsg-day-sums-compact strong {
     color: #242424;
     font-weight: 700;
