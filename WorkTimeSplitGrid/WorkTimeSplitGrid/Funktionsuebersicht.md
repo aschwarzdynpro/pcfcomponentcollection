@@ -355,9 +355,10 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   damit ein veraltetes, gecachtes Stylesheet es nicht in den Seitenfluss
   schiebt. Desktop behält die volle Leiste. Respektiert
   `prefers-reduced-motion`.
-- **Kompakter Tageskopf (Handy)** — eine Zeile: Datum · `A 8 h · F 1 h · Σ 9 h`
-  (Arbeit/Fahrzeit farbig, ausgeschrieben im Tooltip) · runder Icon-Button
-  *Tag aufteilen* (40 px Tippfläche).
+- **Kompakter Tageskopf (Handy)** — zwei Zeilen: oben Datum (· Person) mit dem
+  runden Icon-Button *Tag aufteilen* (40 px Tippfläche), darunter bündig zur
+  Beschriftung `A 8 h · F 1 h · Σ 9 h` (Arbeit/Fahrzeit farbig, ausgeschrieben
+  im Tooltip) — die Summen werden nie abgeschnitten.
 - Beim Hinzufügen zur View dasselbe Control **Web + Tablet + Phone** zuweisen —
   kein separater Mobil-Build zu pflegen.
 

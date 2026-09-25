@@ -1397,9 +1397,12 @@
 }
 
 /* ---- Confirm modal ---- */
+/* z-index 60: above the sticky group headers (1), popovers (30) and the phone
+   bottom sheet (50) — see components/layers.ts. */
 .wtsg-modal {
     position: absolute;
     inset: 0;
+    z-index: 60;
     background: rgba(0, 0, 0, 0.35);
     display: flex;
     align-items: center;
@@ -1874,21 +1877,55 @@
     cursor: pointer;
 }
 
-/* ---- Compact day header (phone): date · text sums · icon split button ---- */
+/* ---- Compact day header (phone), two lines:
+        ⌄ [☐] Date · person …                 (✱)
+              A 0,25 h · F 0 h · Σ 0,25 h
+   The label takes the free width of line 1 (ellipsis only for very long
+   names), the sums get their own full line and are never cut off. ---- */
 .wtsg-mobile .wtsg-day-head.wtsg-day-head-compact {
-    flex-wrap: nowrap;
-    gap: 8px;
-    padding: 4px 8px 4px 6px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 8px;
+    padding: 4px 8px 6px 6px;
+}
+
+.wtsg-day-head-compact .wtsg-day-label {
+    flex: 1 1 0;
 }
 
 .wtsg-day-sums-compact {
-    flex: 1 1 auto;
+    flex: 1 1 100%;
     min-width: 0;
+    /* align under the label: collapse button (32 px) + gap (8 px) */
+    padding-left: 40px;
+    box-sizing: border-box;
     font-size: 12px;
+    line-height: 18px;
     color: #616161;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+}
+
+/* Assign mode: the header checkbox (18 px + 8 px gap) shifts the label. */
+.wtsg-assign .wtsg-day-sums-compact {
+    padding-left: 66px;
+}
+
+/* Phone readability: the group header is the list's main orientation, so it
+   gets a larger date/person line and 15 px sums (was 15 / 12 px). */
+.wtsg-mobile .wtsg-day-head-compact .wtsg-day-label {
+    font-size: 17px;
+    line-height: 24px;
+}
+
+.wtsg-mobile .wtsg-day-sums-compact {
+    font-size: 15px;
+    line-height: 22px;
+    color: #424242;
+}
+
+.wtsg-mobile .wtsg-dsc-w,
+.wtsg-mobile .wtsg-dsc-t {
+    font-weight: 600;
 }
 
 .wtsg-day-sums-compact strong {

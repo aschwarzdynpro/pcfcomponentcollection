@@ -273,9 +273,10 @@ deletes the original.
   closes it). The sheet's overlay layout is inline so a stale cached
   stylesheet can't push it into the page flow. Desktop keeps the full bar.
   Respects `prefers-reduced-motion`.
-- **Compact day header (phone)** — one line: date · `A 8 h · F 1 h · Σ 9 h`
-  (work/travel coloured, full words in the tooltip) · round icon-only
-  *Split day* button (40 px touch target).
+- **Compact day header (phone)** — two lines: date (· person) with the round
+  icon-only *Split day* button (40 px touch target) on the first, and
+  `A 8 h · F 1 h · Σ 9 h` (work/travel coloured, full words in the tooltip)
+  on the second, aligned under the label — the sums are never cut off.
 - Assign the same control to **Web + Tablet + Phone** when adding it to the
   view; no separate mobile build to maintain.
 
@@ -353,6 +354,7 @@ WorkTimeSplitGrid/
 │   ├── DaySplitPanel.tsx         # Day-level editor (work/travel blocks, preview)
 │   ├── SubtypeRowEditor.tsx      # Shared subtype input row (arrow + stepper)
 │   ├── grouping.ts               # 1–2 level grouping tree, sums, day-split scope
+│   ├── layers.ts                 # z-index order of overlays (modal layer inline)
 │   ├── daySplit.ts               # Chronological fill of a day total into entries
 │   ├── Dropdown.tsx              # Custom, dependency-free sort dropdown
 │   ├── api.ts                    # WebAPI: load entries/subtypes + split-save + reports

@@ -412,19 +412,6 @@ export const EntryList: React.FC<EntryListProps> = ({
                     >
                         {g.label}
                     </span>
-                    {compact && (
-                        <span className="wtsg-day-sums-compact" title={sumsTitle}>
-                            <span className="wtsg-dsc-w">
-                                {strings.dayWorkShort} {hours(g.work)}
-                            </span>
-                            {" · "}
-                            <span className="wtsg-dsc-t">
-                                {strings.dayTravelShort} {hours(g.travel)}
-                            </span>
-                            {" · "}
-                            <strong>Σ {hours(g.total)}</strong>
-                        </span>
-                    )}
                     {canSplitDay && (
                         <button
                             type="button"
@@ -439,6 +426,21 @@ export const EntryList: React.FC<EntryListProps> = ({
                             {splitIcon}
                             {!compact && <span>{strings.daySplitButton}</span>}
                         </button>
+                    )}
+                    {/* Phone: second line under the label (date / name is never
+                        squeezed by the sums, the sums are never cut off). */}
+                    {compact && (
+                        <span className="wtsg-day-sums-compact" title={sumsTitle}>
+                            <span className="wtsg-dsc-w">
+                                {strings.dayWorkShort} {hours(g.work)}
+                            </span>
+                            {" · "}
+                            <span className="wtsg-dsc-t">
+                                {strings.dayTravelShort} {hours(g.travel)}
+                            </span>
+                            {" · "}
+                            <strong>Σ {hours(g.total)}</strong>
+                        </span>
                     )}
                     {compact ? null : top ? (
                         <span className="wtsg-day-sums">
