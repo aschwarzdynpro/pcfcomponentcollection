@@ -68,6 +68,9 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   - **Aufteilen** — `sst_worksubtypecompleted = Nein` → Split-Editor rechts.
   - **Zuordnen** — `sst_worksubtypecompleted = Ja` **und** `sst_timereport` leer
     → Mehrfachauswahl-Liste mit Aktion **„Lieferscheine erstellen"**.
+  Es werden ausschließlich **aktive** Einträge gelistet (`statecode eq 0`) — ein
+  deaktivierter Datensatz taucht in keinem der beiden Modi auf, analog zu allen
+  Systemansichten der Tabelle.
   **Pausen** (`sst_type` = `pauseValue`, Default `Pause`) werden in beiden Modi
   ausgeblendet — ebenso Einträge auf **Festpreis-Projekten** (Projekt-Feld
   `hso_projecttype = 100000001`, gefiltert über die `sst_Project_id`-Navigation),

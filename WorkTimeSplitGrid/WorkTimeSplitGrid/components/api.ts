@@ -418,8 +418,9 @@ function mapLoadedEntry(e: Record<string, any>): LoadedEntry {
 /**
  * Load the entries for a mode directly from the server with the filter already
  * applied — replacing the previous "pull every dataset page + enrich" approach,
- * which does not scale past Dataverse's 5000-record page cap. Both modes require
- * a project; split → not completed; assign → completed and no delivery note.
+ * which does not scale past Dataverse's 5000-record page cap. Both modes are
+ * restricted to **active** records (`statecode eq 0`) and require a project;
+ * split → not completed; assign → completed and no delivery note.
  * When `resourceUserId` is set ("My hours"), restrict to that user's resource(s).
  */
 export async function loadEntries(
@@ -474,8 +475,11 @@ export async function loadEntries(
         fromDate && !isNaN(fromDate.getTime())
             ? ` and sst_date ge ${fromDate.toISOString()}`
             : "";
+    // Active records only (statecode 0 = Active, 1 = Inactive). Every system view
+    // of sst_roundedtimeentries filters this way — without it a deactivated entry
+    // shows up in both modes and can still be split / assigned to a delivery note.
     const filter =
-        "_sst_project_id_value ne null" +
+        "statecode eq 0 and _sst_project_id_value ne null" +
         dateClause +
         projectTypeClause +
         modeClause +
