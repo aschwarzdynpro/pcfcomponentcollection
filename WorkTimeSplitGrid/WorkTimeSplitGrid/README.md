@@ -65,6 +65,8 @@ deletes the original.
   - **Zuordnen / Assign** — `sst_worksubtypecompleted = Yes` **and**
     `sst_timereport` empty; a multi-select list with a **Create delivery notes**
     action.
+  Only **active** entries are listed (`statecode eq 0`) — a deactivated entry
+  never shows up in either mode, matching every system view of the table.
   Breaks (`sst_type` = `pauseValue`, default `Pause`) are excluded from both
   modes, as are entries on **fixed-price ("Festpreis") projects** — unless a team
   lead enables the *Show fixed-price hours* switch (desktop only, see below) (the project's
