@@ -165,14 +165,17 @@ function buildLevel(
         compareGroups(dim, a, b, dayAscending),
     );
 
-    // A day is always split per person when several people booked it and the
-    // grouping doesn't separate people anyway (no resource dimension): the
-    // day split works per person-day (8 h rule), so a mixed day header could
-    // never offer "Split day". One person → one header, label unchanged.
+    // A day is always split per person when the grouping doesn't separate
+    // people anyway (no resource dimension): the day split works per
+    // person-day (8 h rule), so a mixed day header could never offer "Split
+    // day". As soon as the list holds several people, every day header names
+    // its person — also days only one person booked — so the headers read
+    // consistently. A single-person list ("my hours") keeps plain dates.
     const splitDayByPerson =
         dim === "day" &&
         !dims.includes("resource") &&
-        parent?.resource === undefined;
+        parent?.resource === undefined &&
+        new Set(rows.map(resourceKey)).size > 1;
 
     type Slot = { value: string; rows: EntryRow[]; resource?: string };
     const slots: Slot[] = [];
@@ -188,10 +191,6 @@ function buildLevel(
             const l = byRes.get(rk);
             if (l) l.push(r);
             else byRes.set(rk, [r]);
-        }
-        if (byRes.size <= 1) {
-            slots.push({ value: v, rows: list });
-            continue;
         }
         const resKeys = Array.from(byRes.keys()).sort((a, b) =>
             compareGroups("resource", a, b, true),
