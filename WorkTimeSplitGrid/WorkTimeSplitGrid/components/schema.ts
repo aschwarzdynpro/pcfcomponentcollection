@@ -151,6 +151,14 @@ export const BOOKING = {
     resourceValue: "_resource_value",
 } as const;
 
+/**
+ * Aufmaß (measurement-based billing) is NOT a project type: it lives in the
+ * separate "Projekt Gruppe" picklist `hso_projectgroup` (global option set
+ * `hso_hsoprojecttype`: 100000000 Aufwand, 100000001 Aufmaß, 100000002
+ * Festpreis). Beware: the same 100000001 means Festpreis in `hso_projecttype`
+ * (option set `hso_uoprojecttype`) but Aufmaß here. Verified in the SSTCore
+ * export and live (UAT 2026-10-06); `ne` keeps projects with no group set.
+ */
 export const PROJECT_TYPE = {
     /** Single-valued navigation property RTE → msdyn_project. */
     nav: "sst_Project_id",
@@ -158,6 +166,10 @@ export const PROJECT_TYPE = {
     field: "hso_projecttype",
     /** Festpreis (fixed price) option value — excluded from both modes. */
     fixedPriceValue: 100000001,
+    /** Project-group picklist on msdyn_project (carries "Aufmaß"). */
+    groupField: "hso_projectgroup",
+    /** Aufmaß option value of the project group — excluded from both modes. */
+    measuredValue: 100000001,
 } as const;
 
 /**

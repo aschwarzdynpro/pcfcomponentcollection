@@ -21,7 +21,9 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   **Festpreis-Projekt** erhalten zusätzlich einen amberfarbenen Chip
   **🏷️ Festpreis** (`hso_projecttype = 100000001`, aus demselben
   `sst_Project_id`-`$expand`) — sobald die Teamleitung sie einblendet, bleiben
-  sie damit auf einen Blick unterscheidbar.
+  sie damit auf einen Blick unterscheidbar. Einträge zu einem
+  **Aufmaß-Projekt** erhalten ebenso einen amberfarbenen Chip **📐 Aufmaß**
+  (Projekt Gruppe `hso_projectgroup = 100000001`).
 - **Gruppierung mit Summen** (`grouping.ts`) — die Liste lässt sich nach
   **Projekt**, **Ressource** und **Tag** gruppieren, unabhängig von der
   Sortierung (die Sortierung ordnet die Karten innerhalb der innersten Gruppe):
@@ -74,7 +76,9 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   Systemansichten der Tabelle.
   **Pausen** (`sst_type` = `pauseValue`, Default `Pause`) werden in beiden Modi
   ausgeblendet — ebenso Einträge auf **Festpreis-Projekten** (Projekt-Feld
-  `hso_projecttype = 100000001`, gefiltert über die `sst_Project_id`-Navigation),
+  `hso_projecttype = 100000001`) und auf **Aufmaß-Projekten** (Projekt Gruppe
+  `hso_projectgroup = 100000001` — derselbe Wert bedeutet in `hso_projecttype`
+  Festpreis, hier Aufmaß), beide gefiltert über die `sst_Project_id`-Navigation,
   sofern die Teamleitung nicht den Schalter **„Festpreiszeiten anzeigen"**
   aktiviert (nur Desktop, siehe unten).
   Die Liste wird **direkt vom Server geladen, mit bereits angewandtem
@@ -168,11 +172,11 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
   freigegeben — die Liste bleibt nie hängen.
 - **Schalter „Festpreiszeiten anzeigen"** (Default **Aus**) — steht direkt neben
   dem Stunden-Schalter und blendet zusätzlich die Einträge zu **Festpreis-
-  Projekten** ein, die beide Modi sonst ausblenden. Er wird **nur** für Inhaber
+  und Aufmaß-Projekten** ein, die beide Modi sonst ausblenden. Er wird **nur** für Inhaber
   derselben beiden Rollen (**System Administrator** / **SST | Dispo Teamleitung
   Addon**) gerendert — **und nur in der Desktop-Variante**, nie im Handy-Layout
-  (Formfaktor Telefon). Eingeschaltet entfällt die `hso_projecttype`-Bedingung in
-  der Server-Abfrage. Der Zustand ist zusätzlich an die Berechtigung gekoppelt,
+  (Formfaktor Telefon). Eingeschaltet entfallen die Bedingungen auf
+  `hso_projecttype` und `hso_projectgroup` in der Server-Abfrage. Der Zustand ist zusätzlich an die Berechtigung gekoppelt,
   damit ein stehengebliebenes „An" die Abfrage nie für jemanden erweitert, der
   den Schalter nicht nutzen darf.
 - Statuspunkt je Karte (offen = rot, aufgeteilt = grün).

@@ -40,6 +40,8 @@ export interface EntryRow {
     projectPresent?: boolean;
     /** Project is of type "Festpreis" (fixed price) → shown as a chip. */
     fixedPrice?: boolean;
+    /** Project group is "Aufmaß" (measurement-based) → shown as a chip. */
+    measured?: boolean;
     /** Extra view columns surfaced as small chips. */
     extras: { key: string; label: string; value: string }[];
 }
