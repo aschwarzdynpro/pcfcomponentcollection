@@ -34,12 +34,13 @@ zugehöriger Pausen als „aufgeteilt" markiert und das Original gelöscht.
     Gruppe), und fällt beim Zurückschalten automatisch weg.
   - **Mobil** (Monteur-Nutzung): eine Ebene — **Keine | Tag | Projekt** (im
     Filter-Sheet).
-  - **Tage werden je Person getrennt:** Haben mehrere Personen am selben Tag
-    gebucht und die Gruppierung hat keine Ressourcen-Ebene, bekommt der Tag
-    je Person eine eigene Kopfzeile („Mi, 07.08.2024 · <Ressource>") — die
-    Tagesaufteilung arbeitet pro Personentag, so bietet jede Kopfzeile
-    *Tag aufteilen* an. Bei nur einer Person (z. B. „Meine Stunden") bleibt
-    die Kopfzeile ein reines Datum.
+  - **Tage werden je Person getrennt:** Enthält die Liste mehrere Personen
+    und die Gruppierung hat keine Ressourcen-Ebene, bekommt jeder Tag je
+    Person eine eigene Kopfzeile („Mi, 07.08.2024 · <Ressource>") — auch
+    Tage, an denen nur eine Person gebucht hat, damit die Kopfzeilen
+    einheitlich aussehen. Die Tagesaufteilung arbeitet pro Personentag, so
+    bietet jede Kopfzeile *Tag aufteilen* an. Bei nur einer Person in der
+    Liste (z. B. „Meine Stunden") bleiben die Kopfzeilen reine Datumsangaben.
   - Jede Kopfzeile zeigt **Arbeit**, **Fahrzeit** und **Gesamt** der Gruppe.
     Kopfzeilen der 1. Ebene haften beim Scrollen und zeigen Pills; die der
     2. Ebene sind eingerückt und kompakt (Summen als Text, nicht haftend).
