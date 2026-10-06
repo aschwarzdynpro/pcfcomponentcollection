@@ -282,6 +282,15 @@ export const EntryList: React.FC<EntryListProps> = ({
                             {strings.fixedPriceChip}
                         </span>
                     )}
+                    {r.measured && (
+                        <span
+                            className="wtsg-chip wtsg-chip-fixed"
+                            title={strings.measuredChip}
+                        >
+                            <span aria-hidden="true">📐 </span>
+                            {strings.measuredChip}
+                        </span>
+                    )}
                 </div>
                 <div className="wtsg-card-foot">
                     {r.projectName &&

@@ -145,6 +145,7 @@ function toEntryRow(
         timereport: e.timereport,
         projectPresent: !!e.projectId,
         fixedPrice: e.fixedPrice,
+        measured: e.measured,
         extras: [],
     };
 }
@@ -187,7 +188,7 @@ function fallbackCopy(text: string, done: () => void): void {
  * the online path does server-side are applied client-side over the dataset
  * columns: pauses excluded, split→not completed, assign→completed & no delivery
  * note, project required (only when the project column is in the view). The
- * Festpreis and "My hours" filters are NOT applied offline (the project type and
+ * Festpreis/Aufmaß and "My hours" filters are NOT applied offline (the project type and
  * the resource→user mapping aren't reliably in the local cache).
  */
 function buildOfflineEntries(
@@ -347,7 +348,7 @@ export const WorkTimeSplitGrid: React.FC<WorkTimeSplitGridProps> = (props) => {
     // offline→online transition (which re-runs the role check).
     const defaultScopeApplied = React.useRef(false);
     // Team-lead-only, desktop-only opt-in to ALSO show entries on fixed-price
-    // ("Festpreis") projects, which both modes hide by default.
+    // ("Festpreis") and "Aufmaß" projects, which both modes hide by default.
     const [showFixedPrice, setShowFixedPrice] = React.useState(false);
     // Debug/info panel: session id (once per control instance) + open/copied state.
     const [showInfo, setShowInfo] = React.useState(false);

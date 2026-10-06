@@ -24,13 +24,16 @@ export interface Strings {
     scopeToggle: string;
     /**
      * Label of the team-lead-only switch that includes entries on fixed-price
-     * ("Festpreis") projects, which are excluded by default. Desktop only.
+     * ("Festpreis") and "Aufmaß" projects, which are excluded by default.
+     * Desktop only.
      */
     fixedPrice: string;
     /** Tooltip/aria description for the fixed-price switch. */
     fixedPriceHint: string;
     /** Chip on a list card marking an entry on a fixed-price project. */
     fixedPriceChip: string;
+    /** Chip on a list card marking an entry on an "Aufmaß" project. */
+    measuredChip: string;
     /** Period filter (segmented). */
     periodLabel: string;
     periodAll: string;
@@ -173,8 +176,9 @@ export const STRINGS: Record<Lang, Strings> = {
         scopeToggle: "Hours scope — off: my hours, on: all hours",
         fixedPrice: "Show fixed-price hours",
         fixedPriceHint:
-            "Also list entries on fixed-price („Festpreis“) projects, which are hidden by default.",
+            "Also list entries on fixed-price („Festpreis“) and measurement-based („Aufmaß“) projects, which are hidden by default.",
         fixedPriceChip: "Fixed price",
+        measuredChip: "Measurement",
         periodLabel: "Period",
         periodAll: "All",
         periodToday: "Today",
@@ -310,8 +314,9 @@ export const STRINGS: Record<Lang, Strings> = {
         scopeToggle: "Stundenbereich — Aus: meine Stunden, An: alle Stunden",
         fixedPrice: "Festpreiszeiten anzeigen",
         fixedPriceHint:
-            "Zeigt zusätzlich Einträge zu Festpreis-Projekten, die standardmäßig ausgeblendet sind.",
+            "Zeigt zusätzlich Einträge zu Festpreis- und Aufmaß-Projekten, die standardmäßig ausgeblendet sind.",
         fixedPriceChip: "Festpreis",
+        measuredChip: "Aufmaß",
         periodLabel: "Zeitraum",
         periodAll: "Alle",
         periodToday: "Heute",
@@ -449,8 +454,9 @@ export const STRINGS: Record<Lang, Strings> = {
         scopeToggle: "Portée des heures — désactivé : mes heures, activé : toutes les heures",
         fixedPrice: "Afficher les heures au forfait",
         fixedPriceChip: "Forfait",
+        measuredChip: "Métré",
         fixedPriceHint:
-            "Affiche également les entrées des projets au forfait (« Festpreis »), masquées par défaut.",
+            "Affiche également les entrées des projets au forfait (« Festpreis ») et au métré (« Aufmaß »), masquées par défaut.",
         periodLabel: "Période",
         periodAll: "Toutes",
         periodToday: "Aujourd'hui",

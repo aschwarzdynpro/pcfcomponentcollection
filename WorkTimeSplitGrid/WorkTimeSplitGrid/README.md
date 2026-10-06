@@ -21,7 +21,9 @@ deletes the original.
   **fixed-price project** get an additional amber-accented **🏷️ Fixed price**
   chip (`hso_projecttype = 100000001`, read from the same `sst_Project_id`
   `$expand`) — so once a team lead switches them into the list, they stay
-  distinguishable at a glance.
+  distinguishable at a glance. Entries on an **"Aufmaß" (measurement-based)
+  project** likewise get an amber **📐 Measurement** chip (project group
+  `hso_projectgroup = 100000001`).
 - **Grouping with sums** (`grouping.ts`) — the list can be grouped by
   **project**, **resource** and **day**, independent of the sort order (the
   sort orders the cards inside the innermost group):
@@ -69,10 +71,12 @@ deletes the original.
   Only **active** entries are listed (`statecode eq 0`) — a deactivated entry
   never shows up in either mode, matching every system view of the table.
   Breaks (`sst_type` = `pauseValue`, default `Pause`) are excluded from both
-  modes, as are entries on **fixed-price ("Festpreis") projects** — unless a team
-  lead enables the *Show fixed-price hours* switch (desktop only, see below) (the project's
-  `hso_projecttype = 100000001`, filtered via the `sst_Project_id` navigation
-  property). The list is loaded **directly from the server with the mode filter
+  modes, as are entries on **fixed-price ("Festpreis") projects** (the project's
+  `hso_projecttype = 100000001`) and on **"Aufmaß" projects** (the project's
+  group `hso_projectgroup = 100000001` — note the same value means Festpreis in
+  `hso_projecttype` but Aufmaß here), both filtered via the `sst_Project_id`
+  navigation property — unless a team lead enables the *Show fixed-price hours*
+  switch (desktop only, see below). The list is loaded **directly from the server with the mode filter
   already applied** (`webApi.retrieveMultipleRecords` on
   `sst_roundedtimeentries`), rather than pulling every page of the bound view and
   filtering client-side.
@@ -149,11 +153,11 @@ deletes the original.
   re-fetch "all hours". The default is applied **once**, so a deliberate switch
   back to "my hours" survives a refresh or an offline→online transition.
 - **Fixed-price switch** (*Show fixed-price hours*, defaults to **off**) — sits
-  next to the scope switch and adds entries on fixed-price ("Festpreis") projects
-  back into the list, which both modes hide by default. It is rendered **only**
+  next to the scope switch and adds entries on fixed-price ("Festpreis") and
+  "Aufmaß" projects back into the list, which both modes hide by default. It is rendered **only**
   for holders of the same two roles **and only in the desktop layout** (never on
-  the phone form factor). Turning it on drops the `hso_projecttype` clause from
-  the server query; the state is additionally gated on the permission, so a stale
+  the phone form factor). Turning it on drops the `hso_projecttype` and
+  `hso_projectgroup` clauses from the server query; the state is additionally gated on the permission, so a stale
   `on` can never widen the query for a user who may not use it.
 - **Detail split panel** — selecting an entry loads its work-subtype rows
   (`sst_roundedtimeentryworksubtypes`) and lets the user edit the hours per

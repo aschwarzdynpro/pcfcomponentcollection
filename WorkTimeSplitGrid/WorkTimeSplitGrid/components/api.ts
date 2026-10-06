@@ -349,6 +349,8 @@ export interface LoadedEntry {
     startValue: string;
     /** Entry belongs to a fixed-price ("Festpreis") project → flagged in the list. */
     fixedPrice: boolean;
+    /** Entry belongs to an "Aufmaß" project (project group) → flagged in the list. */
+    measured: boolean;
 }
 
 export interface LoadEntriesOptions {
@@ -412,6 +414,10 @@ function mapLoadedEntry(e: Record<string, any>): LoadedEntry {
             e.sst_Project_id != null &&
             Number(e.sst_Project_id[PROJECT_TYPE.field]) ===
                 PROJECT_TYPE.fixedPriceValue,
+        measured:
+            e.sst_Project_id != null &&
+            Number(e.sst_Project_id[PROJECT_TYPE.groupField]) ===
+                PROJECT_TYPE.measuredValue,
     };
 }
 
@@ -462,14 +468,16 @@ export async function loadEntries(
     const pauseClause = pause
         ? ` and sst_type ne '${pause.replace(/'/g, "''")}'`
         : "";
-    // Exclude entries on fixed-price ("Festpreis") projects — both modes. Filter
-    // on the project's hso_projecttype via the lookup navigation property; `ne`
-    // keeps projects with no type set. Team leads can opt back in via
-    // `includeFixedPrice`, which drops the clause entirely.
+    // Exclude entries on fixed-price ("Festpreis") and "Aufmaß" projects — both
+    // modes. Filter on the project's hso_projecttype / hso_projectgroup via the
+    // lookup navigation property; `ne` keeps projects with no value set. Team
+    // leads can opt back in via `includeFixedPrice`, which drops both clauses.
     const projectTypeClause = opts.includeFixedPrice
         ? ""
         : ` and ${PROJECT_TYPE.nav}/${PROJECT_TYPE.field}` +
-          ` ne ${PROJECT_TYPE.fixedPriceValue}`;
+          ` ne ${PROJECT_TYPE.fixedPriceValue}` +
+          ` and ${PROJECT_TYPE.nav}/${PROJECT_TYPE.groupField}` +
+          ` ne ${PROJECT_TYPE.measuredValue}`;
     const fromDate = opts.fromDate;
     const dateClause =
         fromDate && !isNaN(fromDate.getTime())
@@ -490,7 +498,7 @@ export async function loadEntries(
         `?$select=sst_roundedtimeentriesid,sst_name,sst_type,sst_date,sst_duration,sst_resource,` +
         `sst_worksubtypecompleted,_sst_project_id_value,_sst_timereport_value,_sst_resource_ref_value,` +
         `_sst_bookableresourcebooking_value` +
-        `&$expand=sst_Project_id($select=sst_projectnumber,msdyn_subject,${PROJECT_TYPE.field}),` +
+        `&$expand=sst_Project_id($select=sst_projectnumber,msdyn_subject,${PROJECT_TYPE.field},${PROJECT_TYPE.groupField}),` +
         `sst_resource_ref($select=name),` +
         `${BOOKING.nav}($select=${BOOKING.start},${BOOKING.resourceValue})` +
         `&$filter=${filter}&$orderby=sst_date desc`;
