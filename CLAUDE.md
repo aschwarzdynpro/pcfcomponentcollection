@@ -42,19 +42,22 @@ Each control is a **feature folder** grouping PCF source + its Dataverse solutio
 
 Controls present: BarcodeScanControl, ChoicePickerControl, DataverseCrudComponent, FlagPhoneControl,
 FuzzyLookupControl, HoursDaysControl, KanbanBoard, MultiProgressControl,
-WorkTimeSplitGrid. `node_modules/`, `out/`, `generated/ManifestTypes.d.ts`, and
+WorkTimeSplitGrid, and RecordAuditHistory (feature folder `audit-history/` — the
+only lowercase feature folder; it also skips `pcfconfig.json`, so the build
+output lands flat in `out/controls`). `node_modules/`, `out/`, `generated/ManifestTypes.d.ts`, and
 `*.zip` are git-ignored.
 
 ---
 
 ## 2. Publishers / customers — pick the right one FIRST
 
-This repo hosts controls for **two customers**. New control → confirm which:
+This repo hosts controls for **two customers** plus DynamicsPro's own products. New control → confirm which:
 
 | Publisher (unique name)     | Prefix | Option-value prefix | Used by |
 |-----------------------------|--------|---------------------|---------|
 | `HerbertWaldmann`           | `wal`  | `15282`             | default for the collection (most controls) |
 | `schulzsystemtechnikgmbh` (Schulz Systemtechnik GmbH) | `sst` | `86752` | WorkTimeSplitGrid (SST project) |
+| `DynamicsPro`               | `pro`  | `45500`             | customer-neutral products (RecordAuditHistory) — same publisher as the Solution Administration Console |
 
 The prefix shows up in the **control namespace/constructor**, the solution
 `Solution.xml` (`<CustomizationPrefix>`, `<CustomizationOptionValuePrefix>`,

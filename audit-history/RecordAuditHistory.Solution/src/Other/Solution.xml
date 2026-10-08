@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml version="9.1.0.643" SolutionPackageVersion="9.1" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SolutionManifest>
+    <UniqueName>DynamicsProRecordAuditHistory</UniqueName>
+    <LocalizedNames>
+      <LocalizedName description="Record Audit History" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="PCF field control: the audit history of the current record inside its main form (Audit Explorer, record mode). DE/EN UI." languagecode="1033" />
+    </Descriptions>
+    <Version>0.1.0.0</Version>
+    <!-- Solution Package Type: Unmanaged(0)/Managed(1)/Both(2)-->
+    <Managed>2</Managed>
+    <Publisher>
+      <UniqueName>DynamicsPro</UniqueName>
+      <LocalizedNames>
+        <LocalizedName description="DynamicsPro" languagecode="1033" />
+      </LocalizedNames>
+      <Descriptions>
+        <Description description="DynamicsPro" languagecode="1033" />
+      </Descriptions>
+      <EMailAddress xsi:nil="true"></EMailAddress>
+      <SupportingWebsiteUrl xsi:nil="true"></SupportingWebsiteUrl>
+      <CustomizationPrefix>pro</CustomizationPrefix>
+      <CustomizationOptionValuePrefix>45500</CustomizationOptionValuePrefix>
+      <Addresses />
+    </Publisher>
+    <RootComponents>
+      <RootComponent type="66" schemaName="pro_AuditExplorer.RecordAuditHistory" behavior="0" />
+    </RootComponents>
+    <MissingDependencies />
+  </SolutionManifest>
+</ImportExportXml>

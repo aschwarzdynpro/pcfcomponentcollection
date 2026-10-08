@@ -15,6 +15,7 @@ and model-driven apps.
 | [HoursDaysControl](./HoursDaysControl/HoursDaysControl/) | field | Duration input for numeric columns. User picks workdays + hours (default 1 day = 8 h); the underlying field stores the total in hours. Bilingual UI (DE / EN). |
 | [KanbanBoard](./KanbanBoard/KanbanBoard/) | dataset | Drag-and-drop Kanban view that groups records by a choice/status column and lets users update the status by dragging cards. Trilingual UI (DE / EN / FR). |
 | [MultiProgressControl](./MultiProgressControl/MultiProgressControl/) | field | Read-only status control. Shows up to 6 configurable Whole-Number columns as ring progress indicators (0–100 %) in a row that snaps from 6-in-a-line to exactly 3-per-row when narrow, with status colours (0 % neutral / 1–99 % brand / 100 % green). Bilingual UI (DE / EN). |
+| [RecordAuditHistory](./audit-history/RecordAuditHistory/) | field | Audit history of the current record inside its main form: entries grouped by day with expandable column diffs (display names, choice labels, lookup names), a per-column value history, and plain-language reasons for empty results (auditing off, retention, genuinely unchanged). Bilingual UI (DE / EN). |
 | [WorkTimeSplitGrid](./WorkTimeSplitGrid/WorkTimeSplitGrid/) | dataset | Master/detail grid for the SST *Rounded Time Entries* table: distribute an entry's total duration across work subtypes (Normal / Overtime / Night-Sunday / Holiday), then save to create the split records, mark the original + its pauses completed, and delete the original. Trilingual UI (DE / EN / FR). |
 
 Each component has its own `README.md` with detailed features, properties,
@@ -33,6 +34,7 @@ Importable Dataverse solutions live alongside their source components:
 | [HoursDaysControl.Solution](./HoursDaysControl/HoursDaysControl.Solution/) | `HoursDaysControl/HoursDaysControl/` | Publisher `HerbertWaldmann`, prefix `wal`. Run [`build.ps1`](./HoursDaysControl/HoursDaysControl.Solution/build.ps1) to produce unmanaged + managed zips. |
 | [KanbanBoard.Solution](./KanbanBoard/KanbanBoard.Solution/) | `KanbanBoard/KanbanBoard/` | Publisher `HerbertWaldmann`, prefix `wal`. Run [`build.ps1`](./KanbanBoard/KanbanBoard.Solution/build.ps1) to produce unmanaged + managed zips. |
 | [MultiProgressControl.Solution](./MultiProgressControl/MultiProgressControl.Solution/) | `MultiProgressControl/MultiProgressControl/` | Publisher `HerbertWaldmann`, prefix `wal`. Run [`build.ps1`](./MultiProgressControl/MultiProgressControl.Solution/build.ps1) to produce unmanaged + managed zips. |
+| [RecordAuditHistory.Solution](./audit-history/RecordAuditHistory.Solution/) | `audit-history/RecordAuditHistory/` | Publisher `DynamicsPro`, prefix `pro`. Run [`build.ps1`](./audit-history/RecordAuditHistory.Solution/build.ps1) to produce unmanaged + managed zips. |
 | [WorkTimeSplitGrid.Solution](./WorkTimeSplitGrid/WorkTimeSplitGrid.Solution/) | `WorkTimeSplitGrid/WorkTimeSplitGrid/` | Publisher `Schulz Systemtechnik GmbH`, prefix `sst`. Run [`build.ps1`](./WorkTimeSplitGrid/WorkTimeSplitGrid.Solution/build.ps1) to produce unmanaged + managed zips. |
 
 ## General installation guide
@@ -57,6 +59,9 @@ node tools/dv-proxy/src/cli.mjs pcf WorkTimeSplitGrid --env https://<org>.crm4.d
 
 ```
 pcfcomponentcollection/
+├── audit-history/                  # feature folder grouping source + solution
+│   ├── RecordAuditHistory/         # PCF source
+│   └── RecordAuditHistory.Solution/ # Importable Dataverse solution
 ├── BarcodeScanControl/             # feature folder grouping source + solution
 │   ├── BarcodeScanControl/         # PCF source
 │   └── BarcodeScanControl.Solution/ # Importable Dataverse solution
