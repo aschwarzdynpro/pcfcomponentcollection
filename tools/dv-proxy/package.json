@@ -1,0 +1,20 @@
+{
+  "name": "dv-proxy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local Dataverse proxy: test PCF controls and Code Apps against a real environment without uploading them.",
+  "type": "module",
+  "bin": {
+    "dv-proxy": "./src/cli.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "check": "node --check src/cli.mjs && node --check src/auth.mjs && node --check src/proxy.mjs && node --check src/pcf.mjs && node --check src/codeapp.mjs"
+  },
+  "dependencies": {
+    "@azure/msal-node": "^3.8.0",
+    "@azure/msal-node-extensions": "^1.5.0"
+  }
+}

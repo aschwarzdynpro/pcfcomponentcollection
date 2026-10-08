@@ -1,0 +1,22 @@
+{
+  "profiles": {
+    "playground": {
+      "url": "https://contoso-dev.crm4.dynamics.com",
+      "auth": "devicecode"
+    },
+    "customer-uat": {
+      "url": "https://contoso-uat.crm4.dynamics.com",
+      "auth": "devicecode",
+      "tenant": "contoso.onmicrosoft.com",
+      "user": "dev.user@contoso.com"
+    },
+    "customer-dev-sp": {
+      "url": "https://contoso-dev2.crm4.dynamics.com",
+      "auth": "secret",
+      "tenant": "00000000-0000-0000-0000-000000000000",
+      "clientId": "00000000-0000-0000-0000-000000000000",
+      "clientSecretEnv": "CONTOSO_DEV_SECRET",
+      "allowWrites": false
+    }
+  }
+}
