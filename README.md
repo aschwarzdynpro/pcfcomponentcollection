@@ -40,6 +40,19 @@ Importable Dataverse solutions live alongside their source components:
 See [`INSTALLATION.md`](./INSTALLATION.md) for the cross-component installation
 walkthrough (build → solution package → import → form configuration).
 
+## Local testing against a real environment
+
+[`tools/dv-proxy`](./tools/dv-proxy/) runs a built control in a local harness
+with a real `ComponentFramework.Context`: `webAPI`, metadata, user settings,
+record context and datasets from a view or FetchXML, all served from a
+Dataverse environment through a token-injecting proxy. No upload is needed,
+and it is read-only unless started with `--allow-writes`.
+
+```powershell
+cd tools/dv-proxy; npm install; cd ../..
+node tools/dv-proxy/src/cli.mjs pcf WorkTimeSplitGrid --env https://<org>.crm4.dynamics.com --watch
+```
+
 ## Repository layout
 
 ```
@@ -69,6 +82,8 @@ pcfcomponentcollection/
 ├── WorkTimeSplitGrid/              # feature folder grouping source + solution
 │   ├── WorkTimeSplitGrid/          # PCF source
 │   └── WorkTimeSplitGrid.Solution/ # Importable Dataverse solution
+├── tools/
+│   └── dv-proxy/                   # Local test harness + Dataverse proxy (no upload needed)
 ├── INSTALLATION.md                 # General install walkthrough
 └── README.md                       # This file
 ```

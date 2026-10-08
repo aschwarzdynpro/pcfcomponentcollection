@@ -118,6 +118,13 @@ cd <Control>\<Control>.Solution; ./build.ps1
 - A manifest change regenerates `generated/ManifestTypes.d.ts` at build start, so
   reading a new `context.parameters.<prop>` compiles **after** the build runs.
 - Test artifact = `<Control>.Solution\bin\<Control>_managed_<ver>.zip`.
+- **Test without uploading:** `tools/dv-proxy` (see its README) runs the built
+  control against a real environment in a local harness:
+  `node tools/dv-proxy/src/cli.mjs pcf <Control> --env <url|profile> [--record table:id] --watch`.
+  Read-only unless `--allow-writes`. Sign-in is device code (cached encrypted)
+  or a service principal (`--auth secret`, secret via env var). Local profiles
+  live in `tools/dv-proxy/dv-proxy.profiles.json` (git-ignored, customer URLs).
+  It does not simulate offline mode — offline behavior still needs a device.
 
 ---
 

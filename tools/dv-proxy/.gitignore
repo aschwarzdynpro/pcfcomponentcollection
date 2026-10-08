@@ -1,0 +1,3 @@
+node_modules/
+# Real profiles name customer environments — keep them local.
+dv-proxy.profiles.json

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>dv-proxy · PCF</title>
+<link rel="stylesheet" href="/__harness/pcf-harness.css" />
+</head>
+<body>
+<header class="h-top">
+  <div class="h-title">
+    <strong>dv-proxy · PCF</strong>
+    <span id="h-control" class="h-muted"></span>
+  </div>
+  <div class="h-status">
+    <span id="h-build" class="h-pill" hidden></span>
+    <span id="h-env" class="h-pill"></span>
+    <span id="h-writes" class="h-pill"></span>
+  </div>
+</header>
+
+<div class="h-layout">
+  <aside class="h-side">
+    <section>
+      <h2>Datensatz (Formularkontext)</h2>
+      <label>Tabelle <input id="h-table" placeholder="z. B. account" autocomplete="off" list="h-tables" /></label>
+      <datalist id="h-tables"></datalist>
+      <label>ID <input id="h-id" placeholder="GUID — leer = neuer Datensatz" autocomplete="off" /></label>
+      <div class="h-row">
+        <button id="h-load" type="button">Laden</button>
+        <a id="h-open" target="_blank" rel="noreferrer" hidden>In D365 öffnen ↗</a>
+      </div>
+      <div id="h-record" class="h-muted"></div>
+    </section>
+
+    <section>
+      <h2>Eigenschaften</h2>
+      <div id="h-props"></div>
+    </section>
+
+    <section id="h-datasets-section" hidden>
+      <h2>Datasets</h2>
+      <div id="h-datasets"></div>
+    </section>
+
+    <section>
+      <h2>Host</h2>
+      <label>Sprache
+        <select id="h-lang">
+          <option value="1031">Deutsch (1031)</option>
+          <option value="1033">English (1033)</option>
+          <option value="1036">Français (1036)</option>
+          <option value="1040">Italiano (1040)</option>
+          <option value="3082">Español (3082)</option>
+        </select>
+      </label>
+      <label>Formfaktor
+        <select id="h-formfactor">
+          <option value="1">Desktop</option>
+          <option value="2">Tablet</option>
+          <option value="3">Telefon</option>
+        </select>
+      </label>
+      <label class="h-check"><input id="h-disabled" type="checkbox" /> Schreibgeschützt (isControlDisabled)</label>
+      <label>Breite <input id="h-width" type="range" min="280" max="1600" step="10" /> <span id="h-width-val"></span></label>
+      <div class="h-row">
+        <button id="h-render" type="button">updateView</button>
+        <button id="h-reinit" type="button">Neu initialisieren</button>
+      </div>
+    </section>
+  </aside>
+
+  <main class="h-main">
+    <div id="h-error" class="h-error" hidden></div>
+    <div class="h-stage-wrap">
+      <div id="h-stage" class="h-stage"></div>
+    </div>
+    <div class="h-log">
+      <div class="h-tabs">
+        <button type="button" data-tab="calls" class="h-tab h-tab--active">Web-API-Aufrufe <span id="h-calls-count"></span></button>
+        <button type="button" data-tab="events" class="h-tab">Control-Ereignisse <span id="h-events-count"></span></button>
+        <button type="button" id="h-clear" class="h-tab h-tab--right">Leeren</button>
+      </div>
+      <ol id="h-log-calls" class="h-log-list"></ol>
+      <ol id="h-log-events" class="h-log-list" hidden></ol>
+    </div>
+  </main>
+</div>
+
+<div id="h-modal" class="h-modal" hidden>
+  <div class="h-modal-box">
+    <h3 id="h-modal-title"></h3>
+    <div id="h-modal-body"></div>
+    <div class="h-row h-modal-actions" id="h-modal-actions"></div>
+  </div>
+</div>
+
+<script type="module" src="/__harness/pcf-harness.js"></script>
+</body>
+</html>
